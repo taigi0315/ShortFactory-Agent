@@ -12,6 +12,7 @@ from google.adk.tools import BaseTool
 from model.models import VideoScript, Scene, SceneType, VoiceTone, ImageStyle, TransitionType
 from core.session_manager import SessionManager
 from core.shared_context import SharedContextManager, SharedContext
+from core.scene_continuity_manager import SceneContinuityManager
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +64,8 @@ class SceneWritingTool(BaseTool):
 class ADKSceneWriterAgent(Agent):
     """ADK Scene Writer Agent for detailed scene generation"""
     
-    def __init__(self, session_manager: SessionManager, shared_context_manager: SharedContextManager = None):
+    def __init__(self, session_manager: SessionManager, shared_context_manager: SharedContextManager = None, 
+                 continuity_manager: SceneContinuityManager = None):
         """
         Initialize ADK Scene Writer Agent
         
@@ -99,8 +101,9 @@ class ADKSceneWriterAgent(Agent):
         self._session_manager = session_manager
         self._scene_tool = scene_tool
         self._shared_context_manager = shared_context_manager or SharedContextManager()
+        self._continuity_manager = continuity_manager or SceneContinuityManager()
         
-        logger.info("ADK Scene Writer Agent initialized with Gemini 2.5 Flash and Shared Context")
+        logger.info("ADK Scene Writer Agent initialized with Gemini 2.5 Flash, Shared Context, and Continuity Manager")
     
     def _get_instruction(self) -> str:
         """Get the instruction prompt for the scene writer agent"""
@@ -288,6 +291,20 @@ Please generate a complete scene script following the format and guidelines prov
                 if shared_context:
                     self._shared_context_manager.update_context_after_scene(scene_number, scene_data)
                 
+                # Add scene to continuity manager
+                self._continuity_manager.add_scene(scene_data)
+                
+                # Check continuity with previous scene if available
+                if len(self._continuity_manager.scene_data) > 1:
+                    prev_scene = self._continuity_manager.scene_data[-2]
+                    continuity_issues = self._continuity_manager.validate_scene_transition(prev_scene, scene_data)
+                    
+                    if continuity_issues:
+                        logger.warning(f"Found {len(continuity_issues)} continuity issues in scene {scene_number}")
+                        for issue in continuity_issues:
+                            if issue.severity.value in ["high", "critical"]:
+                                logger.error(f"Critical continuity issue: {issue.description}")
+                
                 return scene_data
             else:
                 raise ValueError("No scene script text received from ADK agent.")
@@ -296,6 +313,21 @@ Please generate a complete scene script following the format and guidelines prov
             logger.error(f"Error writing scene script: {str(e)}")
             # Return fallback scene data
             return self._generate_fallback_scene(scene_number, scene_type, subject)
+    
+    def get_continuity_report(self) -> Dict[str, Any]:
+        """Get continuity report for all generated scenes"""
+        return self._continuity_manager.get_continuity_report()
+    
+    def get_continuity_issues(self) -> List[Dict[str, Any]]:
+        """Get all continuity issues found"""
+        report = self.get_continuity_report()
+        all_issues = []
+        
+        for severity in ["critical", "high", "medium", "low"]:
+            issues = report.get(f"{severity}_issues", [])
+            all_issues.extend(issues)
+        
+        return all_issues
     
     def _generate_fallback_scene(self, scene_number: int, scene_type: str, subject: str) -> Dict[str, Any]:
         """Generate fallback scene data if ADK fails"""

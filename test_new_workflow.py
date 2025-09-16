@@ -15,6 +15,7 @@ from agents.adk_script_writer_agent import ADKScriptWriterAgent
 from agents.adk_scene_writer_agent import ADKSceneWriterAgent
 from core.session_manager import SessionManager
 from core.shared_context import SharedContextManager, VisualStyle
+from core.scene_continuity_manager import SceneContinuityManager
 import logging
 
 # Configure logging
@@ -30,13 +31,14 @@ async def test_new_workflow():
     print("🧪 Testing New Workflow: Story Writer + Scene Writer...")
     
     try:
-    # Initialize shared context manager
+    # Initialize managers
     shared_context_manager = SharedContextManager()
+    continuity_manager = SceneContinuityManager()
     
-    # Initialize agents with shared context
+    # Initialize agents with shared context and continuity manager
     session_manager = SessionManager()
     story_writer = ADKScriptWriterAgent(shared_context_manager)
-    scene_writer = ADKSceneWriterAgent(session_manager, shared_context_manager)
+    scene_writer = ADKSceneWriterAgent(session_manager, shared_context_manager, continuity_manager)
         
         # Test subject
         subject = "Coca Cola"
@@ -99,6 +101,20 @@ Scene Plan:
         print(f"📝 Dialogue: {detailed_scene['dialogue']}")
         print(f"🎨 Image prompt: {detailed_scene['image_create_prompt']}")
         print(f"🎬 Video prompt: {detailed_scene['video_prompt']}")
+        
+        # Generate continuity report
+        continuity_report = scene_writer.get_continuity_report()
+        print(f"\n📊 Continuity Report:")
+        print(f"   Overall Score: {continuity_report.get('overall_continuity_score', 0):.2f}")
+        print(f"   Total Issues: {continuity_report.get('total_issues', 0)}")
+        
+        if continuity_report.get('total_issues', 0) > 0:
+            print(f"   Issues by Severity: {continuity_report.get('issues_by_severity', {})}")
+            recommendations = continuity_report.get('recommendations', [])
+            if recommendations:
+                print(f"   Recommendations:")
+                for rec in recommendations:
+                    print(f"     - {rec}")
         
         # Show educational content
         if 'educational_content' in detailed_scene:
