@@ -2,3 +2,16 @@
 __pycache__/
 *.pyc
 *.json
+
+# Session data (generated content)
+sessions/
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.wav
+*.mp3
+
+# Logs
+*.log
