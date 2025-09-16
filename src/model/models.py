@@ -160,15 +160,35 @@ class Scene(BaseModel):
     # Hook technique (only for first scene)
     hook_technique: Optional[HookTechnique] = Field(default=None, description="Hook technique used if this is the first scene")
 
+class ScenePlan(BaseModel):
+    """Scene plan for story development"""
+    scene_number: int
+    scene_type: SceneType
+    scene_purpose: str
+    key_content: str
+    scene_focus: str
+
+class StoryScript(BaseModel):
+    """Story script model for overall story planning"""
+    title: str
+    main_character_description: str = Field(description="Consistent character description for all scenes")
+    character_cosplay_instructions: str = Field(description="Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a K-pop idol')")
+    overall_style: str = Field(description="Overall video style: 'educational', 'entertaining', 'documentary'")
+    overall_story: str = Field(description="The specific, focused story developed from the subject")
+    story_summary: str = Field(description="Brief summary of the overall narrative and key points")
+    scene_plan: List[ScenePlan] = Field(description="Plan for all scenes in order")
+
 class VideoScript(BaseModel):
     """
-    Complete video script with scenes in order
+    Complete video script with detailed scenes
     First scene is always the hook scene
     """
     title: str
     main_character_description: str = Field(description="Consistent character description for all scenes")
     character_cosplay_instructions: str = Field(description="Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a K-pop idol')")
     overall_style: str = Field(description="Overall video style: 'educational', 'entertaining', 'documentary'")
+    overall_story: str = Field(description="The specific, focused story developed from the subject")
+    story_summary: str = Field(description="Brief summary of the overall narrative and key points")
     
     # All scenes in order
     scenes: List[Scene] = Field(description="All scenes in order, first scene is always the hook scene")

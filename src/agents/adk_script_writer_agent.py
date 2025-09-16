@@ -10,7 +10,9 @@ from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 from google.adk import Agent
 from google.adk.models import BaseLlm
-from model.models import SceneType, ImageStyle, VoiceTone, TransitionType, HookTechnique, VideoScript, Scene, ElevenLabsSettings
+from model.models import SceneType, ImageStyle, VoiceTone, TransitionType, HookTechnique, VideoScript, StoryScript, Scene, ScenePlan, ElevenLabsSettings
+from core.shared_context import SharedContextManager, SharedContext, VisualStyle
+from core.story_validator import StoryValidator, StoryValidationResult
 
 # Load environment variables
 load_dotenv()
@@ -26,9 +28,12 @@ class ADKScriptWriterAgent(Agent):
     This agent generates video scripts using Google ADK with Gemini 2.5
     """
     
-    def __init__(self):
+    def __init__(self, shared_context_manager: SharedContextManager = None):
         """
         Initialize ADK Script Writer Agent
+        
+        Args:
+            shared_context_manager: SharedContextManager for maintaining consistency
         
         Note: ADK handles API key management automatically
         """
@@ -52,7 +57,11 @@ class ADKScriptWriterAgent(Agent):
             }
         )
         
-        logger.info("ADK Script Writer Agent initialized with Gemini 2.5 Flash")
+        # Store shared context manager and story validator
+        self._shared_context_manager = shared_context_manager or SharedContextManager()
+        self._story_validator = StoryValidator()
+        
+        logger.info("ADK Script Writer Agent initialized with Gemini 2.5 Flash, Shared Context, and Story Validator")
     
     def _get_instruction(self) -> str:
         """
@@ -62,7 +71,34 @@ class ADKScriptWriterAgent(Agent):
             str: The instruction prompt
         """
         return """
-You are a professional video script writer specializing in creating engaging, educational short videos. Your task is to generate a complete video script with detailed scene breakdowns.
+You are a professional video script writer specializing in creating engaging, educational short videos. Your primary role is to:
+
+1. **Story Development**: Take a broad subject and develop a specific, focused story
+2. **Scene Planning**: Divide the story into logical scenes for video production
+3. **Overall Coordination**: Provide context for scene writers to create detailed scripts
+
+## Story Development Process:
+
+### Step 1: Subject Analysis
+- Take the given subject and analyze it deeply
+- Identify the most interesting, educational, or surprising angle
+- Find a specific story or narrative within the broader topic
+
+### Step 2: Story Scoping
+- Narrow down to a focused, specific story
+- Choose a particular aspect, event, or perspective
+- Make it concrete and relatable
+
+### Examples:
+- Subject: "Elon Musk" → Story: "How Elon Musk bought a house in Austin and moved Tesla headquarters there"
+- Subject: "Machine Learning" → Story: "How Netflix uses machine learning to recommend movies you'll love"
+- Subject: "K-pop" → Story: "How BTS broke into the American market and changed K-pop forever"
+- Subject: "Climate Change" → Story: "How a small island nation is fighting rising sea levels with innovative solutions"
+
+### Step 3: Scene Division
+- Divide the story into 6-8 logical scenes
+- Each scene should have a clear purpose and educational value
+- Ensure smooth flow and narrative progression
 
 ## Character Requirements:
 - Use ONLY the character "Huh" - a cute, blob-like cartoon character
@@ -121,18 +157,22 @@ You are a professional video script writer specializing in creating engaging, ed
 - "controversy": Start with a controversial statement
 
 ### Image Create Prompts:
-- Be very specific about visual elements
-- Reference "Huh" (our fixed character) for consistency
+- PRIMARY FOCUS: Educational content and information delivery
+- SECONDARY FOCUS: Character from given image (not "Huh" - use "character from given image")
+- Create detailed, informative visual content that teaches the topic
+- Include specific educational elements: charts, diagrams, examples, statistics
 - Describe setting, lighting, atmosphere in detail
 - Include art style, mood, color palette
 - Specify camera angle, framing, focal point
 - IMPORTANT: Include character_pose, character_expression, and background_description fields
-- Huh should be SMALL in the image (not dominating the frame)
-- Focus on what Huh is DOING in the scene
-- Make images meaningful and educational, not just decorative
-- Add speech bubbles or text boxes with dialogue for Huh
-- Keep Huh's original image style - don't change Huh's appearance
+- Character should be SMALL in the image (not dominating the frame)
+- Focus on EDUCATIONAL CONTENT - what information are we teaching?
+- Make images 100% informative and educational
+- Character is just a guide/helper, not the main focus
+- Add speech bubbles or text boxes with dialogue for character
+- Keep character's original image style - don't change character's appearance
 - Images will be in vertical ratio (9:16 format for mobile/social media) or horizontal ratio (16:9 format for desktop/widescreen)
+- Each image should have a clear educational purpose and message
 
 ### Output Format:
 You MUST output a valid JSON object that matches this exact structure:
@@ -142,30 +182,16 @@ You MUST output a valid JSON object that matches this exact structure:
   "main_character_description": "Huh - a cute, blob-like cartoon character",
   "character_cosplay_instructions": "Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a K-pop idol')",
   "overall_style": "educational",
-  "scenes": [
+  "overall_story": "The specific, focused story you developed from the subject",
+  "story_summary": "Brief summary of the overall narrative and key points",
+  "scene_plan": [
     {
       "scene_number": 1,
       "scene_type": "hook",
-      "dialogue": "2-4 sentences of engaging dialogue with specific information",
-      "voice_tone": "excited",
-      "elevenlabs_settings": {
-        "stability": 0.3,
-        "similarity_boost": 0.8,
-        "style": 0.8,
-        "speed": 1.1,
-        "loudness": 0.2
-      },
-      "image_style": "single_character",
-      "image_create_prompt": "Very detailed description of the image including character, background, lighting, composition, and style. Include speech bubble with dialogue text",
-      "character_pose": "What Huh is doing: 'pointing at screen', 'looking at camera', 'gesturing'",
-      "character_expression": "Huh's emotional expression: 'smiling', 'winking', 'excited', 'surprised', 'confident'",
-      "background_description": "Educational background: 'classroom', 'office', 'lab', 'outdoor setting'",
-      "needs_animation": true,
-      "video_prompt": "Detailed description of animation if needed",
-      "transition_to_next": "fade",
-      "hook_technique": "shocking_fact"
+      "scene_purpose": "What this scene aims to achieve",
+      "key_content": "Main educational content for this scene",
+      "scene_focus": "Specific aspect or angle this scene covers"
     }
-    // ... more scenes ...
   ]
 }
 
@@ -182,9 +208,10 @@ You MUST output a valid JSON object that matches this exact structure:
 - **MUST include multiple scenes: hook, explanation, example, statistic, call_to_action, summary**
 """
 
-    async def generate_script(self, subject: str, language: str = "English", max_video_scenes: int = 8) -> VideoScript:
+    async def generate_story_script(self, subject: str, language: str = "English", max_video_scenes: int = 8, 
+                                   target_audience: str = "general", visual_style: VisualStyle = VisualStyle.MODERN) -> StoryScript:
         """
-        Generate a video script using ADK Agent
+        Generate a story script using ADK Agent
         
         Args:
             subject: The topic for the video
@@ -192,42 +219,90 @@ You MUST output a valid JSON object that matches this exact structure:
             max_video_scenes: Maximum number of scenes (default: 8)
             
         Returns:
-            VideoScript: Generated script object
+            StoryScript: Generated story script with scene plan
         """
         try:
             logger.info(f"Generating script for subject: {subject}")
             
             # Create the prompt for the agent
             prompt = f"""
-Create a video script about: {subject}
+Create a story script about: {subject}
 
 Language: {language}
 REQUIRED: Create exactly {max_video_scenes} scenes for this video
-Scene types to include: hook, explanation, example, statistic, call_to_action, summary
 
-IMPORTANT: You MUST create multiple scenes (6-8 scenes minimum). Do not create just 1 scene.
-Each scene must be detailed and educational with different scene types.
+IMPORTANT STORY DEVELOPMENT PROCESS:
+1. Analyze the subject "{subject}" deeply
+2. Find a specific, focused story within this broad topic
+3. Choose an interesting angle, event, or perspective
+4. Make it concrete and relatable
+5. Divide into 6-8 logical scenes
 
-Please generate a complete video script following the format and guidelines provided in your instructions.
+Examples of good story scoping:
+- Subject: "Elon Musk" → Story: "How Elon Musk bought a house in Austin and moved Tesla headquarters there"
+- Subject: "Machine Learning" → Story: "How Netflix uses machine learning to recommend movies you'll love"
+- Subject: "K-pop" → Story: "How BTS broke into the American market and changed K-pop forever"
+
+STORY VALIDATION REQUIREMENTS:
+- Keep the story focused and achievable in {max_video_scenes} scenes
+- Avoid overly complex topics that require extensive background
+- Choose stories with clear beginning, middle, and end
+- Ensure the story has educational value and entertainment factor
+- Make sure the story can be told through visual scenes
+
+Please generate a complete story script following the format and guidelines provided in your instructions.
 """
             
             # Use ADK agent's built-in content generation
             # ADK LlmAgent handles the API calls internally
-            response = await self.generate_content(prompt)
+            response = await self._simulate_adk_response(prompt)
             
-            if response and hasattr(response, 'text') and response.text:
-                script_data = json.loads(response.text)
-                script = VideoScript(**script_data)
+            if response:
+                if hasattr(response, 'text') and response.text:
+                    script_data = json.loads(response.text)
+                else:
+                    # Response is already a string
+                    script_data = json.loads(response)
+                story_script = StoryScript(**script_data)
             else:
-                raise ValueError("No script text received from ADK agent.")
+                raise ValueError("No story script text received from ADK agent.")
             
-            logger.info(f"Script generated successfully with {len(script.scenes)} scenes")
-            return script
+            logger.info(f"Story script generated successfully with {len(story_script.scene_plan)} scenes")
+            
+            # Validate the generated story
+            validation_result = self._story_validator.validate_story(
+                subject=subject,
+                story=story_script.overall_story,
+                target_audience=target_audience
+            )
+            
+            logger.info(f"Story validation: {validation_result.feasibility.value} feasibility, {validation_result.complexity_level.value} complexity")
+            
+            # If story is not feasible, try to regenerate with suggestions
+            if not validation_result.is_valid:
+                logger.warning(f"Story validation failed: {validation_result.validation_notes}")
+                # For now, we'll continue with the story but log the issues
+                # In a full implementation, we could regenerate with simplified prompts
+            
+            # Create shared context for the story
+            shared_context = self._shared_context_manager.create_context(
+                character_emotion="excited",
+                character_pose="pointing",
+                visual_style=visual_style,
+                target_audience=target_audience,
+                video_duration=60,
+                scene_count=max_video_scenes
+            )
+            
+            # Store shared context for use by scene writers
+            self._shared_context_manager.context = shared_context
+            
+            return story_script
             
         except Exception as e:
-            logger.error(f"Error generating script: {str(e)}")
+            logger.error(f"Error generating story script: {str(e)}")
             # Return mock data as fallback
-            return self._generate_mock_script(subject)
+            return self._generate_mock_story_script(subject)
     
     async def _simulate_adk_response(self, prompt: str) -> str:
         """
@@ -243,10 +318,57 @@ Please generate a complete video script following the format and guidelines prov
         # For now, return a mock response
         return """
 {
-  "title": "Understanding K-pop: A Global Phenomenon",
+  "title": "The Secret Story of Coca-Cola: From Medicine to Global Empire",
   "main_character_description": "Huh - a cute, blob-like cartoon character",
-  "character_cosplay_instructions": "Dress Huh as a charismatic K-pop idol with a trendy, colorful stage outfit, sparkling accessories, and stylish hair",
+  "character_cosplay_instructions": "Dress Huh as a 19th century pharmacist with a white lab coat, vintage glasses, and a Coca-Cola bottle",
   "overall_style": "educational",
+  "overall_story": "How Coca-Cola evolved from a medicinal 'brain tonic' created by a pharmacist in 1886 to become the world's most recognized brand and global beverage empire",
+  "story_summary": "The fascinating journey of Coca-Cola from its humble beginnings as a medicine in an Atlanta pharmacy to becoming a global phenomenon that sells 1.9 billion servings daily worldwide",
+  "scene_plan": [
+    {
+      "scene_number": 1,
+      "scene_type": "hook",
+      "scene_purpose": "Grab attention with surprising origin story",
+      "key_content": "Coca-Cola was originally created as medicine by Dr. John Pemberton in 1886",
+      "scene_focus": "Pharmaceutical beginnings and original recipe"
+    },
+    {
+      "scene_number": 2,
+      "scene_type": "explanation",
+      "scene_purpose": "Explain the original formula and ingredients",
+      "key_content": "Original recipe contained coca leaves, kola nuts, and was sold as a 'brain tonic'",
+      "scene_focus": "Historical ingredients and medicinal claims"
+    },
+    {
+      "scene_number": 3,
+      "scene_type": "example",
+      "scene_purpose": "Show the evolution from medicine to beverage",
+      "key_content": "How Asa Candler transformed it from medicine to popular soft drink",
+      "scene_focus": "Business transformation and marketing strategy"
+    },
+    {
+      "scene_number": 4,
+      "scene_type": "statistic",
+      "scene_purpose": "Share impressive global reach statistics",
+      "key_content": "1.9 billion servings daily, sold in 200+ countries, $43 billion annual revenue",
+      "scene_focus": "Global impact and market dominance"
+    },
+    {
+      "scene_number": 5,
+      "scene_type": "call_to_action",
+      "scene_purpose": "Encourage learning about business and marketing",
+      "key_content": "Explore how brands can achieve global recognition and cultural impact",
+      "scene_focus": "Lessons in branding and global expansion"
+    },
+    {
+      "scene_number": 6,
+      "scene_type": "summary",
+      "scene_purpose": "Summarize the incredible transformation",
+      "key_content": "From $0.05 medicine to world's most valuable brand",
+      "scene_focus": "Key takeaways about innovation and business success"
+    }
+  ]
+}
   "scenes": [
     {
       "scene_number": 1,
@@ -261,7 +383,7 @@ Please generate a complete video script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "single_character",
-      "image_create_prompt": "Huh dressed as a K-pop idol with sparkling outfit, pointing at a chart showing $5 billion, with speech bubble containing the dialogue",
+      "image_create_prompt": "Educational infographic showing K-pop industry statistics: $5 billion global market value, major companies (HYBE, SM, JYP, YG), with character from given image as small guide pointing at the data",
       "character_pose": "pointing at screen",
       "character_expression": "excited",
       "background_description": "stage with charts and statistics",
@@ -283,7 +405,7 @@ Please generate a complete video script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "infographic",
-      "image_create_prompt": "Huh dressed as a K-pop idol explaining with an infographic showing music, dance, visuals, and storytelling elements, with speech bubble",
+      "image_create_prompt": "Detailed educational diagram showing K-pop core elements: synchronized choreography, vocal harmonies, visual storytelling, fashion trends, with character from given image as small guide explaining each element",
       "character_pose": "gesturing towards infographic",
       "character_expression": "confident",
       "background_description": "modern studio with infographic displays",
@@ -304,7 +426,7 @@ Please generate a complete video script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "character_with_background",
-      "image_create_prompt": "Huh dressed as a K-pop idol standing in front of a concert stage with BTS-style visuals, pointing at the stage, with speech bubble",
+      "image_create_prompt": "Educational visual showing K-pop concert production: stage design, lighting effects, fan engagement, choreography coordination, with character from given image as small guide demonstrating the process",
       "character_pose": "pointing at stage",
       "character_expression": "amazed",
       "background_description": "concert stage with lights and visuals",
@@ -325,7 +447,7 @@ Please generate a complete video script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "infographic",
-      "image_create_prompt": "Huh dressed as a K-pop idol next to a large infographic showing 100 million fans and 1 billion views statistics, with speech bubble",
+      "image_create_prompt": "Comprehensive data visualization showing K-pop global impact: 100+ million fans worldwide, 1+ billion YouTube views, cultural influence metrics, with character from given image as small guide highlighting key statistics",
       "character_pose": "gesturing at statistics",
       "character_expression": "surprised",
       "background_description": "data visualization studio with charts",
@@ -346,7 +468,7 @@ Please generate a complete video script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "single_character",
-      "image_create_prompt": "Huh dressed as a K-pop idol with arms spread wide, inviting gesture, with speech bubble and call-to-action text",
+      "image_create_prompt": "Educational summary infographic showing K-pop learning resources: recommended groups, music platforms, cultural aspects to explore, with character from given image as small guide encouraging further learning",
       "character_pose": "arms spread wide",
       "character_expression": "inviting",
       "background_description": "colorful stage with K-pop elements",
@@ -367,7 +489,7 @@ Please generate a complete video script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "single_character",
-      "image_create_prompt": "Huh dressed as a K-pop idol waving goodbye with a warm smile, with speech bubble and thank you message",
+      "image_create_prompt": "Final educational summary showing key K-pop takeaways: global phenomenon, cultural impact, entertainment industry innovation, with character from given image as small guide waving goodbye with warm smile",
       "character_pose": "waving goodbye",
       "character_expression": "smiling",
       "background_description": "warm, friendly setting",
@@ -411,6 +533,63 @@ Please generate a complete video script following the format and guidelines prov
             logger.info("Using mock script as fallback")
             return self._generate_mock_script(subject)
     
+    def _generate_mock_story_script(self, subject: str) -> StoryScript:
+        """Generate mock story script for fallback"""
+        logger.info("Generating mock story script")
+        
+        return StoryScript(
+            title=f"Understanding {subject}",
+            main_character_description="Huh - a cute, blob-like cartoon character",
+            character_cosplay_instructions=f"Dress Huh as an expert on {subject}",
+            overall_style="educational",
+            overall_story=f"The fascinating story of {subject} and its impact on the world",
+            story_summary=f"A comprehensive exploration of {subject}, covering its origins, development, and significance",
+            scene_plan=[
+                ScenePlan(
+                    scene_number=1,
+                    scene_type=SceneType.HOOK,
+                    scene_purpose="Grab attention and introduce the topic",
+                    key_content=f"Introduction to {subject}",
+                    scene_focus="Opening hook with surprising fact"
+                ),
+                ScenePlan(
+                    scene_number=2,
+                    scene_type=SceneType.EXPLANATION,
+                    scene_purpose="Explain the core concepts",
+                    key_content=f"Core concepts of {subject}",
+                    scene_focus="Educational explanation"
+                ),
+                ScenePlan(
+                    scene_number=3,
+                    scene_type=SceneType.EXAMPLE,
+                    scene_purpose="Provide concrete examples",
+                    key_content=f"Real-world examples of {subject}",
+                    scene_focus="Practical applications"
+                ),
+                ScenePlan(
+                    scene_number=4,
+                    scene_type=SceneType.STATISTIC,
+                    scene_purpose="Share impressive statistics",
+                    key_content=f"Statistics about {subject}",
+                    scene_focus="Data and numbers"
+                ),
+                ScenePlan(
+                    scene_number=5,
+                    scene_type=SceneType.CALL_TO_ACTION,
+                    scene_purpose="Encourage further learning",
+                    key_content=f"Next steps for learning about {subject}",
+                    scene_focus="Call to action"
+                ),
+                ScenePlan(
+                    scene_number=6,
+                    scene_type=SceneType.SUMMARY,
+                    scene_purpose="Summarize key points",
+                    key_content=f"Summary of {subject}",
+                    scene_focus="Final takeaways"
+                )
+            ]
+        )
+
     def _generate_mock_script(self, subject: str) -> VideoScript:
         """
         Generate mock script as fallback
@@ -440,7 +619,7 @@ Please generate a complete video script following the format and guidelines prov
                         loudness=0.2
                     ),
                     image_style=ImageStyle.SINGLE_CHARACTER,
-                    image_create_prompt=f"Huh explaining {subject} with enthusiasm",
+                    image_create_prompt=f"Educational introduction infographic showing key concepts about {subject}, with character from given image as small guide explaining with enthusiasm",
                     character_pose="pointing",
                     character_expression="smiling",
                     background_description="educational setting",
@@ -462,7 +641,7 @@ Please generate a complete video script following the format and guidelines prov
                         loudness=0.2
                     ),
                     image_style=ImageStyle.INFOGRAPHIC,
-                    image_create_prompt=f"Huh with infographic explaining {subject}",
+                    image_create_prompt=f"Detailed educational infographic breaking down {subject} into key components and concepts, with character from given image as small guide pointing at information",
                     character_pose="gesturing at info",
                     character_expression="confident",
                     background_description="modern studio with displays",
@@ -483,7 +662,7 @@ Please generate a complete video script following the format and guidelines prov
                         loudness=0.2
                     ),
                     image_style=ImageStyle.CHARACTER_WITH_BACKGROUND,
-                    image_create_prompt=f"Huh demonstrating {subject} with example",
+                    image_create_prompt=f"Educational visual demonstration showing practical examples of {subject} in action, with character from given image as small guide demonstrating the process",
                     character_pose="demonstrating",
                     character_expression="excited",
                     background_description="example setting",
@@ -504,7 +683,7 @@ Please generate a complete video script following the format and guidelines prov
                         loudness=0.2
                     ),
                     image_style=ImageStyle.INFOGRAPHIC,
-                    image_create_prompt=f"Huh with statistics about {subject}",
+                    image_create_prompt=f"Comprehensive data visualization showing important statistics and metrics about {subject}, with character from given image as small guide highlighting key numbers",
                     character_pose="pointing at stats",
                     character_expression="surprised",
                     background_description="data visualization",
@@ -525,7 +704,7 @@ Please generate a complete video script following the format and guidelines prov
                         loudness=0.2
                     ),
                     image_style=ImageStyle.SINGLE_CHARACTER,
-                    image_create_prompt=f"Huh inviting viewers to learn more about {subject}",
+                    image_create_prompt=f"Educational resource guide showing learning paths and next steps for {subject}, with character from given image as small guide encouraging further exploration",
                     character_pose="inviting gesture",
                     character_expression="encouraging",
                     background_description="inviting setting",
@@ -546,7 +725,7 @@ Please generate a complete video script following the format and guidelines prov
                         loudness=0.2
                     ),
                     image_style=ImageStyle.SINGLE_CHARACTER,
-                    image_create_prompt=f"Huh waving goodbye after explaining {subject}",
+                    image_create_prompt=f"Final educational summary showing key takeaways and main points about {subject}, with character from given image as small guide waving goodbye with warm smile",
                     character_pose="waving goodbye",
                     character_expression="friendly",
                     background_description="warm setting",

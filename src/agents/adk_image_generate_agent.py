@@ -135,18 +135,18 @@ class ImageGenerationTool(BaseTool):
             
             # Create cosplay prompt
             cosplay_prompt = f"""
-            Transform this character (Huh) to look like: {cosplay_instructions}
+            Transform this character to look like: {cosplay_instructions}
 
             Requirements:
-            - Keep Huh's basic cute, blob-like cartoon character design
+            - Keep the character's basic cute, blob-like cartoon character design
             - Apply the cosplay transformation as described (clothing, accessories)
-            - Maintain Huh's original image style and personality
-            - Don't change Huh's fundamental appearance - only add cosplay elements
+            - Maintain the character's original image style and personality
+            - Don't change the character's fundamental appearance - only add cosplay elements
             - Maintain high quality and professional appearance
             - Character should look natural in the new style
             - Image ratio: {self.image_ratio} ({'9:16 vertical format for mobile/social media' if self.image_ratio == 'vertical' else '16:9 horizontal format for desktop/widescreen'})
             - Professional photography quality
-            - Preserve Huh's cute, friendly character design
+            - Preserve the character's cute, friendly character design
             """
             
             # Create client and generate cosplayed image
@@ -332,23 +332,25 @@ class ADKImageGenerateAgent(Agent):
     def _get_instruction(self) -> str:
         """Get the instruction prompt for the agent"""
         return """
-You are a professional image generation agent specializing in creating educational images with the Huh character.
+You are a professional image generation agent specializing in creating educational images with a character from given image.
 
 ## Your Role:
-- Generate images for video scenes using the Huh character
-- Apply cosplay transformations to Huh based on the topic
-- Create educational, engaging visuals
+- Generate images for video scenes using the character from given image
+- Apply cosplay transformations to the character based on the topic
+- Create educational, engaging visuals with focus on information delivery
 - Maintain character consistency across all images
 
 ## Available Tools:
-- generate_image: Generate images for scenes with Huh character
+- generate_image: Generate images for scenes with character from given image
 
 ## Guidelines:
-- Always use the Huh character in images
+- PRIMARY FOCUS: Educational content and information delivery
+- SECONDARY FOCUS: Character from given image (not "Huh" - use "character from given image")
+- Always use the character from given image in images
 - Apply cosplay instructions when provided
-- Create educational, meaningful visuals
+- Create educational, meaningful visuals that teach the topic
 - Maintain high quality and professional appearance
-- Keep Huh's original design and personality
+- Keep character's original design and personality
 - Add speech bubbles or text boxes when appropriate
 - Focus on educational content, not just decorative images
 
@@ -496,21 +498,21 @@ CRITICAL REQUIREMENTS:
         """Get style-specific instructions based on image style and scene type"""
         
         style_instructions = {
-            "single_character": "Focus on Huh character with minimal background",
-            "character_with_background": "Show Huh with educational background elements",
-            "infographic": "Create informative visual with Huh explaining data",
-            "diagram_explanation": "Show Huh pointing to or explaining a diagram",
-            "before_after_comparison": "Show Huh with before/after visual comparison",
-            "step_by_step_visual": "Show Huh demonstrating step-by-step process",
-            "four_cut_cartoon": "Create comic-style panel with Huh",
-            "comic_panel": "Design comic panel layout with Huh",
-            "speech_bubble": "Include prominent speech bubbles with Huh",
-            "cinematic": "Create cinematic composition with Huh",
-            "close_up_reaction": "Show close-up of Huh's facial expression",
-            "wide_establishing_shot": "Show wide shot with Huh in educational setting"
+            "single_character": "Focus on educational content with character from given image as small guide",
+            "character_with_background": "Show educational background elements with character from given image as guide",
+            "infographic": "Create comprehensive informative visual with character from given image explaining data",
+            "diagram_explanation": "Show character from given image pointing to or explaining a detailed diagram",
+            "before_after_comparison": "Show character from given image with before/after visual comparison",
+            "step_by_step_visual": "Show character from given image demonstrating step-by-step process",
+            "four_cut_cartoon": "Create comic-style panel with character from given image",
+            "comic_panel": "Design comic panel layout with character from given image",
+            "speech_bubble": "Include prominent speech bubbles with character from given image",
+            "cinematic": "Create cinematic composition with character from given image",
+            "close_up_reaction": "Show close-up of character from given image's facial expression",
+            "wide_establishing_shot": "Show wide shot with character from given image in educational setting"
         }
         
-        return style_instructions.get(image_style, "Create educational visual with Huh character")
+        return style_instructions.get(image_style, "Create educational visual with character from given image")
 
 # Test function
 async def test_adk_image_generate():
