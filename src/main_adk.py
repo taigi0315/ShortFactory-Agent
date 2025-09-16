@@ -17,7 +17,7 @@ from google.adk.memory import InMemoryMemoryService
 from core.session_manager import SessionManager
 from agents.adk_script_writer_agent import ADKScriptWriterAgent
 from agents.adk_image_generate_agent import ADKImageGenerateAgent
-from agents.image_generate_agent import ImageGenerateAgent
+# Removed non-ADK import
 from model.models import VideoScript
 
 # Load environment variables
