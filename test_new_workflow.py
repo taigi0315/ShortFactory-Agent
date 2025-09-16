@@ -16,6 +16,7 @@ from agents.adk_scene_writer_agent import ADKSceneWriterAgent
 from core.session_manager import SessionManager
 from core.shared_context import SharedContextManager, VisualStyle
 from core.scene_continuity_manager import SceneContinuityManager
+from core.image_style_selector import ImageStyleSelector
 import logging
 
 # Configure logging
@@ -34,11 +35,12 @@ async def test_new_workflow():
     # Initialize managers
     shared_context_manager = SharedContextManager()
     continuity_manager = SceneContinuityManager()
+    style_selector = ImageStyleSelector()
     
-    # Initialize agents with shared context and continuity manager
+    # Initialize agents with shared context, continuity manager, and style selector
     session_manager = SessionManager()
     story_writer = ADKScriptWriterAgent(shared_context_manager)
-    scene_writer = ADKSceneWriterAgent(session_manager, shared_context_manager, continuity_manager)
+    scene_writer = ADKSceneWriterAgent(session_manager, shared_context_manager, continuity_manager, style_selector)
         
         # Test subject
         subject = "Coca Cola"
@@ -101,6 +103,13 @@ Scene Plan:
         print(f"📝 Dialogue: {detailed_scene['dialogue']}")
         print(f"🎨 Image prompt: {detailed_scene['image_create_prompt']}")
         print(f"🎬 Video prompt: {detailed_scene['video_prompt']}")
+        
+        # Show intelligent style selection results
+        if 'image_style' in detailed_scene:
+            print(f"\n🎨 Intelligent Style Selection:")
+            print(f"   Selected Style: {detailed_scene['image_style']}")
+            print(f"   Confidence: {detailed_scene.get('style_confidence', 0):.2f}")
+            print(f"   Reasoning: {detailed_scene.get('style_selection_reasoning', 'N/A')}")
         
         # Generate continuity report
         continuity_report = scene_writer.get_continuity_report()

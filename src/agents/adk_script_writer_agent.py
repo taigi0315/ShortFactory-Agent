@@ -13,6 +13,7 @@ from google.adk.models import BaseLlm
 from model.models import SceneType, ImageStyle, VoiceTone, TransitionType, HookTechnique, VideoScript, StoryScript, Scene, ScenePlan, ElevenLabsSettings
 from core.shared_context import SharedContextManager, SharedContext, VisualStyle
 from core.story_validator import StoryValidator, StoryValidationResult
+from core.story_focus_engine import StoryFocusEngine, StoryFocusResult
 
 # Load environment variables
 load_dotenv()
@@ -57,11 +58,12 @@ class ADKScriptWriterAgent(Agent):
             }
         )
         
-        # Store shared context manager and story validator
+        # Store shared context manager, story validator, and story focus engine
         self._shared_context_manager = shared_context_manager or SharedContextManager()
         self._story_validator = StoryValidator()
+        self._story_focus_engine = StoryFocusEngine()
         
-        logger.info("ADK Script Writer Agent initialized with Gemini 2.5 Flash, Shared Context, and Story Validator")
+        logger.info("ADK Script Writer Agent initialized with Gemini 2.5 Flash, Shared Context, Story Validator, and Story Focus Engine")
     
     def _get_instruction(self) -> str:
         """
@@ -224,24 +226,40 @@ You MUST output a valid JSON object that matches this exact structure:
         try:
             logger.info(f"Generating script for subject: {subject}")
             
-            # Create the prompt for the agent
+            # First, refine the story focus using the Story Focus Engine
+            initial_story = f"The story of {subject} and how it works"
+            focus_result = self._story_focus_engine.refine_story_focus(
+                broad_subject=subject,
+                initial_story=initial_story,
+                target_audience=target_audience
+            )
+            
+            logger.info(f"Story focus refined: {focus_result.applied_pattern.value} pattern applied")
+            logger.info(f"Focus score: {focus_result.focus_score:.2f}")
+            
+            # Create the prompt for the agent with focused story
             prompt = f"""
 Create a story script about: {subject}
 
 Language: {language}
 REQUIRED: Create exactly {max_video_scenes} scenes for this video
 
-IMPORTANT STORY DEVELOPMENT PROCESS:
-1. Analyze the subject "{subject}" deeply
-2. Find a specific, focused story within this broad topic
-3. Choose an interesting angle, event, or perspective
-4. Make it concrete and relatable
-5. Divide into 6-8 logical scenes
+FOCUSED STORY ANGLE:
+{focus_result.focused_story}
 
-Examples of good story scoping:
-- Subject: "Elon Musk" → Story: "How Elon Musk bought a house in Austin and moved Tesla headquarters there"
-- Subject: "Machine Learning" → Story: "How Netflix uses machine learning to recommend movies you'll love"
-- Subject: "K-pop" → Story: "How BTS broke into the American market and changed K-pop forever"
+IMPORTANT STORY DEVELOPMENT PROCESS:
+1. Use the focused story angle above as your foundation
+2. Develop this specific, engaging narrative
+3. Choose scenes that support this focused story
+4. Make it concrete and relatable
+5. Divide into {max_video_scenes} logical scenes
+
+STORY FOCUS REQUIREMENTS:
+- Follow the focused story angle: "{focus_result.focused_story}"
+- Keep the story specific and engaging (not broad overview)
+- Choose scenes that build the focused narrative
+- Ensure each scene supports the main story angle
+- Make sure the story can be told through visual scenes
 
 STORY VALIDATION REQUIREMENTS:
 - Keep the story focused and achievable in {max_video_scenes} scenes
@@ -269,6 +287,9 @@ Please generate a complete story script following the format and guidelines prov
             
             logger.info(f"Story script generated successfully with {len(story_script.scene_plan)} scenes")
             
+            # Update the story script with the focused story
+            story_script.overall_story = focus_result.focused_story
+            
             # Validate the generated story
             validation_result = self._story_validator.validate_story(
                 subject=subject,
@@ -283,6 +304,13 @@ Please generate a complete story script following the format and guidelines prov
                 logger.warning(f"Story validation failed: {validation_result.validation_notes}")
                 # For now, we'll continue with the story but log the issues
                 # In a full implementation, we could regenerate with simplified prompts
+            
+            # Log focus engine results
+            logger.info(f"Story focus engine results:")
+            logger.info(f"  - Applied pattern: {focus_result.applied_pattern.value}")
+            logger.info(f"  - Focus score: {focus_result.focus_score:.2f}")
+            logger.info(f"  - Specificity improvement: +{focus_result.specificity_improvement:.2f}")
+            logger.info(f"  - Engagement improvement: +{focus_result.engagement_improvement:.2f}")
             
             # Create shared context for the story
             shared_context = self._shared_context_manager.create_context(

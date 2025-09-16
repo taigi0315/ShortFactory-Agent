@@ -13,6 +13,7 @@ from model.models import VideoScript, Scene, SceneType, VoiceTone, ImageStyle, T
 from core.session_manager import SessionManager
 from core.shared_context import SharedContextManager, SharedContext
 from core.scene_continuity_manager import SceneContinuityManager
+from core.image_style_selector import ImageStyleSelector, StyleSelectionResult
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ class ADKSceneWriterAgent(Agent):
     """ADK Scene Writer Agent for detailed scene generation"""
     
     def __init__(self, session_manager: SessionManager, shared_context_manager: SharedContextManager = None, 
-                 continuity_manager: SceneContinuityManager = None):
+                 continuity_manager: SceneContinuityManager = None, style_selector: ImageStyleSelector = None):
         """
         Initialize ADK Scene Writer Agent
         
@@ -102,8 +103,10 @@ class ADKSceneWriterAgent(Agent):
         self._scene_tool = scene_tool
         self._shared_context_manager = shared_context_manager or SharedContextManager()
         self._continuity_manager = continuity_manager or SceneContinuityManager()
+        self._style_selector = style_selector or ImageStyleSelector()
+        self._previous_styles = []  # Track previous styles for variety
         
-        logger.info("ADK Scene Writer Agent initialized with Gemini 2.5 Flash, Shared Context, and Continuity Manager")
+        logger.info("ADK Scene Writer Agent initialized with Gemini 2.5 Flash, Shared Context, Continuity Manager, and Image Style Selector")
     
     def _get_instruction(self) -> str:
         """Get the instruction prompt for the scene writer agent"""
@@ -304,6 +307,24 @@ Please generate a complete scene script following the format and guidelines prov
                         for issue in continuity_issues:
                             if issue.severity.value in ["high", "critical"]:
                                 logger.error(f"Critical continuity issue: {issue.description}")
+                
+                # Select optimal image style using intelligent style selector
+                style_result = self._style_selector.select_optimal_style(
+                    scene_data=scene_data,
+                    previous_styles=self._previous_styles,
+                    target_audience=shared_context.target_audience if shared_context else "general"
+                )
+                
+                # Update scene data with selected style
+                scene_data["image_style"] = style_result.selected_style.value
+                scene_data["style_selection_reasoning"] = style_result.reasoning
+                scene_data["style_confidence"] = style_result.confidence_score
+                
+                # Track style for future selections
+                self._previous_styles.append(style_result.selected_style)
+                
+                logger.info(f"Selected image style: {style_result.selected_style.value} (confidence: {style_result.confidence_score:.2f})")
+                logger.info(f"Style reasoning: {style_result.reasoning}")
                 
                 return scene_data
             else:
