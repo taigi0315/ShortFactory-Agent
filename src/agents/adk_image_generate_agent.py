@@ -234,6 +234,139 @@ class ImageGenerationTool(BaseTool):
             logger.info("Falling back to mock image generation")
             return self._generate_mock_scene_image(scene_prompt)
     
+    async def generate_unified_scene(self, scene: Scene, cosplay_desc: str) -> bytes:
+        """
+        Generate scene with cosplayed character in one unified pass
+        This addresses the architect feedback for unified image generation
+        """
+        try:
+            logger.info(f"Generating unified scene for scene {scene.scene_number}")
+            
+            # Create unified prompt that includes both character and educational content
+            unified_prompt = self._create_unified_prompt(scene, cosplay_desc)
+            
+            # Use the cosplayed Huh image as reference
+            cosplayed_huh_pil = Image.open(BytesIO(self.huh_image_data))
+            
+            # Generate scene in one pass
+            client = genai.Client(api_key=self.api_key)
+            response = client.models.generate_content(
+                model="gemini-2.5-flash-image-preview",
+                contents=[unified_prompt, cosplayed_huh_pil],
+                config={
+                    "temperature": 0.7,
+                    "top_p": 0.8,
+                    "top_k": 40,
+                    "max_output_tokens": 8192,
+                }
+            )
+            
+            # Extract image data from response
+            if response.candidates and response.candidates[0].content.parts:
+                parts = response.candidates[0].content.parts
+                if hasattr(parts, '__iter__'):
+                    for part in parts:
+                        if hasattr(part, 'inline_data') and part.inline_data:
+                            logger.info("✅ Unified scene generated successfully")
+                            return part.inline_data.data
+                else:
+                    # Single part
+                    if hasattr(parts, 'inline_data') and parts.inline_data:
+                        logger.info("✅ Unified scene generated successfully")
+                        return parts.inline_data.data
+            
+            logger.warning("No image data found in unified scene generation response")
+            return self._generate_mock_scene_image(unified_prompt)
+            
+        except Exception as e:
+            logger.error(f"Error generating unified scene: {str(e)}")
+            return self._generate_mock_scene_image(unified_prompt)
+    
+    def _create_unified_prompt(self, scene: Scene, cosplay_desc: str) -> str:
+        """Create unified prompt that combines character and educational content"""
+        
+        # Extract educational elements for enhanced prompt
+        educational_elements = self._extract_educational_elements(scene)
+        
+        unified_prompt = f"""
+        Create an educational scene with these elements:
+        
+        CHARACTER (10-15% of image area):
+        - A cute, blob-like cartoon character dressed as {cosplay_desc}
+        - Character pose: {scene.character_pose}
+        - Character expression: {scene.character_expression}
+        - Keep character small and as a guide/presenter
+        - Include speech bubble: "{scene.dialogue[:60]}..."
+        
+        EDUCATIONAL CONTENT (PRIMARY FOCUS - 85% of image):
+        {scene.image_create_prompt}
+        
+        ENHANCED EDUCATIONAL ELEMENTS:
+        {educational_elements}
+        
+        COMPOSITION REQUIREMENTS:
+        - Image ratio: {self.image_ratio} ({'9:16' if self.image_ratio == 'vertical' else '16:9'})
+        - Educational elements dominate the frame
+        - Character acts as a guide pointing to educational content
+        - Clear visual hierarchy with educational content as primary focus
+        - Professional, clean layout suitable for educational content
+        
+        STYLE: {scene.image_style} approach
+        - Maintain consistent visual style
+        - Ensure high contrast for readability
+        - Use appropriate colors for educational content
+        - Include visual elements that support learning objectives
+        
+        TECHNICAL SPECIFICATIONS:
+        - High resolution and quality
+        - Clear, readable text if any
+        - Professional educational design
+        - Suitable for video production
+        """
+        
+        return unified_prompt
+    
+    def _extract_educational_elements(self, scene: Scene) -> str:
+        """Extract and format educational elements for enhanced prompt"""
+        educational_content = scene.educational_content or {}
+        
+        elements = []
+        
+        # Add key concepts
+        if educational_content.get("key_concepts"):
+            concepts = ", ".join(educational_content["key_concepts"])
+            elements.append(f"Key concepts to highlight: {concepts}")
+        
+        # Add specific facts
+        if educational_content.get("specific_facts"):
+            facts = "; ".join(educational_content["specific_facts"])
+            elements.append(f"Specific facts to include: {facts}")
+        
+        # Add examples
+        if educational_content.get("examples"):
+            examples = "; ".join(educational_content["examples"])
+            elements.append(f"Examples to demonstrate: {examples}")
+        
+        # Add statistics
+        if educational_content.get("statistics"):
+            stats = "; ".join(educational_content["statistics"])
+            elements.append(f"Statistics to display: {stats}")
+        
+        # Add visual elements
+        if scene.visual_elements:
+            visual_elements = scene.visual_elements
+            if visual_elements.get("primary_focus"):
+                elements.append(f"Primary visual focus: {visual_elements['primary_focus']}")
+            if visual_elements.get("secondary_elements"):
+                secondary = ", ".join(visual_elements["secondary_elements"])
+                elements.append(f"Secondary visual elements: {secondary}")
+            if visual_elements.get("color_scheme"):
+                elements.append(f"Color scheme: {visual_elements['color_scheme']}")
+            if visual_elements.get("lighting"):
+                elements.append(f"Lighting: {visual_elements['lighting']}")
+        
+        return "\n".join(elements) if elements else "Focus on clear, educational visual presentation"
+    
     def _generate_mock_scene_image(self, scene_prompt: str) -> bytes:
         """Generate mock scene image"""
         from PIL import Image, ImageDraw, ImageFont
@@ -327,7 +460,7 @@ class ADKImageGenerateAgent(Agent):
         # Store references in a way that works with ADK
         self._session_manager = session_manager
         self._image_tool = image_tool
-        logger.info("ADK Image Generate Agent initialized with Gemini 2.5 Flash")
+        logger.info("ADK Image Generate Agent initialized with Gemini 2.5 Flash and Unified Generation")
     
     def _get_instruction(self) -> str:
         """Get the instruction prompt for the agent"""
