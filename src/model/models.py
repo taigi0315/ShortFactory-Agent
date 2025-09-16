@@ -136,6 +136,7 @@ class Scene(BaseModel):
     image_style: ImageStyle
     image_create_prompt: str = Field(description="Detailed prompt for image generation - be very specific about visual elements, lighting, composition, and style")
     character_pose: Optional[str] = Field(default=None, description="Character pose: 'pointing', 'thinking', 'surprised'")
+    character_expression: Optional[str] = Field(default=None, description="Character emotional expression: 'smiling', 'winking', 'excited', 'surprised', 'confident'")
     background_description: Optional[str] = Field(default=None, description="Background setting description")
     
     # Video related (8 seconds fixed duration)
@@ -155,6 +156,7 @@ class VideoScript(BaseModel):
     """
     title: str
     main_character_description: str = Field(description="Consistent character description for all scenes")
+    character_cosplay_instructions: str = Field(description="Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a K-pop idol')")
     overall_style: str = Field(description="Overall video style: 'educational', 'entertaining', 'documentary'")
     
     # All scenes in order

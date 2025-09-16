@@ -9,7 +9,7 @@ import logging
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 import google.generativeai as genai
-from models import SceneType, ImageStyle, VoiceTone, TransitionType, HookTechnique, VideoScript, Scene, ElevenLabsSettings
+from model.models import SceneType, ImageStyle, VoiceTone, TransitionType, HookTechnique, VideoScript, Scene, ElevenLabsSettings
 
 # Load environment variables from .env file
 load_dotenv()
@@ -111,6 +111,14 @@ You are an expert video script writer and creative director. Create a comprehens
 4. CLIMAX SCENE: The "aha!" moment or most important revelation
 5. RESOLUTION SCENES: Summarize key learnings and provide closure
 
+## Character Requirements:
+- Use ONLY the character "Huh" - a cute, blob-like cartoon character
+- Huh is the main character who appears in all scenes
+- Include character_cosplay_instructions: Describe how Huh should be cosplayed/dressed for this topic (e.g., "dress Huh as a scientist with lab coat", "dress Huh as a programmer with glasses", etc.)
+- Include character_expression for each scene: Describe Huh's emotional expression (e.g., "smiling", "winking", "excited", "surprised", "confident")
+- Huh should be relatable and engaging
+- Add speech bubbles or text boxes with dialogue for Huh in each scene
+
 ## Available Options:
 
 Scene Types: {', '.join(scene_types)}
@@ -129,17 +137,24 @@ Hook Techniques: {', '.join(hook_techniques)}
 
 ### Image Create Prompts:
 - Be very specific about visual elements
-- Reference "our fixed character" for consistency
+- Reference "Huh" (our fixed character) for consistency
 - Describe setting, lighting, atmosphere in detail
 - Include art style, mood, color palette
 - Specify camera angle, framing, focal point
+- IMPORTANT: Include character_pose, character_expression, and background_description fields
+- Huh should be SMALL in the image (not dominating the frame)
+- Focus on what Huh is DOING in the scene
+- Make images meaningful and educational, not just decorative
+- Add speech bubbles or text boxes with dialogue for Huh
+- Keep Huh's original image style - don't change Huh's appearance
 
 ### Output Format:
 You MUST output a valid JSON object that matches this exact structure:
 
 {{
   "title": "Compelling title for the video",
-  "main_character_description": "Detailed character description for consistency",
+      "main_character_description": "Huh - a cute, blob-like cartoon character",
+  "character_cosplay_instructions": "Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a K-pop idol')",
   "overall_style": "educational",
   "scenes": [
     {{
@@ -155,9 +170,10 @@ You MUST output a valid JSON object that matches this exact structure:
         "loudness": 0.2
       }},
       "image_style": "single_character",
-      "image_create_prompt": "Very detailed description of the image including character, background, lighting, composition, and style",
-      "character_pose": null,
-      "background_description": null,
+      "image_create_prompt": "Very detailed description of the image including character, background, lighting, composition, and style. Include speech bubble with dialogue text",
+      "character_pose": "What Huh is doing: 'pointing at screen', 'looking at camera', 'gesturing'",
+      "character_expression": "Huh's emotional expression: 'smiling', 'winking', 'excited', 'surprised', 'confident'",
+      "background_description": "Educational background: 'classroom', 'office', 'lab', 'outdoor setting'",
       "needs_animation": true,
       "video_prompt": "Detailed description of animation if needed",
       "transition_to_next": "fade",

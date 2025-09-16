@@ -1,344 +1,153 @@
-# System Architecture - ShortFactory Agent
+# Architecture
 
-## Overview
+## System Overview
 
-ShortFactory Agent follows a multi-agent architecture where four specialized agents work together to create short educational videos. Each agent has specific responsibilities and communicates through well-defined interfaces.
+ShortFactory Agent is a modular AI system that creates short educational videos using a consistent character (Huh) with cosplay capabilities.
 
-## Architecture Diagram
+## 🏗️ Architecture Components
 
+### 1. AI Agents
+- **Script Writer Agent**: Generates 8-scene educational scripts with cosplay instructions
+- **Huh Image Agent**: Creates character-consistent images using Huh character
+- **Audio Agent**: (Future) Text-to-speech generation
+- **Video Agent**: (Future) Final video assembly
+
+### 2. Core Components
+- **Models**: Pydantic data structures (VideoScript, Scene, etc.)
+- **Session Manager**: UUID-based file organization and metadata tracking
+- **Asset Manager**: Huh character image management
+
+### 3. Data Flow
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    ShortFactory Orchestrator                    │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │              Google ADK Orchestration                   │   │
-│  └─────────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────────┘
-                                │
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        Agent Communication                      │
-│                                                                 │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
-│  │   Script    │───▶│   Image     │───▶│   Video     │         │
-│  │   Writer    │    │  Generator  │    │  Generator  │         │
-│  │   Agent     │    │   Agent     │    │   Agent     │         │
-│  └─────────────┘    └─────────────┘    └─────────────┘         │
-│         │                   │                   │               │
-│         │                   │                   │               │
-│         ▼                   ▼                   ▼               │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐         │
-│  │   Audio     │◀───│   Shared    │───▶│   Final     │         │
-│  │  Generator  │    │   Assets    │    │   Video     │         │
-│  │   Agent     │    │   Storage   │    │  Assembly   │         │
-│  └─────────────┘    └─────────────┘    └─────────────┘         │
-└─────────────────────────────────────────────────────────────────┘
+Subject Input → Script Generation → Character Cosplay → Image Generation → Audio Generation → Video Assembly
 ```
 
-## Agent Responsibilities
+## 🎭 Character System
 
-### 1. Script Writer Agent
+### Huh Character
+- **Base Image**: `src/assets/huh.png`
+- **Cosplay System**: Character transforms based on subject
+- **Consistency**: Same character appears in all scenes
+- **Size**: Character stays small, educational content is primary
 
-**Primary Role**: Master story creator and video director
+### Cosplay Process
+1. Load base Huh character
+2. Apply cosplay instructions from script
+3. Generate cosplayed character image
+4. Use cosplayed character for all scene images
 
-**Responsibilities**:
-- Transform subjects into compelling video scripts
-- Design story arc structure (Hook → Setup → Development → Climax → Resolution)
-- Create detailed scene descriptions with visual and audio direction
-- Specify character consistency and visual styles
-- Plan transitions and animation requirements
-- Generate voice tone and dialogue specifications
+## 🔧 Technical Architecture
 
-**Input**:
+### AI Integration
+- **Script Generation**: Google Gemini 2.0 Flash
+- **Image Generation**: Google Flash 2.5 (Nano Banana)
+- **Image Editing**: Text-and-image-to-image editing
+- **API**: `google-generativeai` SDK
+
+### Session Management
+- **UUID-based**: Each session gets unique identifier
+- **File Organization**: Structured folders for all content
+- **Metadata Tracking**: Progress and file information
+- **Logging**: Comprehensive logging for debugging
+
+### Error Handling
+- **Fallbacks**: Mock data when AI fails
+- **Retry Logic**: Automatic retry for transient failures
+- **Logging**: Detailed error logging
+- **Graceful Degradation**: System continues with partial results
+
+## 📊 Data Models
+
+### VideoScript
 ```python
-{
-    "subject": str,           # Topic for the video
-    "language": str,          # Target language (e.g., "Korean", "English")
-    "max_video_scenes": int   # Maximum number of scenes (5-8 recommended)
-}
+class VideoScript(BaseModel):
+    title: str
+    main_character_description: str
+    character_cosplay_instructions: str  # Cosplay instructions
+    overall_style: str
+    scenes: List[Scene]
 ```
 
-**Output**:
+### Scene
 ```python
-VideoScript {
-    title: str,
-    main_character_description: str,
-    overall_style: str,
-    scenes: List[Scene] {
-        scene_type: SceneType,
-        image_style: ImageStyle,
-        image_create_prompt: str,
-        dialogue: str,
-        voice_tone: VoiceTone,
-        needs_animation: bool,
-        video_prompt: Optional[str],
-        transition_type: TransitionType,
-        hook_technique: Optional[HookTechnique]  # Only for first scene
-    }
-}
+class Scene(BaseModel):
+    scene_number: int
+    scene_type: SceneType  # hook, explanation, visual_demo, etc.
+    dialogue: str
+    voice_tone: VoiceTone
+    image_style: ImageStyle
+    image_create_prompt: str
+    character_pose: Optional[str]        # What character is doing
+    background_description: Optional[str] # Educational background
+    # ... other fields
 ```
 
-**Integration Points**:
-- Uses Google ADK for AI model access
-- Outputs structured data for other agents
-- Coordinates with image agent for visual consistency
+## 🚀 Workflow
 
-### 2. Image Generate Agent
+### Current Workflow (Phase 2)
+1. **Input**: User provides subject
+2. **Script Generation**: AI creates 8-scene script with cosplay
+3. **Character Creation**: Huh character is cosplayed
+4. **Image Generation**: 8 educational images with consistent character
+5. **Output**: Files saved in session directory
 
-**Primary Role**: Visual content creator
+### Future Workflow (Complete)
+1. **Input**: User provides subject
+2. **Script Generation**: AI creates 8-scene script with cosplay
+3. **Character Creation**: Huh character is cosplayed
+4. **Image Generation**: 8 educational images with consistent character
+5. **Audio Generation**: Voice-over for each scene
+6. **Video Assembly**: Combine images and audio into final video
+7. **Output**: Complete video file
 
-**Responsibilities**:
-- Generate images based on script descriptions
-- Maintain character consistency across all scenes
-- Apply appropriate visual styles (educational, cinematic, cartoon)
-- Create special effects and overlays
-- Optimize images for video composition
-- Handle different image formats and resolutions
-
-**Input**:
-```python
-{
-    "script": VideoScript,
-    "scene_index": int,
-    "character_reference": str,  # For consistency
-    "style_requirements": ImageStyle
-}
-```
-
-**Output**:
-```python
-{
-    "image_path": str,
-    "image_metadata": {
-        "style": ImageStyle,
-        "character_consistency": bool,
-        "resolution": tuple,
-        "format": str
-    }
-}
-```
-
-**Integration Points**:
-- Receives detailed prompts from script writer
-- Provides images to video generator
-- Maintains character consistency database
-- Uses Google Vision API for quality validation
-
-### 3. Video Generate Agent
-
-**Primary Role**: Animation and video composition specialist
-
-**Responsibilities**:
-- Combine static images with animations
-- Implement scene transitions
-- Add visual effects and motion
-- Synchronize timing with audio
-- Create smooth video sequences
-- Optimize for different platforms
-
-**Input**:
-```python
-{
-    "script": VideoScript,
-    "images": List[ImageData],
-    "animation_requirements": List[AnimationSpec],
-    "transition_specs": List[TransitionSpec]
-}
-```
-
-**Output**:
-```python
-{
-    "video_path": str,
-    "video_metadata": {
-        "duration": float,
-        "resolution": tuple,
-        "fps": int,
-        "format": str,
-        "file_size": int
-    }
-}
-```
-
-**Integration Points**:
-- Receives images from image generator
-- Coordinates timing with audio agent
-- Uses Google Video Intelligence API
-- Outputs final video for assembly
-
-### 4. Audio Generate Agent
-
-**Primary Role**: Voice and sound production specialist
-
-**Responsibilities**:
-- Generate voice narration from script dialogue
-- Apply emotional tones and voice characteristics
-- Create background music and sound effects
-- Synchronize audio with video timing
-- Handle multiple languages and accents
-- Optimize audio quality and compression
-
-**Input**:
-```python
-{
-    "script": VideoScript,
-    "voice_requirements": {
-        "tone": VoiceTone,
-        "language": str,
-        "speed": float,
-        "pitch": float
-    }
-}
-```
-
-**Output**:
-```python
-{
-    "audio_path": str,
-    "audio_metadata": {
-        "duration": float,
-        "format": str,
-        "sample_rate": int,
-        "channels": int,
-        "voice_tone": VoiceTone
-    }
-}
-```
-
-**Integration Points**:
-- Receives dialogue and tone from script writer
-- Coordinates timing with video generator
-- Uses Google Text-to-Speech API
-- Provides final audio for video assembly
-
-## Data Flow
-
-### 1. Initial Request Processing
-```
-User Input → Orchestrator → Script Writer Agent
-```
-
-### 2. Script Generation
-```
-Script Writer Agent → VideoScript Object → Shared Storage
-```
-
-### 3. Parallel Asset Generation
-```
-VideoScript → Image Agent (parallel) → Image Assets
-VideoScript → Audio Agent (parallel) → Audio Assets
-```
-
-### 4. Video Assembly
-```
-Image Assets + Audio Assets → Video Agent → Final Video
-```
-
-### 5. Quality Assurance
-```
-Final Video → Quality Check → User Output
-```
-
-## Communication Patterns
-
-### Synchronous Communication
-- **Script Generation**: Must complete before other agents start
-- **Quality Validation**: Final step before delivery
-
-### Asynchronous Communication
-- **Asset Generation**: Image and audio generation can run in parallel
-- **Background Processing**: Non-critical tasks can be queued
-
-### Event-Driven Communication
-- **Progress Updates**: Agents notify orchestrator of completion
-- **Error Handling**: Failures trigger retry or fallback mechanisms
-
-## Error Handling and Resilience
-
-### Agent-Level Error Handling
-```python
-class AgentError(Exception):
-    """Base exception for agent errors"""
-    pass
-
-class ScriptGenerationError(AgentError):
-    """Script writer specific errors"""
-    pass
-
-class ImageGenerationError(AgentError):
-    """Image generator specific errors"""
-    pass
-```
-
-### Orchestration-Level Error Handling
-- **Retry Logic**: Failed agents can retry with different parameters
-- **Fallback Mechanisms**: Alternative approaches for critical failures
-- **Graceful Degradation**: Partial results when full pipeline fails
-
-### Monitoring and Logging
-```python
-# Each agent logs its activities
-logger.info(f"Agent {self.name} started processing {request_id}")
-logger.info(f"Agent {self.name} completed processing {request_id}")
-logger.error(f"Agent {self.name} failed: {error_message}")
-```
-
-## Scalability Considerations
-
-### Horizontal Scaling
-- Each agent can be deployed as separate microservices
-- Multiple instances of each agent can handle concurrent requests
-- Load balancing across agent instances
-
-### Vertical Scaling
-- Individual agents can be optimized for specific workloads
-- Resource allocation based on agent requirements
-- Caching strategies for frequently used assets
-
-### Performance Optimization
-- **Caching**: Store frequently generated assets
-- **Preprocessing**: Prepare common elements in advance
-- **Batch Processing**: Handle multiple requests efficiently
-
-## Security and Privacy
-
-### Data Protection
-- **Input Validation**: Sanitize all user inputs
-- **Output Filtering**: Ensure generated content is appropriate
-- **Data Retention**: Clear temporary files and sensitive data
+## 🔒 Security & Reliability
 
 ### API Security
-- **Authentication**: Secure access to Google APIs
-- **Rate Limiting**: Prevent abuse of external services
-- **Monitoring**: Track usage and detect anomalies
+- API keys stored in environment variables
+- No hardcoded credentials
+- Secure API communication
 
-## Deployment Architecture
+### Error Recovery
+- Comprehensive error handling
+- Fallback to mock data when needed
+- Detailed logging for debugging
+- Graceful degradation
 
-### Development Environment
-```
-Local Development → Docker Containers → Local Testing
-```
+### Performance
+- Efficient file management
+- Optimized API calls
+- Rate limiting compliance
+- Memory management
 
-### Production Environment
-```
-Load Balancer → Kubernetes Cluster → Google Cloud Services
-```
+## 📈 Scalability
 
-### Monitoring and Observability
-- **Metrics**: Performance, error rates, resource usage
-- **Logging**: Structured logging across all agents
-- **Tracing**: End-to-end request tracking
-- **Alerting**: Proactive issue detection
+### Current Limitations
+- Single session processing
+- Sequential image generation
+- Local file storage
 
-## Future Extensibility
+### Future Improvements
+- Concurrent session processing
+- Parallel image generation
+- Cloud storage integration
+- Caching system
 
-### Plugin Architecture
-- **Custom Agents**: Easy addition of new agent types
-- **Tool Integration**: Flexible tool and service integration
-- **Format Support**: Extensible output format support
+## 🛠️ Development Guidelines
 
-### AI Model Flexibility
-- **Model Agnostic**: Support for different AI models
-- **Fine-tuning**: Custom model training capabilities
-- **A/B Testing**: Compare different model approaches
+### Code Organization
+- Modular agent-based architecture
+- Clear separation of concerns
+- Consistent error handling
+- Comprehensive logging
 
-This architecture provides a solid foundation for the ShortFactory Agent system while maintaining flexibility for future enhancements and scaling.
+### Testing Strategy
+- Unit tests for each agent
+- Integration tests for workflows
+- Mock data for testing
+- Error scenario testing
+
+### Documentation
+- Comprehensive code documentation
+- API documentation
+- User guides
+- Development guides
