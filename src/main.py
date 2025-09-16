@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-def main():
+def main(subject=None):
     """Main program for ShortFactory Agent"""
     
     print("🎬 ShortFactory Agent")
@@ -28,12 +28,13 @@ def main():
         return
     
     # Get user input
-    print("\n📝 Enter your video subject:")
-    subject = input("Subject: ").strip()
-    
-    if not subject:
-        print("❌ No subject provided. Exiting.")
-        return
+    if subject is None:
+        print("\n📝 Enter your video subject:")
+        subject = input("Subject: ").strip()
+        
+        if not subject:
+            print("❌ No subject provided. Exiting.")
+            return
     
     print(f"\n🎯 Creating video for: {subject}")
     

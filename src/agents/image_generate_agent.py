@@ -286,9 +286,6 @@ Requirements:
             # Generate mock image for testing
             image_data = self._generate_mock_scene_image(scene_prompt)
         else:
-            # Save cosplay prompt for debugging
-            self._save_prompt(session_id, 0, cosplay_prompt, "image")
-            
             # Generate scene using comprehensive information
             image_data = self._generate_scene_with_huh(
                 cosplayed_huh_image, scene_prompt
