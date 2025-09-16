@@ -234,26 +234,37 @@ Requirements:
             # Convert Huh image to base64 for API
             base64_huh = base64.b64encode(self.huh_image_data).decode('utf-8')
             
-            # Use Google Flash 2.5 for cosplay transformation
+            # Use Gemini 2.5 Flash Image for cosplay transformation (text-and-image-to-image)
+            # Convert image to PIL Image object for proper API format
+            huh_image = Image.open(BytesIO(self.huh_image_data))
+            
             response = self.client.models.generate_content(
                 model=self.model_name,
-                contents=[
-                    cosplay_prompt,
-                    {
-                        "inline_data": {
-                            "mime_type": "image/png",
-                            "data": base64_huh
-                        }
-                    }
-                ],
+                contents=[cosplay_prompt, huh_image],
+                config={
+                    "temperature": 0.7,
+                    "top_p": 0.8,
+                    "top_k": 40,
+                    "max_output_tokens": 8192,
+                }
             )
             
             # Process response
-            for part in response.candidates[0].content.parts:
-                if part.inline_data is not None:
-                    image_data = part.inline_data.data
-                    logger.info("Successfully created cosplayed Huh character")
-                    return image_data
+            if response.candidates and response.candidates[0].content and response.candidates[0].content.parts:
+                parts = response.candidates[0].content.parts
+                if hasattr(parts, '__iter__'):
+                    for part in parts:
+                        if part.inline_data is not None:
+                            image_data = part.inline_data.data
+                            logger.info("Successfully created cosplayed Huh character")
+                            return image_data
+                else:
+                    # Single part
+                    part = parts
+                    if part.inline_data is not None:
+                        image_data = part.inline_data.data
+                        logger.info("Successfully created cosplayed Huh character")
+                        return image_data
             
             logger.warning("No image data found in cosplay response, using original Huh")
             return self.huh_image_data
@@ -453,39 +464,64 @@ Style instruction: {style_instruction}
         try:
             logger.info(f"Generating scene with Huh: {scene_prompt[:100]}...")
             
-            # Convert image to base64 for API
-            base64_huh = base64.b64encode(cosplayed_huh_image).decode('utf-8')
+            if self.use_mock:
+                logger.info("Using enhanced mock image generation")
+                return self._generate_enhanced_mock_image(scene_prompt)
             
-            # Use Google Flash 2.5 for scene generation
+            # Use Gemini 2.5 Flash Image for scene generation (text-and-image-to-image)
+            # Convert image to PIL Image object for proper API format
+            cosplayed_huh_pil = Image.open(BytesIO(cosplayed_huh_image))
+            
             response = self.client.models.generate_content(
                 model=self.model_name,
-                contents=[
-                    scene_prompt,
-                    {
-                        "inline_data": {
-                            "mime_type": "image/png",
-                            "data": base64_huh
-                        }
-                    }
-                ],
+                contents=[scene_prompt, cosplayed_huh_pil],
+                config={
+                    "temperature": 0.7,
+                    "top_p": 0.8,
+                    "top_k": 40,
+                    "max_output_tokens": 8192,
+                }
             )
             
-            # Process response
-            for part in response.candidates[0].content.parts:
-                if part.text is not None:
-                    logger.info(f"Text response: {part.text}")
-                elif part.inline_data is not None:
-                    image_data = part.inline_data.data
-                    logger.info("Successfully generated scene with Huh")
-                    return image_data
+            # Extract image data from response
+            if response.candidates and response.candidates[0].content.parts:
+                parts = response.candidates[0].content.parts
+                if hasattr(parts, '__iter__'):
+                    for part in parts:
+                        if hasattr(part, 'inline_data') and part.inline_data:
+                            logger.info("✅ Scene image generated successfully with Gemini 2.5 Flash Image")
+                            return part.inline_data.data
+                else:
+                    # Single part
+                    if hasattr(parts, 'inline_data') and parts.inline_data:
+                        logger.info("✅ Scene image generated successfully with Gemini 2.5 Flash Image")
+                        return parts.inline_data.data
             
-            # If no image data found, fall back to mock
             logger.warning("No image data found in scene response, using mock image")
-            return self._generate_mock_scene_image(scene_prompt)
+            return self._generate_enhanced_mock_image(scene_prompt)
             
         except Exception as e:
             logger.error(f"Error generating scene with Huh: {str(e)}")
             logger.info("Falling back to mock image")
+            return self._generate_mock_scene_image(scene_prompt)
+    
+    def _generate_enhanced_mock_image(self, scene_prompt: str) -> bytes:
+        """
+        Generate enhanced mock image (no external APIs)
+        
+        Args:
+            scene_prompt: Scene prompt for image generation
+            
+        Returns:
+            bytes: Generated image data
+        """
+        try:
+            # Use enhanced mock image generation
+            logger.info("Using enhanced mock image generation")
+            return self._generate_mock_scene_image(scene_prompt)
+                
+        except Exception as e:
+            logger.error(f"Error in image generation: {str(e)}")
             return self._generate_mock_scene_image(scene_prompt)
     
     def _generate_mock_cosplayed_huh(self, cosplay_instructions: str) -> bytes:
@@ -551,15 +587,80 @@ Style instruction: {style_instruction}
         except:
             font = None
         
-        text = f"Huh in Educational Scene\n{scene_prompt[:50]}...\nMock Image"
-        bbox = draw.textbbox((0, 0), text, font=font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
+        # Create a more sophisticated mock image
+        # Background gradient effect
+        for y in range(height):
+            color_ratio = y / height
+            r = int(135 + color_ratio * 120)  # Light blue to white
+            g = int(206 + color_ratio * 49)
+            b = int(235 + color_ratio * 20)
+            draw.line([(0, y), (width, y)], fill=(r, g, b))
         
-        x = (width - text_width) // 2
-        y = (height - text_height) // 2
+        # Add Huh character (more detailed)
+        huh_x, huh_y = width // 3, height // 2
+        huh_size = 80
         
-        draw.text((x, y), text, fill='darkgreen', font=font)
+        # Main body (blob-like)
+        draw.ellipse([huh_x - huh_size, huh_y - huh_size, huh_x + huh_size, huh_y + huh_size], 
+                    fill='#FFD700', outline='#FFA500', width=4)
+        
+        # Eyes
+        eye_size = 12
+        draw.ellipse([huh_x - 25, huh_y - 20, huh_x - 25 + eye_size, huh_y - 20 + eye_size], fill='black')
+        draw.ellipse([huh_x + 13, huh_y - 20, huh_x + 13 + eye_size, huh_y - 20 + eye_size], fill='black')
+        
+        # Eye highlights
+        draw.ellipse([huh_x - 22, huh_y - 18, huh_x - 20, huh_y - 16], fill='white')
+        draw.ellipse([huh_x + 16, huh_y - 18, huh_x + 18, huh_y - 16], fill='white')
+        
+        # Smile
+        draw.arc([huh_x - 30, huh_y - 5, huh_x + 30, huh_y + 25], 0, 180, fill='black', width=3)
+        
+        # Arms (simple lines)
+        draw.line([huh_x - huh_size, huh_y, huh_x - huh_size - 30, huh_y + 20], fill='#FFA500', width=6)
+        draw.line([huh_x + huh_size, huh_y, huh_x + huh_size + 30, huh_y + 20], fill='#FFA500', width=6)
+        
+        # Add educational elements
+        # Chart/Graph representation
+        chart_x, chart_y = width // 2, height // 4
+        chart_width, chart_height = 200, 120
+        draw.rectangle([chart_x, chart_y, chart_x + chart_width, chart_y + chart_height], 
+                      fill='white', outline='black', width=2)
+        
+        # Simple bar chart
+        bar_width = 30
+        bar_heights = [60, 80, 40, 90, 70]
+        colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7']
+        for i, (height, color) in enumerate(zip(bar_heights, colors)):
+            x = chart_x + 20 + i * (bar_width + 10)
+            y = chart_y + chart_height - height - 10
+            draw.rectangle([x, y, x + bar_width, chart_y + chart_height - 10], fill=color)
+        
+        # Add speech bubble
+        bubble_x, bubble_y = huh_x + huh_size + 20, huh_y - 60
+        bubble_width, bubble_height = 250, 80
+        
+        # Bubble body
+        draw.rectangle([bubble_x, bubble_y, bubble_x + bubble_width, bubble_y + bubble_height], 
+                      fill='white', outline='black', width=2)
+        
+        # Bubble tail
+        tail_points = [
+            (bubble_x, bubble_y + bubble_height // 2),
+            (bubble_x - 15, bubble_y + bubble_height // 2 + 10),
+            (bubble_x - 15, bubble_y + bubble_height // 2 - 10)
+        ]
+        draw.polygon(tail_points, fill='white', outline='black', width=2)
+        
+        # Speech text
+        speech_text = "Let me explain this!"
+        draw.text((bubble_x + 15, bubble_y + 25), speech_text, fill='black', font=font)
+        
+        # Add title
+        title_text = "Educational Video Scene"
+        title_bbox = draw.textbbox((0, 0), title_text, font=font)
+        title_width = title_bbox[2] - title_bbox[0]
+        draw.text((width - title_width - 20, 20), title_text, fill='darkblue', font=font)
         
         # Add scene elements
         draw.rectangle([width//4, height//4, 3*width//4, 3*height//4], outline='darkgreen', width=5)

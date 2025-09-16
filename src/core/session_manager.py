@@ -178,7 +178,9 @@ class SessionManager:
             str: Path to saved image file
         """
         session_dir = self.get_session_dir(session_id)
-        image_path = session_dir / "images" / f"scene_{scene_number}.{format}"
+        images_dir = session_dir / "images"
+        images_dir.mkdir(parents=True, exist_ok=True)
+        image_path = images_dir / f"scene_{scene_number}.{format}"
         
         # Save image
         with open(image_path, 'wb') as f:

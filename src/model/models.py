@@ -9,6 +9,10 @@ class SceneType(str, Enum):
     STORY_TELLING = "story_telling"  # Story-telling scene
     HOOK = "hook"  # Opening hook scene
     CONCLUSION = "conclusion"  # Closing/summary scene
+    EXAMPLE = "example"  # Example scene
+    STATISTIC = "statistic"  # Statistical information scene
+    CALL_TO_ACTION = "call_to_action"  # Call to action scene
+    SUMMARY = "summary"  # Summary scene
 
 class ImageStyle(str, Enum):
     # Basic styles
@@ -48,16 +52,23 @@ class VoiceTone(str, Enum):
     MYSTERIOUS = "mysterious"
     SURPRISED = "surprised"
     CONFIDENT = "confident"
+    
+    # Educational tones
+    INFORMATIVE = "informative"
+    ENTHUSIASTIC = "enthusiastic"
+    IMPRESSED = "impressed"
+    ENCOURAGING = "encouraging"
     WORRIED = "worried"
     PLAYFUL = "playful"
     DRAMATIC = "dramatic"
     CALM = "calm"
-    ENTHUSIASTIC = "enthusiastic"
 
 class TransitionType(str, Enum):
     FADE = "fade"
     SLIDE_LEFT = "slide_left"
     SLIDE_RIGHT = "slide_right"
+    SLIDE = "slide"
+    CUT = "cut"
     ZOOM_IN = "zoom_in"
     ZOOM_OUT = "zoom_out"
     DISSOLVE = "dissolve"

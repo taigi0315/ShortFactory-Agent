@@ -8,7 +8,7 @@ import json
 import logging
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
 from model.models import SceneType, ImageStyle, VoiceTone, TransitionType, HookTechnique, VideoScript, Scene, ElevenLabsSettings
 
 # Load environment variables from .env file
@@ -36,21 +36,20 @@ class ScriptWriterAgent:
         if not self.api_key:
             raise ValueError("Google API key is required. Set GEMINI_API_KEY or GOOGLE_API_KEY environment variable or pass api_key parameter.")
         
-        # Configure Gemini
-        genai.configure(api_key=self.api_key)
+        # Configure Google Generative AI client (new SDK)
+        self.client = genai.Client(api_key=self.api_key)
+        self.model_name = "gemini-2.5-flash"
         
-        # Initialize the model
-        self.model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash-exp",
-            generation_config={
-                "temperature": 0.7,
-                "top_p": 0.8,
-                "top_k": 40,
-                "max_output_tokens": 8192,
-            }
-        )
+        # Generation config for new SDK
+        self.generation_config = {
+            "temperature": 0.7,
+            "top_p": 0.8,
+            "top_k": 40,
+            "max_output_tokens": 8192,
+            "response_mime_type": "application/json"
+        }
         
-        logger.info("Script Writer Agent initialized with Gemini 2.0 Flash")
+        logger.info("Script Writer Agent initialized with Gemini 2.5 Flash")
     
     def generate_script(self, subject: str, language: str = "English", max_video_scenes: int = 8) -> VideoScript:
         """
@@ -70,8 +69,12 @@ class ScriptWriterAgent:
             # Create the prompt for Gemini
             prompt = self._create_gemini_prompt(subject, language, max_video_scenes)
             
-            # Generate content using Gemini
-            response = self.model.generate_content(prompt)
+            # Generate content using Gemini (new SDK)
+            response = self.client.models.generate_content(
+                model=self.model_name,
+                contents=[prompt],
+                config=self.generation_config
+            )
             
             # Parse the response into VideoScript object
             script = self._parse_gemini_response(response.text, subject)
