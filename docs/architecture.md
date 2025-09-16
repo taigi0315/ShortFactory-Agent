@@ -2,24 +2,30 @@
 
 ## System Overview
 
-ShortFactory Agent is a modular AI system that creates short educational videos using a consistent character (Huh) with cosplay capabilities.
+ShortFactory Agent is a **Google ADK (Agent Development Kit)** based modular AI system that creates short educational videos using a consistent character (Huh) with cosplay capabilities.
 
-## 🏗️ Architecture Components
+## 🏗️ ADK Architecture Components
 
-### 1. AI Agents
-- **Script Writer Agent**: Generates 8-scene educational scripts with cosplay instructions
-- **Huh Image Agent**: Creates character-consistent images using Huh character
-- **Audio Agent**: (Future) Text-to-speech generation
-- **Video Agent**: (Future) Final video assembly
+### 1. ADK Agents
+- **ADKScriptWriterAgent**: Generates 8-scene educational scripts with cosplay instructions using Gemini 2.5 Flash
+- **ADKImageGenerateAgent**: Creates character-consistent images using Huh character with Gemini 2.5 Flash Image
+- **ADKAudioGenerateAgent**: (Future) Text-to-speech generation
+- **ADKVideoGenerateAgent**: (Future) Final video assembly
 
-### 2. Core Components
+### 2. ADK Core Components
+- **ADK Runner**: Central orchestrator for all agents
+- **InMemorySessionService**: Session state management
+- **InMemoryArtifactService**: Generated content storage
+- **InMemoryMemoryService**: Agent memory and context
+
+### 3. Core Components
 - **Models**: Pydantic data structures (VideoScript, Scene, etc.)
 - **Session Manager**: UUID-based file organization and metadata tracking
 - **Asset Manager**: Huh character image management
 
-### 3. Data Flow
+### 4. ADK Data Flow
 ```
-Subject Input → Script Generation → Character Cosplay → Image Generation → Audio Generation → Video Assembly
+User Input → ADK Runner → ADKScriptWriterAgent → Script Generation → ADKImageGenerateAgent → Cosplay Generation → Scene Image Generation → Session Storage → Complete Assets
 ```
 
 ## 🎭 Character System
@@ -38,11 +44,12 @@ Subject Input → Script Generation → Character Cosplay → Image Generation �
 
 ## 🔧 Technical Architecture
 
-### AI Integration
-- **Script Generation**: Google Gemini 2.0 Flash
-- **Image Generation**: Google Flash 2.5 (Nano Banana)
+### ADK AI Integration
+- **Script Generation**: Google Gemini 2.5 Flash via ADK
+- **Image Generation**: Google Gemini 2.5 Flash Image via ADK
 - **Image Editing**: Text-and-image-to-image editing
-- **API**: `google-generativeai` SDK
+- **Framework**: Google ADK (Agent Development Kit)
+- **API**: Direct API calls within ADK agents
 
 ### Session Management
 - **UUID-based**: Each session gets unique identifier
@@ -84,20 +91,21 @@ class Scene(BaseModel):
 
 ## 🚀 Workflow
 
-### Current Workflow (Phase 2)
+### Current ADK Workflow (Phase 2)
 1. **Input**: User provides subject
-2. **Script Generation**: AI creates 8-scene script with cosplay
-3. **Character Creation**: Huh character is cosplayed
-4. **Image Generation**: 8 educational images with consistent character
-5. **Output**: Files saved in session directory
+2. **ADK Runner**: Orchestrates multi-agent workflow
+3. **ADKScriptWriterAgent**: Creates 8-scene script with cosplay
+4. **ADKImageGenerateAgent**: Cosplays Huh character
+5. **ADKImageGenerateAgent**: Generates 8 educational images with consistent character
+6. **Output**: Files saved in session directory
 
-### Future Workflow (Complete)
+### Future ADK Workflow (Complete)
 1. **Input**: User provides subject
-2. **Script Generation**: AI creates 8-scene script with cosplay
-3. **Character Creation**: Huh character is cosplayed
-4. **Image Generation**: 8 educational images with consistent character
-5. **Audio Generation**: Voice-over for each scene
-6. **Video Assembly**: Combine images and audio into final video
+2. **ADK Runner**: Orchestrates multi-agent workflow
+3. **ADKScriptWriterAgent**: Creates 8-scene script with cosplay
+4. **ADKImageGenerateAgent**: Cosplays Huh character and generates images
+5. **ADKAudioGenerateAgent**: Generates voice-over for each scene
+6. **ADKVideoGenerateAgent**: Combines images and audio into final video
 7. **Output**: Complete video file
 
 ## 🔒 Security & Reliability

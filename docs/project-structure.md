@@ -4,25 +4,31 @@
 
 ```
 ShortFactory-Agent/
-├── run.py                          # Main entry point (use this to run)
+├── run_adk.py                      # ADK Main entry point (use this to run)
 ├── src/                            # Source code
-│   ├── main.py                     # Main program logic
-│   ├── agents/                     # AI Agents
-│   │   ├── script_writer_agent.py  # Generates video scripts with cosplay
-│   │   └── huh_image_agent.py      # Generates images using Huh character
+│   ├── main_adk.py                 # ADK Main program logic
+│   ├── agents/                     # ADK Agents
+│   │   ├── adk_script_writer_agent.py  # ADK Script generation with cosplay
+│   │   └── adk_image_generate_agent.py # ADK Image generation with Huh character
 │   ├── core/                       # Core functionality
-│   │   ├── models.py               # Pydantic data models
 │   │   └── session_manager.py      # Session and file management
+│   ├── model/                      # Data models
+│   │   └── models.py               # Pydantic data models
 │   ├── assets/                     # Static assets
 │   │   └── huh.png                 # Main character image
 │   └── utils/                      # Utility functions
 ├── docs/                           # Documentation
-├── examples/                       # Example scripts
+│   ├── ADK-ARCHITECTURE.md         # ADK Architecture guide
+│   ├── ADK-MIGRATION-PLAN.md       # ADK Migration plan
+│   └── ...                         # Other documentation
 ├── sessions/                       # Generated content (UUID-based)
 │   └── [session-id]/
 │       ├── script.json             # Generated script
 │       ├── images/                 # Generated images
 │       │   └── scene_1.png
+│       ├── prompts/                # Saved prompts for debugging
+│       │   ├── image/
+│       │   └── video/
 │       ├── audios/                 # Future: Generated audio
 │       ├── videos/                 # Future: Generated video
 │       └── metadata.json           # Session metadata
@@ -32,15 +38,15 @@ ShortFactory-Agent/
 ## 🎯 Key Files
 
 ### Entry Points
-- **`run.py`** - Main entry point (recommended)
-- **`src/main.py`** - Main program logic
+- **`run_adk.py`** - ADK Main entry point (recommended)
+- **`src/main_adk.py`** - ADK Main program logic
 
-### AI Agents
-- **`src/agents/script_writer_agent.py`** - Generates video scripts with cosplay instructions
-- **`src/agents/huh_image_agent.py`** - Generates images using Huh character
+### ADK Agents
+- **`src/agents/adk_script_writer_agent.py`** - ADK Script generation with cosplay instructions
+- **`src/agents/adk_image_generate_agent.py`** - ADK Image generation using Huh character
 
 ### Core Components
-- **`src/core/models.py`** - Pydantic data models (VideoScript, Scene, etc.)
+- **`src/model/models.py`** - Pydantic data models (VideoScript, Scene, etc.)
 - **`src/core/session_manager.py`** - Session and file management
 
 ### Assets
@@ -50,10 +56,10 @@ ShortFactory-Agent/
 
 ```bash
 # Recommended way
-python run.py
+python run_adk.py
 
 # Alternative way
-python src/main.py
+python src/main_adk.py
 ```
 
 ## 📊 Session Structure
@@ -61,6 +67,9 @@ python src/main.py
 Each session creates a UUID-based directory with:
 - `script.json` - Generated video script
 - `images/scene_X.png` - Generated images for each scene
+- `prompts/` - Saved prompts for debugging
+  - `image/scene_X.txt` - Image generation prompts
+  - `video/scene_X.txt` - Video generation prompts (future)
 - `audios/` - Future: Generated audio files
 - `videos/` - Future: Generated video files
 - `metadata.json` - Session progress and file information
@@ -68,44 +77,46 @@ Each session creates a UUID-based directory with:
 
 ## 🔧 Development Guidelines
 
-### Adding New Agents
-1. Create agent file in `src/agents/`
-2. Follow existing patterns (error handling, logging)
-3. Update documentation
-4. Add tests in `tests/`
+### Adding New ADK Agents
+1. Create ADK agent file in `src/agents/` (e.g., `adk_audio_generate_agent.py`)
+2. Follow ADK patterns (inherit from `Agent` class)
+3. Implement error handling and logging
+4. Update documentation
+5. Add tests in `tests/`
 
 ### File Organization
-- **Agents**: `src/agents/`
+- **ADK Agents**: `src/agents/`
 - **Core Logic**: `src/core/`
+- **Data Models**: `src/model/`
 - **Utilities**: `src/utils/`
 - **Assets**: `src/assets/`
 - **Documentation**: `docs/`
-- **Examples**: `examples/`
 - **Tests**: `tests/`
 
 ### Import Structure
 ```python
-# For agents
-from ..models.models import VideoScript
+# For ADK agents
+from ..model.models import VideoScript
 from ..core.session_manager import SessionManager
 
-# For main program
-from session_manager import SessionManager
-from script_writer_agent import ScriptWriterAgent
-from huh_image_agent import HuhImageAgent
+# For main ADK program
+from core.session_manager import SessionManager
+from agents.adk_script_writer_agent import ADKScriptWriterAgent
+from agents.adk_image_generate_agent import ADKImageGenerateAgent
 ```
 
 ## 📈 Current Status
 
 ### ✅ Completed
-- Script generation with cosplay instructions
-- Image generation using Huh character
+- ADK Script generation with cosplay instructions
+- ADK Image generation using Huh character
+- Actual Gemini 2.5 Flash Image API integration
 - Session management system
 - Comprehensive documentation
 
 ### 🚧 Next Phase
-- Audio generation agent
-- Video generation agent
+- ADK Audio generation agent
+- ADK Video generation agent
 - Final video assembly
 
 ## 🎭 Character System

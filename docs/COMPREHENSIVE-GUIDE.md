@@ -2,13 +2,14 @@
 
 ## 🎯 Project Overview
 
-**ShortFactory Agent** is an AI-powered system that creates short educational videos using a consistent character (Huh) with cosplay capabilities. The system generates scripts, creates character-consistent images, and will eventually produce audio and video content.
+**ShortFactory Agent** is a **Google ADK (Agent Development Kit)** based AI-powered system that creates short educational videos using a consistent character (Huh) with cosplay capabilities. The system generates scripts, creates character-consistent images, and will eventually produce audio and video content.
 
-### 🎬 Current Status: **Phase 2 Complete** ✅
-- ✅ Script Generation (with cosplay instructions)
-- ✅ Image Generation (Huh character with cosplay)
-- ⏳ Audio Generation (Next Phase)
-- ⏳ Video Generation (Final Phase)
+### 🎬 Current Status: **Phase 2 Complete with ADK** ✅
+- ✅ ADK Script Generation (with cosplay instructions)
+- ✅ ADK Image Generation (Huh character with cosplay)
+- ✅ Actual Gemini 2.5 Flash Image API integration
+- ⏳ ADK Audio Generation (Next Phase)
+- ⏳ ADK Video Generation (Final Phase)
 
 ### 🎭 Key Features
 - **Huh Character**: Consistent character across all videos
@@ -23,28 +24,34 @@
 
 ```
 ShortFactory-Agent/
-├── run.py                          # Main entry point (use this to run)
+├── run_adk.py                      # ADK Main entry point (use this to run)
 ├── src/                            # Source code
-│   ├── main.py                     # Main program logic
-│   ├── agents/                     # AI Agents
-│   │   ├── script_writer_agent.py  # Generates video scripts with cosplay
-│   │   └── huh_image_agent.py      # Generates images using Huh character
+│   ├── main_adk.py                 # ADK Main program logic
+│   ├── agents/                     # ADK Agents
+│   │   ├── adk_script_writer_agent.py  # ADK Script generation with cosplay
+│   │   └── adk_image_generate_agent.py # ADK Image generation with Huh character
 │   ├── core/                       # Core functionality
-│   │   ├── models.py               # Pydantic data models
 │   │   └── session_manager.py      # Session and file management
+│   ├── model/                      # Data models
+│   │   └── models.py               # Pydantic data models
 │   ├── assets/                     # Static assets
 │   │   └── huh.png                 # Main character image
 │   └── utils/                      # Utility functions
 ├── docs/                           # Documentation
+│   ├── ADK-ARCHITECTURE.md         # ADK Architecture guide
+│   ├── ADK-MIGRATION-PLAN.md       # ADK Migration plan
+│   └── ...                         # Other documentation
 ├── sessions/                       # Generated content (UUID-based)
 │   └── [session-id]/
 │       ├── script.json             # Generated script
 │       ├── images/                 # Generated images
 │       │   └── scene_1.png
+│       ├── prompts/                # Saved prompts for debugging
+│       │   ├── image/
+│       │   └── video/
 │       ├── audios/                 # Future: Generated audio
 │       ├── videos/                 # Future: Generated video
 │       └── metadata.json           # Session metadata
-├── examples/                       # Example scripts
 └── tests/                          # Test files
 ```
 
@@ -61,33 +68,35 @@ ShortFactory-Agent/
 
 ### Quick Start
 ```bash
-# Run the main program
-python run.py
+# Run the ADK main program
+python run_adk.py
 
 # Or directly
-python src/main.py
+python src/main_adk.py
 ```
 
 ### What Happens
 1. **Input**: You provide a subject (e.g., "What is Python?")
-2. **Script Generation**: AI creates 8-scene script with cosplay instructions
-3. **Character Creation**: Huh character is cosplayed based on script
-4. **Image Generation**: 8 educational images created with Huh character
-5. **Output**: All files saved in `sessions/[uuid]/` directory
+2. **ADK Runner**: Orchestrates multi-agent workflow
+3. **ADKScriptWriterAgent**: Creates 8-scene script with cosplay instructions
+4. **ADKImageGenerateAgent**: Cosplays Huh character based on script
+5. **ADKImageGenerateAgent**: Creates 8 educational images with Huh character
+6. **Output**: All files saved in `sessions/[uuid]/` directory
 
 ---
 
 ## 🤖 AI Agents
 
-### 1. Script Writer Agent (`script_writer_agent.py`)
-**Purpose**: Generates comprehensive video scripts with cosplay instructions
+### 1. ADK Script Writer Agent (`adk_script_writer_agent.py`)
+**Purpose**: Generates comprehensive video scripts with cosplay instructions using ADK
 
 **Features**:
-- Uses Google Gemini 2.0 Flash
+- Uses Google Gemini 2.5 Flash via ADK
 - Creates 8 educational scenes
 - Includes character cosplay instructions
 - Generates detailed image prompts
 - Specifies character poses and backgrounds
+- Built-in error handling and fallbacks
 
 **Output**: `VideoScript` object with:
 - `title`: Video title
@@ -95,18 +104,19 @@ python src/main.py
 - `character_cosplay_instructions`: How to dress the character
 - `scenes[]`: Array of 8 scenes with dialogue, poses, backgrounds
 
-### 2. Huh Image Agent (`huh_image_agent.py`)
-**Purpose**: Generates character-consistent images using Huh character
+### 2. ADK Image Generate Agent (`adk_image_generate_agent.py`)
+**Purpose**: Generates character-consistent images using Huh character with ADK
 
 **Features**:
-- Uses Google Flash 2.5 (Nano Banana) for image editing
+- Uses Google Gemini 2.5 Flash Image via ADK
 - Loads Huh character from `assets/huh.png`
-- Applies cosplay transformations
+- Applies cosplay transformations using actual API
 - Creates educational, meaningful images
 - Character stays small in images (not dominating)
+- Actual image generation (not mock)
 
 **Process**:
-1. **Step 1**: Create cosplayed Huh character
+1. **Step 1**: Create cosplayed Huh character using Gemini 2.5 Flash Image
 2. **Step 2**: Generate scene images using cosplayed Huh + scene info
 
 **Output**: PNG images in `sessions/[uuid]/images/scene_X.png`
@@ -158,11 +168,12 @@ class Scene(BaseModel):
 
 ## 🔧 Technical Details
 
-### Google AI Integration
-- **Script Generation**: Gemini 2.0 Flash
-- **Image Generation**: Google Flash 2.5 (Nano Banana)
+### Google ADK Integration
+- **Script Generation**: Gemini 2.5 Flash via ADK
+- **Image Generation**: Gemini 2.5 Flash Image via ADK
 - **Image Editing**: Text-and-image-to-image editing
-- **API**: `google-generativeai` SDK
+- **Framework**: Google ADK (Agent Development Kit)
+- **API**: Direct API calls within ADK agents
 
 ### Session Management
 - **UUID-based**: Each session gets unique identifier
@@ -181,11 +192,12 @@ class Scene(BaseModel):
 ## 📈 Current Capabilities
 
 ### ✅ Working Features
-1. **Script Generation**: 8-scene educational scripts
-2. **Character Cosplay**: Huh character transformation
-3. **Image Generation**: Character-consistent educational images
-4. **Session Management**: UUID-based file organization
-5. **Comprehensive Logging**: Full process tracking
+1. **ADK Script Generation**: 8-scene educational scripts via ADK
+2. **ADK Character Cosplay**: Huh character transformation via ADK
+3. **ADK Image Generation**: Character-consistent educational images via ADK
+4. **Actual API Integration**: Real Gemini 2.5 Flash Image API usage
+5. **Session Management**: UUID-based file organization
+6. **Comprehensive Logging**: Full process tracking
 
 ### 🎯 Image Quality Features
 - **Character Consistency**: Same Huh character in all scenes
@@ -198,32 +210,32 @@ class Scene(BaseModel):
 
 ## 🚧 Next Development Phases
 
-### Phase 3: Audio Generation (Next)
-**Goal**: Generate voice-over audio for each scene
+### Phase 3: ADK Audio Generation (Next)
+**Goal**: Generate voice-over audio for each scene using ADK
 
 **Requirements**:
-- Text-to-Speech integration
+- ADK-based text-to-speech integration
 - Voice tone matching (excited, calm, etc.)
 - Audio file generation (WAV/MP3)
 - Sync with scene dialogue
 
 **Implementation Plan**:
-1. Create `audio_generate_agent.py`
+1. Create `ADKAudioGenerateAgent` class
 2. Integrate with ElevenLabs or similar TTS service
 3. Use `voice_tone` and `elevenlabs_settings` from scenes
 4. Generate audio files in `sessions/[uuid]/audios/`
 
-### Phase 4: Video Generation (Final)
-**Goal**: Combine images and audio into final video
+### Phase 4: ADK Video Generation (Final)
+**Goal**: Combine images and audio into final video using ADK
 
 **Requirements**:
-- Image-to-video generation
+- ADK-based image-to-video generation
 - Audio synchronization
 - Transition effects
 - Final video output (MP4)
 
 **Implementation Plan**:
-1. Create `video_generate_agent.py`
+1. Create `ADKVideoGenerateAgent` class
 2. Integrate with video generation service
 3. Combine images + audio + transitions
 4. Generate final video in `sessions/[uuid]/videos/`
@@ -277,31 +289,31 @@ from huh_image_agent import HuhImageAgent
 
 ## 📚 API Reference
 
-### Script Writer Agent
+### ADK Script Writer Agent
 ```python
-from script_writer_agent import ScriptWriterAgent
+from agents.adk_script_writer_agent import ADKScriptWriterAgent
 
-agent = ScriptWriterAgent()
-script = agent.generate_script(
+agent = ADKScriptWriterAgent()
+script = await agent.generate_script(
     subject="Your topic here",
     language="English",
     max_video_scenes=8
 )
 ```
 
-### Huh Image Agent
+### ADK Image Generate Agent
 ```python
-from huh_image_agent import HuhImageAgent
-from session_manager import SessionManager
+from agents.adk_image_generate_agent import ADKImageGenerateAgent
+from core.session_manager import SessionManager
 
 session_manager = SessionManager()
-image_agent = HuhImageAgent(session_manager)
-results = image_agent.generate_images_for_session(session_id)
+image_agent = ADKImageGenerateAgent(session_manager)
+results = await image_agent.generate_images_for_session(session_id, script)
 ```
 
 ### Session Manager
 ```python
-from session_manager import SessionManager
+from core.session_manager import SessionManager
 
 session_manager = SessionManager()
 session_id = session_manager.create_session(subject, language)
@@ -313,9 +325,10 @@ script_path = session_manager.save_script(session_id, script)
 ## 🎯 Success Metrics
 
 ### Current Achievements
-- ✅ **Script Quality**: 8-scene educational scripts with cosplay
-- ✅ **Character Consistency**: Huh character appears in all images
-- ✅ **Image Quality**: Educational, meaningful images
+- ✅ **ADK Script Quality**: 8-scene educational scripts with cosplay via ADK
+- ✅ **ADK Character Consistency**: Huh character appears in all images via ADK
+- ✅ **ADK Image Quality**: Educational, meaningful images via ADK
+- ✅ **Actual API Integration**: Real Gemini 2.5 Flash Image API usage
 - ✅ **System Reliability**: Robust error handling and logging
 - ✅ **File Organization**: Clean UUID-based session structure
 
@@ -339,11 +352,12 @@ This document provides complete context for continuing development. Key points:
 5. **File Structure**: Organized, documented, and ready for extension
 
 ### Key Files to Understand
-- `src/agents/script_writer_agent.py` - Script generation logic
-- `src/agents/huh_image_agent.py` - Image generation with Huh
-- `src/core/models.py` - Data structures
+- `src/agents/adk_script_writer_agent.py` - ADK Script generation logic
+- `src/agents/adk_image_generate_agent.py` - ADK Image generation with Huh
+- `src/model/models.py` - Data structures
 - `src/core/session_manager.py` - File management
-- `run.py` - Main entry point
+- `src/main_adk.py` - ADK Main program logic
+- `run_adk.py` - ADK Main entry point
 
 ### Development Environment
 - Python 3.8+
@@ -354,5 +368,5 @@ This document provides complete context for continuing development. Key points:
 ---
 
 **Last Updated**: September 2024  
-**Status**: Phase 2 Complete (Script + Image Generation)  
-**Next Phase**: Audio Generation
+**Status**: Phase 2 Complete with ADK (Script + Image Generation)  
+**Next Phase**: ADK Audio Generation

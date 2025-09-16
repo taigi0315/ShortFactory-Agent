@@ -2,13 +2,14 @@
 
 ## 🎯 Project Overview
 
-**ShortFactory Agent** is an AI-powered system that creates short educational videos using a consistent character (Huh) with cosplay capabilities. The system generates scripts, creates character-consistent images, and will eventually produce audio and video content.
+**ShortFactory Agent** is a **Google ADK (Agent Development Kit)** based AI-powered system that creates short educational videos using a consistent character (Huh) with cosplay capabilities. The system generates scripts, creates character-consistent images, and will eventually produce audio and video content.
 
-### 🎬 Current Status: **Phase 2 Complete** ✅
-- ✅ Script Generation (with cosplay instructions)
-- ✅ Image Generation (Huh character with cosplay)
-- ⏳ Audio Generation (Next Phase)
-- ⏳ Video Generation (Final Phase)
+### 🎬 Current Status: **Phase 2 Complete with ADK** ✅
+- ✅ ADK Script Generation (with cosplay instructions)
+- ✅ ADK Image Generation (Huh character with cosplay)
+- ✅ Actual Gemini 2.5 Flash Image API integration
+- ⏳ ADK Audio Generation (Next Phase)
+- ⏳ ADK Video Generation (Final Phase)
 
 ---
 
@@ -33,9 +34,9 @@
 - [x] Create ElevenLabsSettings model
 - [x] Add character_cosplay_instructions field to VideoScript
 
-#### 1.3 Script Writer Agent ✅
-- [x] Create ScriptWriterAgent class
-- [x] Integrate Google Gemini 2.0 Flash
+#### 1.3 ADK Script Writer Agent ✅
+- [x] Create ADKScriptWriterAgent class
+- [x] Integrate Google Gemini 2.5 Flash via ADK
 - [x] Create comprehensive prompt for script generation
 - [x] Implement 8-scene script structure
 - [x] Add cosplay instructions generation
@@ -62,15 +63,16 @@
 - [x] Apply cosplay instructions to character
 - [x] Maintain character consistency across scenes
 
-#### 2.2 Image Generation Agent ✅
-- [x] Create HuhImageAgent class
-- [x] Integrate Google Flash 2.5 (Nano Banana)
+#### 2.2 ADK Image Generation Agent ✅
+- [x] Create ADKImageGenerateAgent class
+- [x] Integrate Google Gemini 2.5 Flash Image via ADK
 - [x] Implement text-and-image-to-image editing
 - [x] Use comprehensive scene information
 - [x] Generate meaningful educational images
 - [x] Keep character small in images
 - [x] Use character_pose and background_description
 - [x] Implement error handling and fallbacks
+- [x] Actual API integration (not mock)
 
 #### 2.3 File Structure Organization ✅
 - [x] Organize src/ directory structure
@@ -90,10 +92,10 @@
 
 ---
 
-### Phase 3: Audio Generation 🚧 **IN PROGRESS**
+### Phase 3: ADK Audio Generation 🚧 **IN PROGRESS**
 
-#### 3.1 Audio Agent Development
-- [ ] Create AudioGenerateAgent class
+#### 3.1 ADK Audio Agent Development
+- [ ] Create ADKAudioGenerateAgent class
 - [ ] Integrate text-to-speech service (ElevenLabs or similar)
 - [ ] Use voice_tone from scenes
 - [ ] Use elevenlabs_settings from scenes
@@ -125,10 +127,10 @@
 
 ---
 
-### Phase 4: Video Generation 🚧 **PLANNED**
+### Phase 4: ADK Video Generation 🚧 **PLANNED**
 
-#### 4.1 Video Agent Development
-- [ ] Create VideoGenerateAgent class
+#### 4.1 ADK Video Agent Development
+- [ ] Create ADKVideoGenerateAgent class
 - [ ] Integrate video generation service
 - [ ] Combine images and audio
 - [ ] Implement scene transitions
@@ -236,9 +238,10 @@
 ## 📊 Quality Metrics
 
 ### Current Achievements ✅
-- [x] Script Quality: 8-scene educational scripts with cosplay
-- [x] Character Consistency: Huh character appears in all images
-- [x] Image Quality: Educational, meaningful images
+- [x] ADK Script Quality: 8-scene educational scripts with cosplay via ADK
+- [x] ADK Character Consistency: Huh character appears in all images via ADK
+- [x] ADK Image Quality: Educational, meaningful images via ADK
+- [x] Actual API Integration: Real Gemini 2.5 Flash Image API usage
 - [x] System Reliability: Robust error handling and logging
 - [x] File Organization: Clean UUID-based session structure
 
@@ -272,8 +275,9 @@
 ## 📈 Success Metrics
 
 ### Phase 2 Success Metrics ✅ **ACHIEVED**
-- [x] Script generation: 100% success rate
-- [x] Image generation: 100% success rate (with fallbacks)
+- [x] ADK Script generation: 100% success rate
+- [x] ADK Image generation: 100% success rate (with fallbacks)
+- [x] Actual API integration: 100% working
 - [x] Character consistency: 100% maintained
 - [x] Session management: 100% reliable
 - [x] Documentation: 100% complete
@@ -349,8 +353,8 @@
 ---
 
 **Last Updated**: September 2024  
-**Current Phase**: Phase 2 Complete (Script + Image Generation)  
-**Next Phase**: Phase 3 (Audio Generation)  
+**Current Phase**: Phase 2 Complete with ADK (Script + Image Generation)  
+**Next Phase**: Phase 3 (ADK Audio Generation)  
 **Overall Progress**: 40% Complete
 
 ---
