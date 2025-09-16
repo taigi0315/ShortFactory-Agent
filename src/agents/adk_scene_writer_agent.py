@@ -14,6 +14,7 @@ from core.session_manager import SessionManager
 from core.shared_context import SharedContextManager, SharedContext
 from core.scene_continuity_manager import SceneContinuityManager
 from core.image_style_selector import ImageStyleSelector, StyleSelectionResult
+from core.educational_enhancer import EducationalEnhancer, EnhancedEducationalContent
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +67,8 @@ class ADKSceneWriterAgent(Agent):
     """ADK Scene Writer Agent for detailed scene generation"""
     
     def __init__(self, session_manager: SessionManager, shared_context_manager: SharedContextManager = None, 
-                 continuity_manager: SceneContinuityManager = None, style_selector: ImageStyleSelector = None):
+                 continuity_manager: SceneContinuityManager = None, style_selector: ImageStyleSelector = None,
+                 educational_enhancer: EducationalEnhancer = None):
         """
         Initialize ADK Scene Writer Agent
         
@@ -104,9 +106,10 @@ class ADKSceneWriterAgent(Agent):
         self._shared_context_manager = shared_context_manager or SharedContextManager()
         self._continuity_manager = continuity_manager or SceneContinuityManager()
         self._style_selector = style_selector or ImageStyleSelector()
+        self._educational_enhancer = educational_enhancer or EducationalEnhancer()
         self._previous_styles = []  # Track previous styles for variety
         
-        logger.info("ADK Scene Writer Agent initialized with Gemini 2.5 Flash, Shared Context, Continuity Manager, and Image Style Selector")
+        logger.info("ADK Scene Writer Agent initialized with Gemini 2.5 Flash, Shared Context, Continuity Manager, Image Style Selector, and Educational Enhancer")
     
     def _get_instruction(self) -> str:
         """Get the instruction prompt for the scene writer agent"""
@@ -251,6 +254,26 @@ Technical Constraints: {context_data['technical_constraints']}
 IMPORTANT: Use this context to maintain consistency across scenes!
 """
             
+            # Enhance educational content
+            scene_data_for_enhancement = {
+                "dialogue": f"Scene {scene_number} dialogue for {subject}",
+                "educational_content": {},
+                "image_create_prompt": f"Educational scene about {subject}"
+            }
+            
+            enhanced_educational_content = self._educational_enhancer.enhance_educational_content(
+                scene_data_for_enhancement, 
+                target_audience=shared_context.target_audience if shared_context else "general"
+            )
+            
+            educational_enhancement_info = f"""
+
+EDUCATIONAL ENHANCEMENT GUIDELINES:
+{self._educational_enhancer.generate_enhanced_prompt(enhanced_educational_content)}
+
+IMPORTANT: Use these enhanced educational elements to create rich, detailed content!
+"""
+            
             # Create comprehensive prompt for scene writing
             prompt = f"""
 Write a detailed scene script for:
@@ -263,6 +286,7 @@ Overall Story: {overall_story}
 Full Script Context:
 {full_script_context}
 {context_info}
+{educational_enhancement_info}
 
 Requirements:
 - Write a comprehensive scene script with ALL details needed for image/video generation
@@ -275,6 +299,9 @@ Requirements:
 - MAINTAIN CONSISTENCY with shared context provided above
 - Avoid repeating facts from previous scenes
 - Build upon established visual elements and character state
+- USE ENHANCED EDUCATIONAL ELEMENTS to create rich, detailed content
+- Include data points, visual metaphors, and learning objectives
+- Ensure educational density and complexity are appropriate for target audience
 
 Please generate a complete scene script following the format and guidelines provided in your instructions.
 """

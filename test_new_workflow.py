@@ -17,6 +17,7 @@ from core.session_manager import SessionManager
 from core.shared_context import SharedContextManager, VisualStyle
 from core.scene_continuity_manager import SceneContinuityManager
 from core.image_style_selector import ImageStyleSelector
+from core.educational_enhancer import EducationalEnhancer
 import logging
 
 # Configure logging
@@ -36,11 +37,12 @@ async def test_new_workflow():
     shared_context_manager = SharedContextManager()
     continuity_manager = SceneContinuityManager()
     style_selector = ImageStyleSelector()
+    educational_enhancer = EducationalEnhancer()
     
-    # Initialize agents with shared context, continuity manager, and style selector
+    # Initialize agents with shared context, continuity manager, style selector, and educational enhancer
     session_manager = SessionManager()
     story_writer = ADKScriptWriterAgent(shared_context_manager)
-    scene_writer = ADKSceneWriterAgent(session_manager, shared_context_manager, continuity_manager, style_selector)
+    scene_writer = ADKSceneWriterAgent(session_manager, shared_context_manager, continuity_manager, style_selector, educational_enhancer)
         
         # Test subject
         subject = "Coca Cola"
