@@ -25,12 +25,12 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-class HuhImageAgent:
+class ImageGenerateAgent:
     """
-    Huh-Based Image Generation Agent
+    Image Generation Agent
     
-    This agent uses the main character "Huh" from assets/huh.png
-    and applies comprehensive scene information to create meaningful images.
+    This agent generates all images for the video using the main character "Huh" 
+    from assets/huh.png and applies comprehensive scene information.
     
     Features:
     - Uses Huh character from assets/huh.png
@@ -38,11 +38,13 @@ class HuhImageAgent:
     - Combines all scene information (pose, background, scene_type)
     - Creates meaningful, educational images
     - Character stays small in the image
+    - Supports vertical (9:16) and horizontal (16:9) ratios
+    - Saves prompts for debugging and tracing
     """
     
     def __init__(self, session_manager: SessionManager):
         """
-        Initialize Huh Image Agent
+        Initialize Image Generation Agent
         
         Args:
             session_manager: SessionManager instance for file operations
@@ -64,7 +66,7 @@ class HuhImageAgent:
             self.client = genai.Client(api_key=self.api_key)
             self.model_name = "gemini-2.5-flash-image-preview"
             self.use_mock = False
-            logger.info("Huh Image Agent initialized")
+            logger.info("Image Generation Agent initialized")
             logger.info(f"Using model: {self.model_name}")
             logger.info(f"Image ratio: {self.image_ratio}")
             logger.info(f"Number of images for video: {self.number_of_images_to_video}")
@@ -284,6 +286,9 @@ Requirements:
             # Generate mock image for testing
             image_data = self._generate_mock_scene_image(scene_prompt)
         else:
+            # Save cosplay prompt for debugging
+            self._save_prompt(session_id, 0, cosplay_prompt, "image")
+            
             # Generate scene using comprehensive information
             image_data = self._generate_scene_with_huh(
                 cosplayed_huh_image, scene_prompt
@@ -296,6 +301,9 @@ Requirements:
             image_data=image_data,
             format="png"
         )
+        
+        # Save prompt for debugging and tracing
+        self._save_prompt(session_id, scene_number, scene_prompt, "image")
         
         return image_path
     
@@ -355,6 +363,36 @@ CRITICAL REQUIREMENTS:
 """
         
         return comprehensive_prompt.strip()
+    
+    def _save_prompt(self, session_id: str, scene_number: int, prompt: str, prompt_type: str) -> None:
+        """
+        Save prompt to session for debugging and tracing
+        
+        Args:
+            session_id: Session ID
+            scene_number: Scene number
+            prompt: The prompt used for generation
+            prompt_type: Type of prompt ('image' or 'video')
+        """
+        try:
+            session_dir = self.session_manager.get_session_dir(session_id)
+            prompts_dir = session_dir / "prompts"
+            type_dir = prompts_dir / prompt_type
+            
+            # Create directories if they don't exist
+            type_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Save prompt to file
+            prompt_file = type_dir / f"scene_{scene_number}.txt"
+            with open(prompt_file, 'w', encoding='utf-8') as f:
+                f.write(f"Scene {scene_number} - {prompt_type.upper()} Generation Prompt\n")
+                f.write("=" * 50 + "\n\n")
+                f.write(prompt)
+            
+            logger.info(f"Saved {prompt_type} prompt for scene {scene_number}: {prompt_file}")
+            
+        except Exception as e:
+            logger.error(f"Failed to save {prompt_type} prompt for scene {scene_number}: {str(e)}")
     
     def _get_style_instructions(self, image_style: str, scene_type: str) -> str:
         """

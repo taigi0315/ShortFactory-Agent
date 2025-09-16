@@ -147,6 +147,7 @@ Hook Techniques: {', '.join(hook_techniques)}
 - Make images meaningful and educational, not just decorative
 - Add speech bubbles or text boxes with dialogue for Huh
 - Keep Huh's original image style - don't change Huh's appearance
+- Images will be in vertical ratio (9:16 format for mobile/social media) or horizontal ratio (16:9 format for desktop/widescreen)
 
 ### Output Format:
 You MUST output a valid JSON object that matches this exact structure:

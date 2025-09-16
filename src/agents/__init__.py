@@ -3,9 +3,9 @@ Agents module for ShortFactory
 """
 
 from .script_writer_agent import ScriptWriterAgent
-from .huh_image_agent import HuhImageAgent
+from .image_generate_agent import ImageGenerateAgent
 
 __all__ = [
     'ScriptWriterAgent',
-    'HuhImageAgent'
+    'ImageGenerateAgent'
 ]

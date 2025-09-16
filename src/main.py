@@ -41,12 +41,12 @@ def main():
         # Import modules
         from core.session_manager import SessionManager
         from agents.script_writer_agent import ScriptWriterAgent
-        from agents.huh_image_agent import HuhImageAgent
+        from agents.image_generate_agent import ImageGenerateAgent
         
         # Initialize components
         session_manager = SessionManager()
         script_writer = ScriptWriterAgent()
-        image_agent = HuhImageAgent(session_manager)
+        image_agent = ImageGenerateAgent(session_manager)
         
         # Create session
         print("1️⃣ Creating session...")
