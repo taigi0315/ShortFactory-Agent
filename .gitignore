@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 *.json
 
-# Session data (generated content)
+# Session data (entire sessions folder - generated content)
 sessions/
 *.png
 *.jpg
