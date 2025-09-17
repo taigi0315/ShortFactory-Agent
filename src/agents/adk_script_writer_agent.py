@@ -146,7 +146,8 @@ Each scene must be information-dense and memorable.
 """
 
     async def generate_story_script(self, subject: str, language: str = "English", max_video_scenes: int = 8, 
-                                   target_audience: str = "general", visual_style: VisualStyle = VisualStyle.MODERN) -> StoryScript:
+                                   target_audience: str = "general", visual_style: VisualStyle = VisualStyle.MODERN, 
+                                   max_retries: int = 3) -> StoryScript:
         """
         Generate a story script using ADK Agent
         
@@ -158,350 +159,309 @@ Each scene must be information-dense and memorable.
         Returns:
             StoryScript: Generated story script with scene plan
         """
-        try:
-            logger.info(f"Generating script for subject: {subject}")
-            
-            # First, refine the story focus using the Story Focus Engine
-            initial_story = f"The story of {subject} and how it works"
-            focus_result = self._story_focus_engine.refine_story_focus(
-                broad_subject=subject,
-                initial_story=initial_story,
-                target_audience=target_audience
-            )
-            
-            logger.info(f"Story focus refined: {focus_result.applied_pattern.value} pattern applied")
-            logger.info(f"Focus score: {focus_result.focus_score:.2f}")
-            
-            # Create a simple, direct prompt
-            prompt = f"""
-Create a story about {subject}.
+        import asyncio
+        
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"Generating script for subject: {subject} (attempt {attempt + 1}/{max_retries})")
+                
+                # First, refine the story focus using the Story Focus Engine
+                initial_story = f"The story of {subject} and how it works"
+                focus_result = self._story_focus_engine.refine_story_focus(
+                    broad_subject=subject,
+                    initial_story=initial_story,
+                    target_audience=target_audience
+                )
+                
+                logger.info(f"Story focus refined: {focus_result.applied_pattern.value} pattern applied")
+                logger.info(f"Focus score: {focus_result.focus_score:.2f}")
+                
+                # Create a more specific and detailed prompt
+                prompt = f"""
+You are creating an educational video story about: {subject}
+
+CRITICAL REQUIREMENTS:
+1. You MUST create content ONLY about {subject}
+2. You MUST follow this EXACT JSON format
+3. You MUST NOT create stories about other topics like Coca-Cola, K-pop, or any other subject
+4. Output ONLY the JSON, no other text
+
+Create a story that focuses specifically on {subject}. Think about:
+- What makes {subject} interesting or important?
+- What are the key facts, concepts, or aspects of {subject}?
+- How can you tell an engaging story about {subject}?
 
 Output ONLY this JSON (no other text):
 
 {{
-  "title": "Story about {subject}",
+  "title": "The Story of {subject}",
   "main_character_description": "Huh - a cute, blob-like cartoon character",
-  "character_cosplay_instructions": "Cosplay for {subject} story",
+  "character_cosplay_instructions": "Dress Huh as an expert or character related to {subject}",
   "overall_style": "educational",
-  "overall_story": "Specific story about {subject}",
-  "story_summary": "Summary about {subject}",
+  "overall_story": "A specific, engaging story about {subject} that explains its importance, history, or key concepts",
+  "story_summary": "A brief summary of the story about {subject}",
   "scene_plan": [
     {{
       "scene_number": 1,
       "scene_type": "hook",
-      "scene_purpose": "Introduce {subject}",
-      "key_content": "Facts about {subject}",
-      "scene_focus": "Key point about {subject}"
+      "scene_purpose": "Grab attention with an interesting fact about {subject}",
+      "key_content": "Surprising or important facts about {subject}",
+      "scene_focus": "What makes {subject} worth learning about"
     }},
     {{
       "scene_number": 2,
       "scene_type": "explanation",
-      "scene_purpose": "Explain {subject}",
-      "key_content": "Details about {subject}",
-      "scene_focus": "Important aspect of {subject}"
+      "scene_purpose": "Explain the core concepts of {subject}",
+      "key_content": "Main concepts, definitions, or principles of {subject}",
+      "scene_focus": "Understanding the basics of {subject}"
     }},
     {{
       "scene_number": 3,
       "scene_type": "example",
-      "scene_purpose": "Show {subject} example",
-      "key_content": "Example of {subject}",
-      "scene_focus": "Practical {subject} example"
+      "scene_purpose": "Show real-world examples of {subject}",
+      "key_content": "Concrete examples, case studies, or applications of {subject}",
+      "scene_focus": "How {subject} works in practice"
     }},
     {{
       "scene_number": 4,
       "scene_type": "statistic",
-      "scene_purpose": "Share {subject} statistics",
-      "key_content": "Numbers about {subject}",
-      "scene_focus": "Statistical data on {subject}"
+      "scene_purpose": "Share impressive statistics about {subject}",
+      "key_content": "Numbers, data, and statistics related to {subject}",
+      "scene_focus": "The scale and impact of {subject}"
     }},
     {{
       "scene_number": 5,
       "scene_type": "call_to_action",
-      "scene_purpose": "Encourage learning about {subject}",
-      "key_content": "Learn more about {subject}",
-      "scene_focus": "Further {subject} exploration"
+      "scene_purpose": "Encourage further learning about {subject}",
+      "key_content": "Ways to learn more about {subject}",
+      "scene_focus": "Next steps for exploring {subject}"
     }},
     {{
       "scene_number": 6,
       "scene_type": "summary",
-      "scene_purpose": "Summarize {subject}",
-      "key_content": "Key {subject} points",
-      "scene_focus": "Main {subject} takeaways"
+      "scene_purpose": "Summarize key points about {subject}",
+      "key_content": "Main takeaways and key points about {subject}",
+      "scene_focus": "What viewers should remember about {subject}"
     }}
   ]
 }}
 
-IMPORTANT: Create a story about {subject} only. Do not create stories about other topics.
+REMEMBER: This story must be about {subject} and {subject} only. Do not create content about any other topic.
 """
-            
-            # Log the prompt being sent to AI
-            logger.info(f"PROMPT BEING SENT TO AI:")
-            logger.info(f"Length: {len(prompt)}")
-            logger.info(f"Content: {prompt}")
-            
-            # Use ADK agent's built-in content generation
-            # ADK LlmAgent handles the API calls internally
-            response = await self._simulate_adk_response(prompt)
-            
-            if response:
-                # Log the full response for debugging
-                logger.info(f"AI Response length: {len(response)}")
-                logger.info(f"AI Response preview: {response[:200]}...")
-                logger.info(f"AI Response full: {response}")
                 
-                if hasattr(response, 'text') and response.text:
-                    script_data = json.loads(response.text)
+                # Log the prompt being sent to AI
+                logger.info(f"PROMPT BEING SENT TO AI:")
+                logger.info(f"Length: {len(prompt)}")
+                logger.info(f"Content: {prompt}")
+                
+                # Use ADK agent's built-in content generation
+                # ADK LlmAgent handles the API calls internally
+                response = await self._simulate_adk_response(prompt)
+                
+                if response:
+                    # Log the full response for debugging
+                    logger.info(f"AI Response length: {len(response)}")
+                    logger.info(f"AI Response preview: {response[:200]}...")
+                    logger.info(f"AI Response full: {response}")
+                    
+                    # Parse response safely
+                    script_data = self._parse_response_safely(response, subject)
+                    story_script = StoryScript(**script_data)
                 else:
-                    # Response is already a string
-                    script_data = json.loads(response)
-                story_script = StoryScript(**script_data)
-            else:
-                raise ValueError("No story script text received from ADK agent.")
-            
-            logger.info(f"Story script generated successfully with {len(story_script.scene_plan)} scenes")
-            
-            # Update the story script with the focused story
-            story_script.overall_story = focus_result.focused_story
-            
-            # Validate the generated story
-            validation_result = self._story_validator.validate_story(
-                subject=subject,
-                story=story_script.overall_story,
-                target_audience=target_audience
-            )
-            
-            logger.info(f"Story validation: {validation_result.feasibility.value} feasibility, {validation_result.complexity_level.value} complexity")
-            
-            # If story is not feasible, try to regenerate with suggestions
-            if not validation_result.is_valid:
-                logger.warning(f"Story validation failed: {validation_result.validation_notes}")
-                # For now, we'll continue with the story but log the issues
-                # In a full implementation, we could regenerate with simplified prompts
-            
-            # Log focus engine results
-            logger.info(f"Story focus engine results:")
-            logger.info(f"  - Applied pattern: {focus_result.applied_pattern.value}")
-            logger.info(f"  - Focus score: {focus_result.focus_score:.2f}")
-            logger.info(f"  - Specificity improvement: +{focus_result.specificity_improvement:.2f}")
-            logger.info(f"  - Engagement improvement: +{focus_result.engagement_improvement:.2f}")
-            
-            # Create shared context for the story
-            shared_context = self._shared_context_manager.create_context(
-                character_emotion="excited",
-                character_pose="pointing",
-                visual_style=visual_style,
-                target_audience=target_audience,
-                video_duration=60,
-                scene_count=max_video_scenes
-            )
-            
-            # Store shared context for use by scene writers
-            self._shared_context_manager.context = shared_context
-            
-            return story_script
-            
-        except Exception as e:
-            logger.error(f"Error generating story script: {str(e)}")
-            # Don't fall back to mock - let the error propagate
-            raise ValueError(f"Failed to generate story script: {str(e)}")
+                    raise ValueError("No story script text received from ADK agent.")
+                
+                logger.info(f"Story script generated successfully with {len(story_script.scene_plan)} scenes")
+                
+                # Update the story script with the focused story
+                story_script.overall_story = focus_result.focused_story
+                
+                # Validate the generated story
+                validation_result = self._story_validator.validate_story(
+                    subject=subject,
+                    story=story_script.overall_story,
+                    target_audience=target_audience
+                )
+                
+                logger.info(f"Story validation: {validation_result.feasibility.value} feasibility, {validation_result.complexity_level.value} complexity")
+                
+                # If story is not feasible, try to regenerate with suggestions
+                if not validation_result.is_valid:
+                    logger.warning(f"Story validation failed: {validation_result.validation_notes}")
+                    # For now, we'll continue with the story but log the issues
+                    # In a full implementation, we could regenerate with simplified prompts
+                
+                # Log focus engine results
+                logger.info(f"Story focus engine results:")
+                logger.info(f"  - Applied pattern: {focus_result.applied_pattern.value}")
+                logger.info(f"  - Focus score: {focus_result.focus_score:.2f}")
+                logger.info(f"  - Specificity improvement: +{focus_result.specificity_improvement:.2f}")
+                logger.info(f"  - Engagement improvement: +{focus_result.engagement_improvement:.2f}")
+                
+                # Create shared context for the story
+                shared_context = self._shared_context_manager.create_context(
+                    character_emotion="excited",
+                    character_pose="pointing",
+                    visual_style=visual_style,
+                    target_audience=target_audience,
+                    video_duration=60,
+                    scene_count=max_video_scenes
+                )
+                
+                # Store shared context for use by scene writers
+                self._shared_context_manager.context = shared_context
+                
+                logger.info(f"Script generated successfully on attempt {attempt + 1}")
+                return story_script
+                
+            except Exception as e:
+                logger.error(f"Error generating story script (attempt {attempt + 1}): {str(e)}")
+                
+                # If this is the last attempt, raise error
+                if attempt == max_retries - 1:
+                    logger.error("All attempts failed")
+                    raise ValueError(f"Failed to generate story script after {max_retries} attempts: {str(e)}")
+                else:
+                    # Wait before retrying (exponential backoff)
+                    wait_time = 2 ** attempt
+                    logger.info(f"Waiting {wait_time} seconds before retry...")
+                    await asyncio.sleep(wait_time)
     
     async def _simulate_adk_response(self, prompt: str) -> str:
         """
-        Simulate ADK response (placeholder for actual ADK integration)
+        Use actual ADK API to generate response
         
         Args:
             prompt: The prompt to send to the agent
             
         Returns:
-            str: Simulated response
+            str: AI-generated response
         """
-        # This is a placeholder - in real implementation, this would use ADK Runner
-        # For now, return a mock response
-        return """
-{
-  "title": "The Secret Story of Coca-Cola: From Medicine to Global Empire",
-  "main_character_description": "Huh - a cute, blob-like cartoon character",
-  "character_cosplay_instructions": "Dress Huh as a 19th century pharmacist with a white lab coat, vintage glasses, and a Coca-Cola bottle",
-  "overall_style": "educational",
-  "overall_story": "How Coca-Cola evolved from a medicinal 'brain tonic' created by a pharmacist in 1886 to become the world's most recognized brand and global beverage empire",
-  "story_summary": "The fascinating journey of Coca-Cola from its humble beginnings as a medicine in an Atlanta pharmacy to becoming a global phenomenon that sells 1.9 billion servings daily worldwide",
-  "scene_plan": [
-    {
-      "scene_number": 1,
-      "scene_type": "hook",
-      "scene_purpose": "Grab attention with surprising origin story",
-      "key_content": "Coca-Cola was originally created as medicine by Dr. John Pemberton in 1886",
-      "scene_focus": "Pharmaceutical beginnings and original recipe"
-    },
-    {
-      "scene_number": 2,
-      "scene_type": "explanation",
-      "scene_purpose": "Explain the original formula and ingredients",
-      "key_content": "Original recipe contained coca leaves, kola nuts, and was sold as a 'brain tonic'",
-      "scene_focus": "Historical ingredients and medicinal claims"
-    },
-    {
-      "scene_number": 3,
-      "scene_type": "example",
-      "scene_purpose": "Show the evolution from medicine to beverage",
-      "key_content": "How Asa Candler transformed it from medicine to popular soft drink",
-      "scene_focus": "Business transformation and marketing strategy"
-    },
-    {
-      "scene_number": 4,
-      "scene_type": "statistic",
-      "scene_purpose": "Share impressive global reach statistics",
-      "key_content": "1.9 billion servings daily, sold in 200+ countries, $43 billion annual revenue",
-      "scene_focus": "Global impact and market dominance"
-    },
-    {
-      "scene_number": 5,
-      "scene_type": "call_to_action",
-      "scene_purpose": "Encourage learning about business and marketing",
-      "key_content": "Explore how brands can achieve global recognition and cultural impact",
-      "scene_focus": "Lessons in branding and global expansion"
-    },
-    {
-      "scene_number": 6,
-      "scene_type": "summary",
-      "scene_purpose": "Summarize the incredible transformation",
-      "key_content": "From $0.05 medicine to world's most valuable brand",
-      "scene_focus": "Key takeaways about innovation and business success"
-    }
-  ]
-}
-  "scenes": [
-    {
-      "scene_number": 1,
-      "scene_type": "hook",
-      "dialogue": "Did you know that music industry generates over $5 billion annually? Let me show you what makes this Korean music phenomenon so powerful!",
-      "voice_tone": "excited",
-      "elevenlabs_settings": {
-        "stability": 0.3,
-        "similarity_boost": 0.8,
-        "style": 0.8,
-        "speed": 1.1,
-        "loudness": 0.2
-      },
-      "image_style": "single_character",
-      "image_create_prompt": "Educational infographic showing music industry industry statistics: $5 billion global market value, major companies (HYBE, SM, JYP, YG), with character from given image as small guide pointing at the data",
-      "character_pose": "pointing at screen",
-      "character_expression": "excited",
-      "background_description": "stage with charts and statistics",
-      "needs_animation": true,
-      "video_prompt": "Huh pointing at animated chart with growing numbers",
-      "transition_to_next": "fade",
-      "hook_technique": "shocking_fact"
-    },
-    {
-      "scene_number": 2,
-      "scene_type": "explanation",
-      "dialogue": "music industry stands for Korean pop music, but it's so much more than just music! It's a complete entertainment package with synchronized dancing, stunning visuals, and captivating storytelling.",
-      "voice_tone": "informative",
-      "elevenlabs_settings": {
-        "stability": 0.3,
-        "similarity_boost": 0.8,
-        "style": 0.8,
-        "speed": 1.1,
-        "loudness": 0.2
-      },
-      "image_style": "infographic",
-      "image_create_prompt": "Detailed educational diagram showing music industry core elements: synchronized choreography, vocal harmonies, visual storytelling, fashion trends, with character from given image as small guide explaining each element",
-      "character_pose": "gesturing towards infographic",
-      "character_expression": "confident",
-      "background_description": "modern studio with infographic displays",
-      "needs_animation": false,
-      "video_prompt": null,
-      "transition_to_next": "cut"
-    },
-    {
-      "scene_number": 3,
-      "scene_type": "example",
-      "dialogue": "Take BTS for example - they didn't just sing songs, they created a global movement! Their music videos tell stories, their performances are like mini-concerts, and they connect with fans worldwide.",
-      "voice_tone": "enthusiastic",
-      "elevenlabs_settings": {
-        "stability": 0.3,
-        "similarity_boost": 0.8,
-        "style": 0.8,
-        "speed": 1.1,
-        "loudness": 0.2
-      },
-      "image_style": "character_with_background",
-      "image_create_prompt": "Educational visual showing music industry concert production: stage design, lighting effects, fan engagement, choreography coordination, with character from given image as small guide demonstrating the process",
-      "character_pose": "pointing at stage",
-      "character_expression": "amazed",
-      "background_description": "concert stage with lights and visuals",
-      "needs_animation": true,
-      "video_prompt": "Huh pointing at animated stage with lights and effects",
-      "transition_to_next": "slide"
-    },
-    {
-      "scene_number": 4,
-      "scene_type": "statistic",
-      "dialogue": "The numbers are incredible! music industry has over 100 million fans worldwide, with groups like BLACKPINK reaching 1 billion views on YouTube. It's not just music - it's a cultural phenomenon!",
-      "voice_tone": "impressed",
-      "elevenlabs_settings": {
-        "stability": 0.3,
-        "similarity_boost": 0.8,
-        "style": 0.8,
-        "speed": 1.1,
-        "loudness": 0.2
-      },
-      "image_style": "infographic",
-      "image_create_prompt": "Comprehensive data visualization showing music industry global impact: 100+ million fans worldwide, 1+ billion YouTube views, cultural influence metrics, with character from given image as small guide highlighting key statistics",
-      "character_pose": "gesturing at statistics",
-      "character_expression": "surprised",
-      "background_description": "data visualization studio with charts",
-      "needs_animation": false,
-      "video_prompt": null,
-      "transition_to_next": "dissolve"
-    },
-    {
-      "scene_number": 5,
-      "scene_type": "call_to_action",
-      "dialogue": "Want to dive deeper into music industry? Check out the amazing choreography, explore different groups, and discover why this Korean wave has taken the world by storm!",
-      "voice_tone": "encouraging",
-      "elevenlabs_settings": {
-        "stability": 0.3,
-        "similarity_boost": 0.8,
-        "style": 0.8,
-        "speed": 1.1,
-        "loudness": 0.2
-      },
-      "image_style": "single_character",
-      "image_create_prompt": "Educational summary infographic showing music industry learning resources: recommended groups, music platforms, cultural aspects to explore, with character from given image as small guide encouraging further learning",
-      "character_pose": "arms spread wide",
-      "character_expression": "inviting",
-      "background_description": "colorful stage with music industry elements",
-      "needs_animation": true,
-      "video_prompt": "Huh with inviting gesture and animated background",
-      "transition_to_next": "fade"
-    },
-    {
-      "scene_number": 6,
-      "scene_type": "summary",
-      "dialogue": "So there you have it! music industry is more than just music - it's a complete entertainment experience that combines music, dance, visuals, and storytelling to create something truly special. Thanks for watching!",
-      "voice_tone": "friendly",
-      "elevenlabs_settings": {
-        "stability": 0.3,
-        "similarity_boost": 0.8,
-        "style": 0.8,
-        "speed": 1.1,
-        "loudness": 0.2
-      },
-      "image_style": "single_character",
-      "image_create_prompt": "Final educational summary showing key music industry takeaways: global phenomenon, cultural impact, entertainment industry innovation, with character from given image as small guide waving goodbye with warm smile",
-      "character_pose": "waving goodbye",
-      "character_expression": "smiling",
-      "background_description": "warm, friendly setting",
-      "needs_animation": false,
-      "video_prompt": null,
-      "transition_to_next": "fade"
-    }
-  ]
-}
-"""
+        try:
+            logger.info("Using actual ADK API for script generation")
+            
+            # Try different ADK Agent methods
+            response = None
+            
+            # Method 1: Try run method
+            try:
+                response = await self.run(prompt)
+                logger.info("Successfully used run() method")
+            except AttributeError:
+                logger.info("run() method not available, trying generate_content()")
+                # Method 2: Try generate_content method
+                try:
+                    response = await self.generate_content(prompt)
+                    logger.info("Successfully used generate_content() method")
+                except AttributeError:
+                    logger.info("generate_content() method not available, trying direct model call")
+                    # Method 3: Try direct model call
+                    try:
+                        import google.genai as genai
+                        client = genai.Client()
+                        response = client.models.generate_content(
+                            model="gemini-2.5-flash",
+                            contents=[prompt],
+                            config={
+                                "temperature": 0.7,
+                                "top_p": 0.8,
+                                "top_k": 40,
+                                "max_output_tokens": 8192,
+                                "response_mime_type": "application/json"
+                            }
+                        )
+                        logger.info("Successfully used direct model call")
+                    except Exception as direct_error:
+                        logger.error(f"Direct model call failed: {str(direct_error)}")
+                        raise direct_error
+            
+            # Process response
+            if response:
+                if hasattr(response, 'text') and response.text:
+                    logger.info("Successfully received response from ADK API")
+                    return response.text
+                elif isinstance(response, str):
+                    logger.info("Successfully received string response from ADK API")
+                    return response
+                else:
+                    logger.error("Unexpected response format from ADK API")
+                    raise ValueError("Invalid response format from ADK API")
+            else:
+                logger.error("No response from ADK API")
+                raise ValueError("No response received from ADK API")
+                
+        except Exception as e:
+            logger.error(f"ADK API call failed: {str(e)}")
+            raise ValueError(f"ADK API call failed: {str(e)}")
     
+    def _extract_subject_from_prompt(self, prompt: str) -> str:
+        """Extract subject from prompt"""
+        # Look for "about: {subject}" pattern
+        import re
+        match = re.search(r'about:\s*([^\n]+)', prompt)
+        if match:
+            return match.group(1).strip()
+        
+        # Fallback: look for "The Story of {subject}" pattern
+        match = re.search(r'The Story of ([^"]+)', prompt)
+        if match:
+            return match.group(1).strip()
+        
+        # Default fallback
+        return "Unknown Topic"
+    
+    
+    def _parse_response_safely(self, response: str, subject: str) -> dict:
+        """
+        Safely parse JSON response with error handling and subject validation
+        
+        Args:
+            response: Raw response from AI
+            subject: Original subject for validation
+            
+        Returns:
+            dict: Parsed script data
+        """
+        try:
+            # Extract response text if it's an object
+            if hasattr(response, 'text') and response.text:
+                response_text = response.text
+            else:
+                response_text = str(response)
+            
+            # Find JSON boundaries
+            start_idx = response_text.find('{')
+            end_idx = response_text.rfind('}') + 1
+            
+            if start_idx == -1 or end_idx == 0:
+                logger.error("No valid JSON found in response")
+                raise ValueError("No valid JSON found in AI response")
+            
+            # Extract clean JSON
+            clean_json = response_text[start_idx:end_idx]
+            logger.info(f"Extracted JSON: {clean_json[:200]}...")
+            
+            # Parse JSON
+            script_data = json.loads(clean_json)
+            
+            # Validate subject match
+            title = script_data.get('title', '').lower()
+            if subject.lower() not in title and not any(word in title for word in subject.lower().split()):
+                logger.warning(f"Generated content doesn't match subject: {subject}")
+                logger.warning(f"Generated title: {script_data.get('title', 'No title')}")
+                raise ValueError(f"Generated content doesn't match requested subject: {subject}")
+            
+            logger.info("JSON parsing successful and subject validated")
+            return script_data
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parsing failed: {e}")
+            logger.error(f"Raw response: {response_text[:500]}...")
+            raise ValueError(f"Failed to parse JSON response: {e}")
+        except Exception as e:
+            logger.error(f"Unexpected error in JSON parsing: {e}")
+            raise ValueError(f"Unexpected error in JSON parsing: {e}")
+    
+
     def _parse_response(self, response_text: str, subject: str) -> VideoScript:
         """
         Parse the ADK response into VideoScript object
@@ -531,212 +491,11 @@ IMPORTANT: Create a story about {subject} only. Do not create stories about othe
             
         except Exception as e:
             logger.error(f"Error parsing response: {str(e)}")
-            logger.error(f"Raw response: {response[:500]}...")
+            logger.error(f"Raw response: {response_text[:500]}...")
             # Don't fall back to mock - let the error propagate
             raise ValueError(f"Failed to parse AI response: {str(e)}")
     
-    def _generate_mock_story_script(self, subject: str) -> StoryScript:
-        """Generate mock story script for fallback"""
-        logger.info("Generating mock story script")
-        
-        return StoryScript(
-            title=f"Understanding {subject}",
-            main_character_description="Huh - a cute, blob-like cartoon character",
-            character_cosplay_instructions=f"Dress Huh as an expert on {subject}",
-            overall_style="educational",
-            overall_story=f"The fascinating story of {subject} and its impact on the world",
-            story_summary=f"A comprehensive exploration of {subject}, covering its origins, development, and significance",
-            scene_plan=[
-                ScenePlan(
-                    scene_number=1,
-                    scene_type=SceneType.HOOK,
-                    scene_purpose="Grab attention and introduce the topic",
-                    key_content=f"Introduction to {subject}",
-                    scene_focus="Opening hook with surprising fact"
-                ),
-                ScenePlan(
-                    scene_number=2,
-                    scene_type=SceneType.EXPLANATION,
-                    scene_purpose="Explain the core concepts",
-                    key_content=f"Core concepts of {subject}",
-                    scene_focus="Educational explanation"
-                ),
-                ScenePlan(
-                    scene_number=3,
-                    scene_type=SceneType.EXAMPLE,
-                    scene_purpose="Provide concrete examples",
-                    key_content=f"Real-world examples of {subject}",
-                    scene_focus="Practical applications"
-                ),
-                ScenePlan(
-                    scene_number=4,
-                    scene_type=SceneType.STATISTIC,
-                    scene_purpose="Share impressive statistics",
-                    key_content=f"Statistics about {subject}",
-                    scene_focus="Data and numbers"
-                ),
-                ScenePlan(
-                    scene_number=5,
-                    scene_type=SceneType.CALL_TO_ACTION,
-                    scene_purpose="Encourage further learning",
-                    key_content=f"Next steps for learning about {subject}",
-                    scene_focus="Call to action"
-                ),
-                ScenePlan(
-                    scene_number=6,
-                    scene_type=SceneType.SUMMARY,
-                    scene_purpose="Summarize key points",
-                    key_content=f"Summary of {subject}",
-                    scene_focus="Final takeaways"
-                )
-            ]
-        )
 
-    def _generate_mock_script(self, subject: str) -> VideoScript:
-        """
-        Generate mock script as fallback
-        
-        Args:
-            subject: The subject for the mock script
-            
-        Returns:
-            VideoScript: Mock script object
-        """
-        return VideoScript(
-            title=f"Understanding {subject}",
-            main_character_description="Huh - a cute, blob-like cartoon character",
-            character_cosplay_instructions=f"Dress Huh as an expert on {subject}",
-            overall_style="educational",
-            scenes=[
-                Scene(
-                    scene_number=1,
-                    scene_type=SceneType.HOOK,
-                    dialogue=f"Let me explain {subject} in a fun and engaging way!",
-                    voice_tone=VoiceTone.EXCITED,
-                    elevenlabs_settings=ElevenLabsSettings(
-                        stability=0.3,
-                        similarity_boost=0.8,
-                        style=0.8,
-                        speed=1.1,
-                        loudness=0.2
-                    ),
-                    image_style=ImageStyle.SINGLE_CHARACTER,
-                    image_create_prompt=f"Educational introduction infographic showing key concepts about {subject}, with character from given image as small guide explaining with enthusiasm",
-                    character_pose="pointing",
-                    character_expression="smiling",
-                    background_description="educational setting",
-                    needs_animation=True,
-                    video_prompt=f"Animated explanation of {subject}",
-                    transition_to_next=TransitionType.FADE,
-                    hook_technique=None
-                ),
-                Scene(
-                    scene_number=2,
-                    scene_type=SceneType.EXPLANATION,
-                    dialogue=f"Here's what you need to know about {subject}. It's fascinating and important to understand!",
-                    voice_tone=VoiceTone.INFORMATIVE,
-                    elevenlabs_settings=ElevenLabsSettings(
-                        stability=0.3,
-                        similarity_boost=0.8,
-                        style=0.8,
-                        speed=1.1,
-                        loudness=0.2
-                    ),
-                    image_style=ImageStyle.INFOGRAPHIC,
-                    image_create_prompt=f"Detailed educational infographic breaking down {subject} into key components and concepts, with character from given image as small guide pointing at information",
-                    character_pose="gesturing at info",
-                    character_expression="confident",
-                    background_description="modern studio with displays",
-                    needs_animation=False,
-                    video_prompt=None,
-                    transition_to_next=TransitionType.CUT
-                ),
-                Scene(
-                    scene_number=3,
-                    scene_type=SceneType.EXAMPLE,
-                    dialogue=f"Let me give you a great example of {subject} in action!",
-                    voice_tone=VoiceTone.ENTHUSIASTIC,
-                    elevenlabs_settings=ElevenLabsSettings(
-                        stability=0.3,
-                        similarity_boost=0.8,
-                        style=0.8,
-                        speed=1.1,
-                        loudness=0.2
-                    ),
-                    image_style=ImageStyle.CHARACTER_WITH_BACKGROUND,
-                    image_create_prompt=f"Educational visual demonstration showing practical examples of {subject} in action, with character from given image as small guide demonstrating the process",
-                    character_pose="demonstrating",
-                    character_expression="excited",
-                    background_description="example setting",
-                    needs_animation=True,
-                    video_prompt=f"Animated example of {subject}",
-                    transition_to_next=TransitionType.SLIDE
-                ),
-                Scene(
-                    scene_number=4,
-                    scene_type=SceneType.STATISTIC,
-                    dialogue=f"The numbers behind {subject} are really impressive!",
-                    voice_tone=VoiceTone.IMPRESSED,
-                    elevenlabs_settings=ElevenLabsSettings(
-                        stability=0.3,
-                        similarity_boost=0.8,
-                        style=0.8,
-                        speed=1.1,
-                        loudness=0.2
-                    ),
-                    image_style=ImageStyle.INFOGRAPHIC,
-                    image_create_prompt=f"Comprehensive data visualization showing important statistics and metrics about {subject}, with character from given image as small guide highlighting key numbers",
-                    character_pose="pointing at stats",
-                    character_expression="surprised",
-                    background_description="data visualization",
-                    needs_animation=False,
-                    video_prompt=None,
-                    transition_to_next=TransitionType.DISSOLVE
-                ),
-                Scene(
-                    scene_number=5,
-                    scene_type=SceneType.CALL_TO_ACTION,
-                    dialogue=f"Want to learn more about {subject}? There's so much more to explore!",
-                    voice_tone=VoiceTone.ENCOURAGING,
-                    elevenlabs_settings=ElevenLabsSettings(
-                        stability=0.3,
-                        similarity_boost=0.8,
-                        style=0.8,
-                        speed=1.1,
-                        loudness=0.2
-                    ),
-                    image_style=ImageStyle.SINGLE_CHARACTER,
-                    image_create_prompt=f"Educational resource guide showing learning paths and next steps for {subject}, with character from given image as small guide encouraging further exploration",
-                    character_pose="inviting gesture",
-                    character_expression="encouraging",
-                    background_description="inviting setting",
-                    needs_animation=True,
-                    video_prompt=f"Inviting animation for {subject}",
-                    transition_to_next=TransitionType.FADE
-                ),
-                Scene(
-                    scene_number=6,
-                    scene_type=SceneType.SUMMARY,
-                    dialogue=f"So there you have it! {subject} is truly fascinating. Thanks for watching!",
-                    voice_tone=VoiceTone.FRIENDLY,
-                    elevenlabs_settings=ElevenLabsSettings(
-                        stability=0.3,
-                        similarity_boost=0.8,
-                        style=0.8,
-                        speed=1.1,
-                        loudness=0.2
-                    ),
-                    image_style=ImageStyle.SINGLE_CHARACTER,
-                    image_create_prompt=f"Final educational summary showing key takeaways and main points about {subject}, with character from given image as small guide waving goodbye with warm smile",
-                    character_pose="waving goodbye",
-                    character_expression="friendly",
-                    background_description="warm setting",
-                    needs_animation=False,
-                    video_prompt=None,
-                    transition_to_next=TransitionType.FADE
-                )
-            ]
-        )
 
 # Test function
 async def test_adk_script_writer():

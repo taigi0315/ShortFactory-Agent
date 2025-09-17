@@ -90,9 +90,9 @@ class ImageGenerationTool(BaseTool):
             if self.api_key:
                 image_data = await self._generate_scene_with_huh(cosplayed_huh_image, scene_prompt)
             else:
-                # Use mock generation as fallback
-                logger.warning("No cosplayed Huh image available, using mock generation")
-                image_data = self._generate_mock_scene_image(scene_prompt)
+                # Raise error instead of using mock
+                logger.error("No cosplayed Huh image available")
+                raise ValueError("No cosplayed Huh image available for scene generation")
             
             # Save image to session
             image_path = self.session_manager.save_image(
@@ -226,13 +226,12 @@ class ImageGenerationTool(BaseTool):
                         logger.info("✅ Scene image generated successfully with Gemini 2.5 Flash Image")
                         return parts.inline_data.data
             
-            logger.warning("No image data found in scene response, using mock image")
-            return self._generate_mock_scene_image(scene_prompt)
+            logger.error("No image data found in scene response")
+            raise ValueError("No image data found in scene response")
             
         except Exception as e:
             logger.error(f"Error generating scene with Huh: {str(e)}")
-            logger.info("Falling back to mock image generation")
-            return self._generate_mock_scene_image(scene_prompt)
+            raise ValueError(f"Error generating scene with Huh: {str(e)}")
     
     async def generate_unified_scene(self, scene: Scene, cosplay_desc: str) -> bytes:
         """
@@ -276,11 +275,11 @@ class ImageGenerationTool(BaseTool):
                         return parts.inline_data.data
             
             logger.warning("No image data found in unified scene generation response")
-            return self._generate_mock_scene_image(unified_prompt)
+            raise ValueError("No image data found in unified scene response")
             
         except Exception as e:
             logger.error(f"Error generating unified scene: {str(e)}")
-            return self._generate_mock_scene_image(unified_prompt)
+            raise ValueError(f"Error generating unified scene: {str(e)}")
     
     def _create_unified_prompt(self, scene: Scene, cosplay_desc: str) -> str:
         """Create unified prompt that combines character and educational content"""
@@ -367,36 +366,100 @@ class ImageGenerationTool(BaseTool):
         
         return "\n".join(elements) if elements else "Focus on clear, educational visual presentation"
     
-    def _generate_mock_scene_image(self, scene_prompt: str) -> bytes:
-        """Generate mock scene image"""
-        from PIL import Image, ImageDraw, ImageFont
-        import io
+    async def _generate_mock_images_for_session(self, session_id: str, script: VideoScript) -> Dict[str, Any]:
+        """
+        Generate mock images by copying from tests/mock_output/images
         
-        # Create a simple mock scene image with proper ratio
-        if self.image_ratio == "vertical":
-            width, height = 720, 1280  # 9:16 ratio
-        elif self.image_ratio == "horizontal":
-            width, height = 1280, 720  # 16:9 ratio
-        else:
-            width, height = 1024, 1024  # fallback to square
-        
-        image = Image.new('RGB', (width, height), color='lightgreen')
-        draw = ImageDraw.Draw(image)
-        
+        Args:
+            session_id: Session ID
+            script: VideoScript object
+            
+        Returns:
+            Dict with mock generation results
+        """
         try:
-            # Try to use a default font
-            font = ImageFont.load_default()
-        except:
-            font = None
-        
-        # Add text
-        text = f"Mock Scene Image\n{scene_prompt[:50]}..."
-        draw.text((50, 50), text, fill='black', font=font)
-        
-        # Convert to bytes
-        img_byte_arr = io.BytesIO()
-        image.save(img_byte_arr, format='PNG')
-        return img_byte_arr.getvalue()
+            logger.info("💰 Using mock images from tests/mock_output/images")
+            
+            results = {
+                "session_id": session_id,
+                "total_scenes": len(script.scenes),
+                "generated_images": [],
+                "failed_images": [],
+                "generation_time": 0,
+                "model_used": "Mock Images (Cost-Saving Mode)",
+                "character": "Huh",
+                "cosplay_instructions": script.character_cosplay_instructions
+            }
+            
+            start_time = time.time()
+            
+            # Get mock images directory
+            mock_images_dir = Path("tests/mock_output/images")
+            if not mock_images_dir.exists():
+                logger.error("Mock images directory not found: tests/mock_output/images")
+                return results
+            
+            # Get available mock images
+            mock_image_files = list(mock_images_dir.glob("scene_*.png"))
+            logger.info(f"Found {len(mock_image_files)} mock images")
+            
+            # Copy mock images for each scene
+            for i, scene in enumerate(script.scenes):
+                try:
+                    # Use available mock image (cycle through if more scenes than mock images)
+                    mock_image_file = mock_image_files[i % len(mock_image_files)]
+                    
+                    # Copy to session directory
+                    session_dir = self.session_manager.get_session_dir(session_id)
+                    images_dir = session_dir / "images"
+                    images_dir.mkdir(parents=True, exist_ok=True)
+                    
+                    destination_path = images_dir / f"scene_{scene.scene_number}.png"
+                    
+                    # Copy the file
+                    import shutil
+                    shutil.copy2(mock_image_file, destination_path)
+                    
+                    results["generated_images"].append({
+                        "scene_number": scene.scene_number,
+                        "image_path": str(destination_path),
+                        "scene_type": scene.scene_type,
+                        "character_pose": scene.character_pose,
+                        "background_description": scene.background_description,
+                        "character": "Huh (mock)",
+                        "cosplay_applied": False,
+                        "mock_source": str(mock_image_file)
+                    })
+                    
+                    logger.info(f"✅ Mock image copied for scene {scene.scene_number}: {destination_path}")
+                    
+                except Exception as e:
+                    logger.error(f"Error copying mock image for scene {scene.scene_number}: {str(e)}")
+                    results["failed_images"].append({
+                        "scene_number": scene.scene_number,
+                        "error": str(e)
+                    })
+            
+            # Calculate generation time
+            results["generation_time"] = time.time() - start_time
+            results["total_images"] = len(results["generated_images"])
+            results["failed_images_count"] = len(results["failed_images"])
+            
+            logger.info(f"✅ Mock image generation completed: {results['total_images']} images in {results['generation_time']:.2f}s")
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error in mock image generation: {str(e)}")
+            return {
+                "session_id": session_id,
+                "total_scenes": len(script.scenes),
+                "generated_images": [],
+                "failed_images": [],
+                "generation_time": 0,
+                "model_used": "Mock Images (Error)",
+                "character": "Huh",
+                "error": str(e)
+            }
     
     def _save_prompt(self, session_id: str, scene_number: int, prompt: str, prompt_type: str) -> None:
         """Save prompt to session for debugging"""
@@ -496,19 +559,24 @@ You are a professional image generation agent specializing in creating education
 - Speech bubbles or text boxes included
 """
     
-    async def generate_images_for_session(self, session_id: str, script: VideoScript) -> Dict[str, Any]:
+    async def generate_images_for_session(self, session_id: str, script: VideoScript, cost_saving_mode: bool = False) -> Dict[str, Any]:
         """
         Generate images for all scenes in a script
         
         Args:
             session_id: Session ID
             script: VideoScript object
+            cost_saving_mode: If True, use mock images instead of AI generation
             
         Returns:
             Dict with generation results
         """
         try:
             logger.info(f"Generating images for session: {session_id}")
+            
+            if cost_saving_mode:
+                logger.info("💰 Cost-saving mode enabled - using mock images from tests/mock_output")
+                return await self._image_tool._generate_mock_images_for_session(session_id, script)
             
             results = {
                 "session_id": session_id,

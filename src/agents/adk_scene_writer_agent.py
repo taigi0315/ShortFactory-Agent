@@ -343,8 +343,8 @@ Please generate a complete scene script following the format and guidelines prov
                 
         except Exception as e:
             logger.error(f"Error writing scene script: {str(e)}")
-            # Return fallback scene data
-            return self._generate_fallback_scene(scene_number, scene_type, subject)
+            # Re-raise the error instead of using fallback
+            raise e
     
     def get_continuity_report(self) -> Dict[str, Any]:
         """Get continuity report for all generated scenes"""
@@ -361,147 +361,37 @@ Please generate a complete scene script following the format and guidelines prov
         
         return all_issues
     
-    def _generate_fallback_scene(self, scene_number: int, scene_type: str, subject: str) -> Dict[str, Any]:
-        """Generate fallback scene data if ADK fails"""
-        logger.info(f"Generating fallback scene {scene_number}")
-        
-        return {
-            "scene_number": scene_number,
-            "scene_type": scene_type,
-            "dialogue": f"Let me explain {subject} in scene {scene_number}",
-            "voice_tone": "friendly",
-            "elevenlabs_settings": {
-                "stability": 0.3,
-                "similarity_boost": 0.8,
-                "style": 0.8,
-                "speed": 1.1,
-                "loudness": 0.2
-            },
-            "image_style": "single_character",
-            "image_create_prompt": f"Educational content about {subject} with character from given image as guide",
-            "character_pose": "pointing",
-            "character_expression": "smiling",
-            "background_description": "educational setting",
-            "needs_animation": True,
-            "video_prompt": f"Animated explanation of {subject}",
-            "transition_to_next": "fade",
-            "hook_technique": None,
-            "educational_content": {
-                "key_concepts": [f"concept about {subject}"],
-                "specific_facts": [f"fact about {subject}"],
-                "examples": [f"example of {subject}"],
-                "statistics": [f"statistic about {subject}"]
-            },
-            "visual_elements": {
-                "primary_focus": f"educational content about {subject}",
-                "secondary_elements": ["character guide"],
-                "color_scheme": "educational colors",
-                "lighting": "bright and clear"
-            },
-            "story_context": {
-                "purpose": f"explain {subject}",
-                "connection_to_previous": "continues the story",
-                "setup_for_next": "prepares for next scene"
-            }
-        }
     
     async def _simulate_adk_response(self, prompt: str) -> str:
         """
-        Simulate ADK response for testing
+        Use actual ADK API to generate scene response
         
         Args:
             prompt: The prompt to send to the agent
             
         Returns:
-            str: Simulated response
+            str: AI-generated response
         """
-        # This is a placeholder - in real implementation, this would use ADK Runner
-        # For now, return a mock response based on the subject in the prompt
-        if "Texas" in prompt:
-            return """
-{
-  "scene_number": 1,
-  "scene_type": "hook",
-  "dialogue": "Did you know that Texas was once its own independent country for 9 years? From 1836 to 1845, Texas was the Republic of Texas with its own president, flag, and currency! Let me tell you the incredible story of how this wild frontier became America's second-largest state!",
-  "voice_tone": "excited",
-  "elevenlabs_settings": {
-    "stability": 0.3,
-    "similarity_boost": 0.8,
-    "style": 0.8,
-    "speed": 1.1,
-    "loudness": 0.2
-  },
-  "image_style": "infographic",
-  "image_create_prompt": "Educational infographic showing 1836 Republic of Texas with the Lone Star flag, Sam Houston as president, Texas independence from Mexico, and character from given image as small guide pointing at the historical timeline and Texas state symbols",
-  "character_pose": "pointing at historical timeline",
-  "character_expression": "excited",
-  "background_description": "19th century Texas frontier with Republic of Texas symbols and historical landmarks",
-  "needs_animation": true,
-  "video_prompt": "Animated sequence showing 1836 Texas independence, the Republic of Texas period, Sam Houston's presidency, and character from given image guiding through the historical journey to statehood",
-  "transition_to_next": "fade",
-  "hook_technique": "shocking_fact",
-  "educational_content": {
-    "key_concepts": ["Texas independence", "Republic of Texas", "Statehood process", "Frontier expansion"],
-    "specific_facts": ["Texas was independent from 1836-1845", "Sam Houston was first president", "Lone Star flag adopted in 1839", "Annexed by US in 1845"],
-    "examples": ["Battle of San Jacinto", "Treaty of Velasco", "Texas Declaration of Independence", "State constitution"],
-    "statistics": ["9 years of independence", "1836-1845 period", "268,596 square miles", "Second largest US state"]
-  },
-  "visual_elements": {
-    "primary_focus": "1836 Republic of Texas with Lone Star flag and historical symbols",
-    "secondary_elements": ["Lone Star flag", "historical timeline", "Sam Houston portrait", "Texas state symbols"],
-    "color_scheme": "vintage sepia tones with Texas red, white, and blue accents",
-    "lighting": "warm historical lighting with frontier ambiance"
-  },
-  "story_context": {
-    "purpose": "Hook viewers with surprising fact about Texas's independent history",
-    "connection_to_previous": "Opening scene to grab attention with unexpected independence story",
-    "setup_for_next": "Sets up the story of how an independent republic became a US state"
-  }
-}
-"""
-        else:
-            # Default fallback for other subjects
-            return """
-{
-  "scene_number": 1,
-  "scene_type": "hook",
-  "dialogue": "Let me tell you an amazing story about this fascinating topic!",
-  "voice_tone": "excited",
-  "elevenlabs_settings": {
-    "stability": 0.3,
-    "similarity_boost": 0.8,
-    "style": 0.8,
-    "speed": 1.1,
-    "loudness": 0.2
-  },
-  "image_style": "infographic",
-  "image_create_prompt": "Educational infographic about the topic with character from given image as small guide",
-  "character_pose": "pointing",
-  "character_expression": "excited",
-  "background_description": "educational setting",
-  "needs_animation": true,
-  "video_prompt": "Animated explanation of the topic with character guide",
-  "transition_to_next": "fade",
-  "hook_technique": "question",
-  "educational_content": {
-    "key_concepts": ["main concept"],
-    "specific_facts": ["key fact"],
-    "examples": ["example"],
-    "statistics": ["statistic"]
-  },
-  "visual_elements": {
-    "primary_focus": "educational content",
-    "secondary_elements": ["character guide"],
-    "color_scheme": "educational colors",
-    "lighting": "bright and clear"
-  },
-  "story_context": {
-    "purpose": "introduce the topic",
-    "connection_to_previous": "opening scene",
-    "setup_for_next": "sets up the story"
-  }
-}
-"""
+        try:
+            logger.info("Using actual ADK API for scene generation")
+            
+            # Use the ADK Agent's run method
+            response = await self.run(prompt)
+            
+            if response and hasattr(response, 'text') and response.text:
+                logger.info("Successfully received scene response from ADK API")
+                return response.text
+            elif response and isinstance(response, str):
+                logger.info("Successfully received string scene response from ADK API")
+                return response
+            else:
+                logger.error("No response text from ADK API")
+                raise ValueError("No response received from ADK API")
+                
+        except Exception as e:
+            logger.error(f"ADK API call failed for scene: {str(e)}")
+            raise ValueError(f"ADK API call failed for scene: {str(e)}")
+    
 
 # Test function
 async def test_scene_writer():

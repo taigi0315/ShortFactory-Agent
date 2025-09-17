@@ -62,7 +62,7 @@ class ADKShortFactoryRunner:
         
         logger.info("ADK ShortFactory Runner initialized successfully")
     
-    async def create_video(self, subject: str, language: str = "English", max_scenes: int = 8) -> dict:
+    async def create_video(self, subject: str, language: str = "English", max_scenes: int = 8, cost_saving_mode: bool = False) -> dict:
         """
         Create a complete video using ADK workflow
         
@@ -70,6 +70,7 @@ class ADKShortFactoryRunner:
             subject: The topic for the video
             language: Language for the script
             max_scenes: Maximum number of scenes
+            cost_saving_mode: If True, use mock images instead of AI generation
             
         Returns:
             Dict with creation results
@@ -93,7 +94,7 @@ class ADKShortFactoryRunner:
             
             # Step 2: Generate images using ADK Image Generate Agent
             logger.info("Step 1b: Generating images with ADK Image Generate Agent...")
-            image_results = await self._generate_images_with_adk_agent(session_id, script)
+            image_results = await self._generate_images_with_adk_agent(session_id, script, cost_saving_mode)
             
             # Step 3: Prepare results
             results = {
@@ -221,11 +222,11 @@ class ADKShortFactoryRunner:
             logger.error(f"Error generating script with ADK: {str(e)}")
             raise
     
-    async def _generate_images_with_adk_agent(self, session_id: str, script: VideoScript) -> dict:
+    async def _generate_images_with_adk_agent(self, session_id: str, script: VideoScript, cost_saving_mode: bool = False) -> dict:
         """Generate images using ADK Image Generate Agent"""
         try:
             # Use ADK image agent to generate images
-            results = await self.image_generate_agent.generate_images_for_session(session_id, script)
+            results = await self.image_generate_agent.generate_images_for_session(session_id, script, cost_saving_mode=cost_saving_mode)
             logger.info(f"Images generated: {len(results.get('generated_images', []))}")
             return results
         except Exception as e:
@@ -256,12 +257,13 @@ class ADKShortFactoryRunner:
         except Exception as e:
             logger.error(f"Error closing ADK Runner: {str(e)}")
 
-async def main_adk(subject: Optional[str] = None):
+async def main_adk(subject: Optional[str] = None, cost_saving_mode: bool = False):
     """
     Main function for ADK-based ShortFactory
     
     Args:
         subject: Optional subject for automated testing
+        cost_saving_mode: If True, use mock images instead of AI generation
     """
     print("🚀 ADK-based ShortFactory Agent")
     print("=" * 50)
@@ -280,10 +282,12 @@ async def main_adk(subject: Optional[str] = None):
                 return
         
         print(f"\n🎯 Creating video for: {subject}")
+        if cost_saving_mode:
+            print("💰 Cost-saving mode enabled - using mock images")
         print("🔄 Using Google ADK workflow...")
         
         # Create video
-        results = await runner.create_video(subject)
+        results = await runner.create_video(subject, cost_saving_mode=cost_saving_mode)
         
         if results["status"] == "completed":
             print("\n✅ Video creation completed successfully!")
