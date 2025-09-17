@@ -2,12 +2,15 @@
 
 ## System Overview
 
-ShortFactory Agent is a **Google ADK (Agent Development Kit)** based modular AI system that creates short educational videos using a consistent character (Huh) with cosplay capabilities.
+ShortFactory Agent is a **Google ADK (Agent Development Kit)** based modular AI system that creates short educational videos using a consistent character (Huh) with cosplay capabilities. The system features a **2-stage validation system** to ensure high-quality, engaging content.
 
 ## 🏗️ ADK Architecture Components
 
 ### 1. ADK Agents
-- **ADKScriptWriterAgent**: Generates 8-scene educational scripts with cosplay instructions using Gemini 2.5 Flash
+- **ADKScriptWriterAgent**: Generates story scripts and scene plans using Gemini 2.5 Flash
+- **ADKSceneWriterAgent**: Creates detailed scene scripts with comprehensive educational content
+- **ADKScriptValidatorAgent**: Validates story-level quality (fun, interest, uniqueness, educational value)
+- **ADKSceneScriptValidatorAgent**: Validates individual scene quality and smooth connections
 - **ADKImageGenerateAgent**: Creates character-consistent images using Huh character with Gemini 2.5 Flash Image
 - **ADKAudioGenerateAgent**: (Future) Text-to-speech generation
 - **ADKVideoGenerateAgent**: (Future) Final video assembly
@@ -19,13 +22,26 @@ ShortFactory Agent is a **Google ADK (Agent Development Kit)** based modular AI 
 - **InMemoryMemoryService**: Agent memory and context
 
 ### 3. Core Components
-- **Models**: Pydantic data structures (VideoScript, Scene, etc.)
+- **Models**: Pydantic data structures (StoryScript, Scene, ValidationResult, etc.)
 - **Session Manager**: UUID-based file organization and metadata tracking
 - **Asset Manager**: Huh character image management
+- **Shared Context Manager**: Maintains consistency across agents
+- **Story Focus Engine**: Refines broad subjects into specific, engaging stories
+- **Scene Continuity Manager**: Ensures smooth transitions between scenes
+- **Image Style Selector**: Intelligently selects optimal image styles
+- **Educational Enhancer**: Enriches content with educational elements
 
-### 4. ADK Data Flow
+### 4. 2-Stage Validation System
+- **Stage 1 - Script Validation**: Validates overall story quality before scene generation
+- **Stage 2 - Scene Validation**: Validates individual scene quality before image generation
+- **Feedback Loop**: Automatic revision system with detailed feedback
+
+### 5. ADK Data Flow
 ```
-User Input → ADK Runner → ADKScriptWriterAgent → Script Generation → ADKImageGenerateAgent → Cosplay Generation → Scene Image Generation → Session Storage → Complete Assets
+User Input → ADK Runner → ADKScriptWriterAgent → Story Script → ADKScriptValidatorAgent → 
+[PASS] → ADKSceneWriterAgent → Scene Scripts → ADKSceneScriptValidatorAgent → 
+[PASS] → ADKImageGenerateAgent → Image Generation → Session Storage → Complete Assets
+[REVISE] → Feedback Loop → Re-generation
 ```
 
 ## 🎭 Character System
@@ -91,22 +107,66 @@ class Scene(BaseModel):
 
 ## 🚀 Workflow
 
-### Current ADK Workflow (Phase 2)
+### Current ADK Workflow with 2-Stage Validation
 1. **Input**: User provides subject
 2. **ADK Runner**: Orchestrates multi-agent workflow
-3. **ADKScriptWriterAgent**: Creates 8-scene script with cosplay
-4. **ADKImageGenerateAgent**: Cosplays Huh character
-5. **ADKImageGenerateAgent**: Generates 8 educational images with consistent character
-6. **Output**: Files saved in session directory
+3. **ADKScriptWriterAgent**: Creates story script and scene plan
+4. **ADKScriptValidatorAgent**: Validates story quality
+   - **PASS**: Continue to scene generation
+   - **REVISE**: Return to Script Writer with feedback
+5. **ADKSceneWriterAgent**: Creates detailed scene scripts
+6. **ADKSceneScriptValidatorAgent**: Validates all scene quality
+   - **PASS**: Continue to image generation
+   - **REVISE**: Return specific scenes to Scene Writer with feedback
+7. **ADKImageGenerateAgent**: Generates educational images with consistent character
+8. **Output**: Files saved in session directory
 
 ### Future ADK Workflow (Complete)
 1. **Input**: User provides subject
 2. **ADK Runner**: Orchestrates multi-agent workflow
-3. **ADKScriptWriterAgent**: Creates 8-scene script with cosplay
-4. **ADKImageGenerateAgent**: Cosplays Huh character and generates images
-5. **ADKAudioGenerateAgent**: Generates voice-over for each scene
-6. **ADKVideoGenerateAgent**: Combines images and audio into final video
-7. **Output**: Complete video file
+3. **ADKScriptWriterAgent**: Creates story script and scene plan
+4. **ADKScriptValidatorAgent**: Validates story quality
+5. **ADKSceneWriterAgent**: Creates detailed scene scripts
+6. **ADKSceneScriptValidatorAgent**: Validates all scene quality
+7. **ADKImageGenerateAgent**: Generates educational images with consistent character
+8. **ADKAudioGenerateAgent**: Generates voice-over for each scene
+9. **ADKVideoGenerateAgent**: Combines images and audio into final video
+10. **Output**: Complete video file
+
+## 🔍 Validation System Details
+
+### Stage 1: Script Validator Agent
+**Purpose**: Validates overall story quality before scene generation
+
+**Validation Criteria**:
+- **Fun Factor**: Is the story entertaining and engaging?
+- **Interest Level**: Will viewers want to continue watching?
+- **Uniqueness**: Is the story angle uncommon and distinctive?
+- **Educational Value**: Does it provide meaningful learning content?
+- **Narrative Coherence**: Does the story flow logically?
+
+**Output**:
+- **PASS**: Story meets quality standards, proceed to scene generation
+- **REVISE**: Story needs improvement, return to Script Writer with detailed feedback
+
+### Stage 2: Scene Script Validator Agent
+**Purpose**: Validates individual scene quality and smooth connections
+
+**Validation Criteria**:
+- **Scene Quality**: Is each scene sufficiently engaging?
+- **Visual Potential**: Can the scene be effectively visualized?
+- **Educational Density**: Does it contain sufficient learning elements?
+- **Character Utilization**: Is the character effectively used?
+- **Smooth Connection**: Do scenes flow well together?
+
+**Output**:
+- **PASS**: All scenes meet quality standards, proceed to image generation
+- **REVISE**: Specific scenes need improvement, return to Scene Writer with feedback
+
+### Feedback Loop System
+**Automatic Revision**: Failed validations trigger automatic re-generation with detailed feedback
+**State Management**: Tracks revision attempts and prevents infinite loops
+**Learning System**: Improves validation criteria based on successful patterns
 
 ## 🔒 Security & Reliability
 

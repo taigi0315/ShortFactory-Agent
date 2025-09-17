@@ -47,7 +47,7 @@ class ADKScriptWriterAgent(Agent):
         super().__init__(
             name="script_writer",
             description="Generates video scripts using Gemini 2.5 with Huh character",
-            model="gemini-2.5-flash",
+            model="gemini-1.5-pro",
             instruction=self._get_instruction(),
             generate_content_config={
                 "temperature": 0.7,
@@ -73,141 +73,76 @@ class ADKScriptWriterAgent(Agent):
             str: The instruction prompt
         """
         return """
-You are a professional video script writer specializing in creating engaging, educational short videos. Your primary role is to:
+You are an expert educational content strategist who creates SPECIFIC, FACT-DENSE, ENGAGING video scripts.
 
-1. **Story Development**: Take a broad subject and develop a specific, focused story
-2. **Scene Planning**: Divide the story into logical scenes for video production
-3. **Overall Coordination**: Provide context for scene writers to create detailed scripts
+## CRITICAL REQUIREMENTS:
 
-## Story Development Process:
+### 1. ULTRA-SPECIFIC STORY SELECTION
+Never create broad overviews. Instead:
+- BAD: "The story of Tesla"
+- GOOD: "The 3 AM meeting where Elon Musk saved Tesla from bankruptcy with a single phone call to Larry Page"
 
-### Step 1: Subject Analysis
-- Take the given subject and analyze it deeply
-- Identify the most interesting, educational, or surprising angle
-- Find a specific story or narrative within the broader topic
+### 2. FACT DENSITY REQUIREMENTS
+Every scene must contain:
+- Minimum 3 specific facts with numbers/dates
+- At least 1 surprising statistic
+- Concrete examples with names, places, times
+- Data points that viewers will remember
 
-### Step 2: Story Scoping
-- Narrow down to a focused, specific story
-- Choose a particular aspect, event, or perspective
-- Make it concrete and relatable
+### 3. NARRATIVE STRUCTURE
+Use the "Curiosity Gap" framework:
+- Scene 1: Present an impossible-seeming outcome
+- Scene 2-3: Reveal the obstacles that made it impossible
+- Scene 4-5: Show the specific actions/decisions that changed everything
+- Scene 6: Reveal the unexpected consequences/current impact
 
-### Examples:
-- Subject: "Elon Musk" → Story: "How Elon Musk bought a house in Austin and moved Tesla headquarters there"
-- Subject: "Machine Learning" → Story: "How Netflix uses machine learning to recommend movies you'll love"
-- Subject: "K-pop" → Story: "How BTS broke into the American market and changed K-pop forever"
-- Subject: "Climate Change" → Story: "How a small island nation is fighting rising sea levels with innovative solutions"
+### 4. BANNED PHRASES (NEVER USE):
+- "Let me explain..."
+- "Did you know..."
+- "It's fascinating..."
+- "Here's what you need to know..."
+- Any generic educational filler
 
-### Step 3: Scene Division
-- Divide the story into 6-8 logical scenes
-- Each scene should have a clear purpose and educational value
-- Ensure smooth flow and narrative progression
+### 5. SCENE REQUIREMENTS
+Each scene MUST have:
+- A specific claim or revelation
+- Supporting data/evidence
+- Visual proof points
+- Connection to viewer's life/interests
 
-## Character Requirements:
-- Use ONLY the character "Huh" - a cute, blob-like cartoon character
-- Huh is the main character who appears in all scenes
-- Include character_cosplay_instructions: Describe how Huh should be cosplayed/dressed for this topic (e.g., "dress Huh as a scientist with lab coat", "dress Huh as a programmer with glasses", etc.)
-- Include character_expression for each scene: Describe Huh's emotional expression (e.g., "smiling", "winking", "excited", "surprised", "confident")
-- Huh should be relatable and engaging
-- Add speech bubbles or text boxes with dialogue for Huh in each scene
+### 6. CHARACTER INTEGRATION
+The character should:
+- React to surprising information (not just present it)
+- Show genuine emotions (shock, confusion, amazement)
+- Ask the questions viewers are thinking
+- Challenge assumptions
 
-## Available Options:
+## Output Format:
+Return a JSON object with:
+- title: Specific, engaging title (not generic)
+- main_character_description: Huh character description
+- character_cosplay_instructions: Specific cosplay for this story
+- overall_style: Educational style with specific focus
+- overall_story: The ultra-specific story being told
+- story_summary: Brief summary with key facts
+- scene_plan: Array of scene plans with specific content
 
-### Scene Types:
-- "hook": Opening scene to grab attention
-- "explanation": Educational content scene
-- "visual_demo": Visual demonstration scene
-- "comparison": Comparison explanation scene
-- "story_telling": Story-telling scene
-- "conclusion": Closing/summary scene
+## Scene Planning Requirements:
+- scene_number: Sequential number
+- scene_type: hook, explanation, example, statistic, call_to_action, summary
+- scene_purpose: Specific educational goal
+- key_content: Concrete facts and data points
+- scene_focus: The specific revelation or claim
 
-### Image Styles:
-- "single_character": Huh alone in the scene
-- "character_with_background": Huh with educational background
-- "infographic": Information display with Huh
-- "diagram_explanation": Diagram with Huh explaining
-- "before_after_comparison": Comparison with Huh
-- "step_by_step_visual": Step-by-step with Huh
-- "four_cut_cartoon": Comic-style with Huh
-- "comic_panel": Comic panel with Huh
-- "speech_bubble": Huh with speech bubbles
-- "cinematic": Cinematic style with Huh
-- "close_up_reaction": Close-up of Huh's reaction
-- "wide_establishing_shot": Wide shot with Huh
+## VALIDATION CRITERIA:
+✓ Can you name 5 specific facts from the script?
+✓ Is there a clear story arc with tension and resolution?
+✓ Would a viewer retell this story to friends?
+✓ Are there at least 10 concrete data points?
+✓ Does each scene advance the narrative?
 
-### Voice Tones:
-- "excited": Energetic and enthusiastic
-- "curious": Questioning and inquisitive
-- "serious": Professional and authoritative
-- "friendly": Warm and approachable
-- "sad": Emotional and empathetic
-- "mysterious": Intriguing and suspenseful
-- "surprised": Shocked and amazed
-- "confident": Assured and knowledgeable
-
-### Transition Types:
-- "fade": Smooth fade transition
-- "cut": Quick cut transition
-- "slide": Slide transition
-- "zoom": Zoom transition
-- "dissolve": Dissolve transition
-
-### Hook Techniques:
-- "shocking_fact": Start with surprising information
-- "question": Begin with a thought-provoking question
-- "story": Start with a relatable story
-- "statistic": Begin with an impressive statistic
-- "controversy": Start with a controversial statement
-
-### Image Create Prompts:
-- PRIMARY FOCUS: Educational content and information delivery
-- SECONDARY FOCUS: Character from given image (not "Huh" - use "character from given image")
-- Create detailed, informative visual content that teaches the topic
-- Include specific educational elements: charts, diagrams, examples, statistics
-- Describe setting, lighting, atmosphere in detail
-- Include art style, mood, color palette
-- Specify camera angle, framing, focal point
-- IMPORTANT: Include character_pose, character_expression, and background_description fields
-- Character should be SMALL in the image (not dominating the frame)
-- Focus on EDUCATIONAL CONTENT - what information are we teaching?
-- Make images 100% informative and educational
-- Character is just a guide/helper, not the main focus
-- Add speech bubbles or text boxes with dialogue for character
-- Keep character's original image style - don't change character's appearance
-- Images will be in vertical ratio (9:16 format for mobile/social media) or horizontal ratio (16:9 format for desktop/widescreen)
-- Each image should have a clear educational purpose and message
-
-### Output Format:
-You MUST output a valid JSON object that matches this exact structure:
-
-{
-  "title": "Compelling title for the video",
-  "main_character_description": "Huh - a cute, blob-like cartoon character",
-  "character_cosplay_instructions": "Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a K-pop idol')",
-  "overall_style": "educational",
-  "overall_story": "The specific, focused story you developed from the subject",
-  "story_summary": "Brief summary of the overall narrative and key points",
-  "scene_plan": [
-    {
-      "scene_number": 1,
-      "scene_type": "hook",
-      "scene_purpose": "What this scene aims to achieve",
-      "key_content": "Main educational content for this scene",
-      "scene_focus": "Specific aspect or angle this scene covers"
-    }
-  ]
-}
-
-## Guidelines:
-- **CRITICAL: Create exactly 6-8 scenes for a complete video**
-- Each scene should be 8 seconds long (dialogue length should match)
-- Make dialogue engaging and educational
-- Use Huh character consistently throughout
-- Include diverse scene types and transitions
-- Ensure smooth flow between scenes
-- Make content accessible and entertaining
-- Focus on educational value while keeping it fun
-- Use Huh's personality to make complex topics relatable
-- **MUST include multiple scenes: hook, explanation, example, statistic, call_to_action, summary**
+## CRITICAL: Create exactly 6 scenes for a complete video
+Each scene must be information-dense and memorable.
 """
 
     async def generate_story_script(self, subject: str, language: str = "English", max_video_scenes: int = 8, 
@@ -237,45 +172,83 @@ You MUST output a valid JSON object that matches this exact structure:
             logger.info(f"Story focus refined: {focus_result.applied_pattern.value} pattern applied")
             logger.info(f"Focus score: {focus_result.focus_score:.2f}")
             
-            # Create the prompt for the agent with focused story
+            # Create a simple, direct prompt
             prompt = f"""
-Create a story script about: {subject}
+Create a story about {subject}.
 
-Language: {language}
-REQUIRED: Create exactly {max_video_scenes} scenes for this video
+Output ONLY this JSON (no other text):
 
-FOCUSED STORY ANGLE:
-{focus_result.focused_story}
+{{
+  "title": "Story about {subject}",
+  "main_character_description": "Huh - a cute, blob-like cartoon character",
+  "character_cosplay_instructions": "Cosplay for {subject} story",
+  "overall_style": "educational",
+  "overall_story": "Specific story about {subject}",
+  "story_summary": "Summary about {subject}",
+  "scene_plan": [
+    {{
+      "scene_number": 1,
+      "scene_type": "hook",
+      "scene_purpose": "Introduce {subject}",
+      "key_content": "Facts about {subject}",
+      "scene_focus": "Key point about {subject}"
+    }},
+    {{
+      "scene_number": 2,
+      "scene_type": "explanation",
+      "scene_purpose": "Explain {subject}",
+      "key_content": "Details about {subject}",
+      "scene_focus": "Important aspect of {subject}"
+    }},
+    {{
+      "scene_number": 3,
+      "scene_type": "example",
+      "scene_purpose": "Show {subject} example",
+      "key_content": "Example of {subject}",
+      "scene_focus": "Practical {subject} example"
+    }},
+    {{
+      "scene_number": 4,
+      "scene_type": "statistic",
+      "scene_purpose": "Share {subject} statistics",
+      "key_content": "Numbers about {subject}",
+      "scene_focus": "Statistical data on {subject}"
+    }},
+    {{
+      "scene_number": 5,
+      "scene_type": "call_to_action",
+      "scene_purpose": "Encourage learning about {subject}",
+      "key_content": "Learn more about {subject}",
+      "scene_focus": "Further {subject} exploration"
+    }},
+    {{
+      "scene_number": 6,
+      "scene_type": "summary",
+      "scene_purpose": "Summarize {subject}",
+      "key_content": "Key {subject} points",
+      "scene_focus": "Main {subject} takeaways"
+    }}
+  ]
+}}
 
-IMPORTANT STORY DEVELOPMENT PROCESS:
-1. Use the focused story angle above as your foundation
-2. Develop this specific, engaging narrative
-3. Choose scenes that support this focused story
-4. Make it concrete and relatable
-5. Divide into {max_video_scenes} logical scenes
-
-STORY FOCUS REQUIREMENTS:
-- Follow the focused story angle: "{focus_result.focused_story}"
-- Keep the story specific and engaging (not broad overview)
-- Choose scenes that build the focused narrative
-- Ensure each scene supports the main story angle
-- Make sure the story can be told through visual scenes
-
-STORY VALIDATION REQUIREMENTS:
-- Keep the story focused and achievable in {max_video_scenes} scenes
-- Avoid overly complex topics that require extensive background
-- Choose stories with clear beginning, middle, and end
-- Ensure the story has educational value and entertainment factor
-- Make sure the story can be told through visual scenes
-
-Please generate a complete story script following the format and guidelines provided in your instructions.
+IMPORTANT: Create a story about {subject} only. Do not create stories about other topics.
 """
+            
+            # Log the prompt being sent to AI
+            logger.info(f"PROMPT BEING SENT TO AI:")
+            logger.info(f"Length: {len(prompt)}")
+            logger.info(f"Content: {prompt}")
             
             # Use ADK agent's built-in content generation
             # ADK LlmAgent handles the API calls internally
             response = await self._simulate_adk_response(prompt)
             
             if response:
+                # Log the full response for debugging
+                logger.info(f"AI Response length: {len(response)}")
+                logger.info(f"AI Response preview: {response[:200]}...")
+                logger.info(f"AI Response full: {response}")
+                
                 if hasattr(response, 'text') and response.text:
                     script_data = json.loads(response.text)
                 else:
@@ -329,8 +302,8 @@ Please generate a complete story script following the format and guidelines prov
             
         except Exception as e:
             logger.error(f"Error generating story script: {str(e)}")
-            # Return mock data as fallback
-            return self._generate_mock_story_script(subject)
+            # Don't fall back to mock - let the error propagate
+            raise ValueError(f"Failed to generate story script: {str(e)}")
     
     async def _simulate_adk_response(self, prompt: str) -> str:
         """
@@ -401,7 +374,7 @@ Please generate a complete story script following the format and guidelines prov
     {
       "scene_number": 1,
       "scene_type": "hook",
-      "dialogue": "Did you know that K-pop generates over $5 billion annually? Let me show you what makes this Korean music phenomenon so powerful!",
+      "dialogue": "Did you know that music industry generates over $5 billion annually? Let me show you what makes this Korean music phenomenon so powerful!",
       "voice_tone": "excited",
       "elevenlabs_settings": {
         "stability": 0.3,
@@ -411,7 +384,7 @@ Please generate a complete story script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "single_character",
-      "image_create_prompt": "Educational infographic showing K-pop industry statistics: $5 billion global market value, major companies (HYBE, SM, JYP, YG), with character from given image as small guide pointing at the data",
+      "image_create_prompt": "Educational infographic showing music industry industry statistics: $5 billion global market value, major companies (HYBE, SM, JYP, YG), with character from given image as small guide pointing at the data",
       "character_pose": "pointing at screen",
       "character_expression": "excited",
       "background_description": "stage with charts and statistics",
@@ -423,7 +396,7 @@ Please generate a complete story script following the format and guidelines prov
     {
       "scene_number": 2,
       "scene_type": "explanation",
-      "dialogue": "K-pop stands for Korean pop music, but it's so much more than just music! It's a complete entertainment package with synchronized dancing, stunning visuals, and captivating storytelling.",
+      "dialogue": "music industry stands for Korean pop music, but it's so much more than just music! It's a complete entertainment package with synchronized dancing, stunning visuals, and captivating storytelling.",
       "voice_tone": "informative",
       "elevenlabs_settings": {
         "stability": 0.3,
@@ -433,7 +406,7 @@ Please generate a complete story script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "infographic",
-      "image_create_prompt": "Detailed educational diagram showing K-pop core elements: synchronized choreography, vocal harmonies, visual storytelling, fashion trends, with character from given image as small guide explaining each element",
+      "image_create_prompt": "Detailed educational diagram showing music industry core elements: synchronized choreography, vocal harmonies, visual storytelling, fashion trends, with character from given image as small guide explaining each element",
       "character_pose": "gesturing towards infographic",
       "character_expression": "confident",
       "background_description": "modern studio with infographic displays",
@@ -454,7 +427,7 @@ Please generate a complete story script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "character_with_background",
-      "image_create_prompt": "Educational visual showing K-pop concert production: stage design, lighting effects, fan engagement, choreography coordination, with character from given image as small guide demonstrating the process",
+      "image_create_prompt": "Educational visual showing music industry concert production: stage design, lighting effects, fan engagement, choreography coordination, with character from given image as small guide demonstrating the process",
       "character_pose": "pointing at stage",
       "character_expression": "amazed",
       "background_description": "concert stage with lights and visuals",
@@ -465,7 +438,7 @@ Please generate a complete story script following the format and guidelines prov
     {
       "scene_number": 4,
       "scene_type": "statistic",
-      "dialogue": "The numbers are incredible! K-pop has over 100 million fans worldwide, with groups like BLACKPINK reaching 1 billion views on YouTube. It's not just music - it's a cultural phenomenon!",
+      "dialogue": "The numbers are incredible! music industry has over 100 million fans worldwide, with groups like BLACKPINK reaching 1 billion views on YouTube. It's not just music - it's a cultural phenomenon!",
       "voice_tone": "impressed",
       "elevenlabs_settings": {
         "stability": 0.3,
@@ -475,7 +448,7 @@ Please generate a complete story script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "infographic",
-      "image_create_prompt": "Comprehensive data visualization showing K-pop global impact: 100+ million fans worldwide, 1+ billion YouTube views, cultural influence metrics, with character from given image as small guide highlighting key statistics",
+      "image_create_prompt": "Comprehensive data visualization showing music industry global impact: 100+ million fans worldwide, 1+ billion YouTube views, cultural influence metrics, with character from given image as small guide highlighting key statistics",
       "character_pose": "gesturing at statistics",
       "character_expression": "surprised",
       "background_description": "data visualization studio with charts",
@@ -486,7 +459,7 @@ Please generate a complete story script following the format and guidelines prov
     {
       "scene_number": 5,
       "scene_type": "call_to_action",
-      "dialogue": "Want to dive deeper into K-pop? Check out the amazing choreography, explore different groups, and discover why this Korean wave has taken the world by storm!",
+      "dialogue": "Want to dive deeper into music industry? Check out the amazing choreography, explore different groups, and discover why this Korean wave has taken the world by storm!",
       "voice_tone": "encouraging",
       "elevenlabs_settings": {
         "stability": 0.3,
@@ -496,10 +469,10 @@ Please generate a complete story script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "single_character",
-      "image_create_prompt": "Educational summary infographic showing K-pop learning resources: recommended groups, music platforms, cultural aspects to explore, with character from given image as small guide encouraging further learning",
+      "image_create_prompt": "Educational summary infographic showing music industry learning resources: recommended groups, music platforms, cultural aspects to explore, with character from given image as small guide encouraging further learning",
       "character_pose": "arms spread wide",
       "character_expression": "inviting",
-      "background_description": "colorful stage with K-pop elements",
+      "background_description": "colorful stage with music industry elements",
       "needs_animation": true,
       "video_prompt": "Huh with inviting gesture and animated background",
       "transition_to_next": "fade"
@@ -507,7 +480,7 @@ Please generate a complete story script following the format and guidelines prov
     {
       "scene_number": 6,
       "scene_type": "summary",
-      "dialogue": "So there you have it! K-pop is more than just music - it's a complete entertainment experience that combines music, dance, visuals, and storytelling to create something truly special. Thanks for watching!",
+      "dialogue": "So there you have it! music industry is more than just music - it's a complete entertainment experience that combines music, dance, visuals, and storytelling to create something truly special. Thanks for watching!",
       "voice_tone": "friendly",
       "elevenlabs_settings": {
         "stability": 0.3,
@@ -517,7 +490,7 @@ Please generate a complete story script following the format and guidelines prov
         "loudness": 0.2
       },
       "image_style": "single_character",
-      "image_create_prompt": "Final educational summary showing key K-pop takeaways: global phenomenon, cultural impact, entertainment industry innovation, with character from given image as small guide waving goodbye with warm smile",
+      "image_create_prompt": "Final educational summary showing key music industry takeaways: global phenomenon, cultural impact, entertainment industry innovation, with character from given image as small guide waving goodbye with warm smile",
       "character_pose": "waving goodbye",
       "character_expression": "smiling",
       "background_description": "warm, friendly setting",
@@ -558,8 +531,9 @@ Please generate a complete story script following the format and guidelines prov
             
         except Exception as e:
             logger.error(f"Error parsing response: {str(e)}")
-            logger.info("Using mock script as fallback")
-            return self._generate_mock_script(subject)
+            logger.error(f"Raw response: {response[:500]}...")
+            # Don't fall back to mock - let the error propagate
+            raise ValueError(f"Failed to parse AI response: {str(e)}")
     
     def _generate_mock_story_script(self, subject: str) -> StoryScript:
         """Generate mock story script for fallback"""
@@ -769,7 +743,7 @@ async def test_adk_script_writer():
     """Test the ADK Script Writer Agent"""
     try:
         agent = ADKScriptWriterAgent()
-        script = await agent.generate_script("What is K-pop?", "English", 3)
+        script = await agent.generate_script("What is music industry?", "English", 3)
         print(f"✅ ADK Script generated successfully!")
         print(f"✅ Title: {script.title}")
         print(f"✅ Scenes: {len(script.scenes)}")

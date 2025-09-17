@@ -609,13 +609,13 @@ def test_educational_enhancer():
     
     # Test scene data
     test_scene = {
-        "dialogue": "Coca-Cola was created in 1886 by Dr. John Pemberton and now sells 1.9 billion servings daily worldwide.",
+        "dialogue": "the company was created in 1886 by Dr. John Pemberton and now sells 1.9 billion servings daily worldwide.",
         "educational_content": {
-            "key_concepts": ["Coca-Cola origin", "Global marketing"],
+            "key_concepts": ["the company origin", "Global marketing"],
             "specific_facts": ["Created in 1886", "1.9 billion servings daily"],
             "statistics": ["1886 creation date", "1.9 billion daily servings"]
         },
-        "image_create_prompt": "Educational scene about Coca-Cola's history and global reach"
+        "image_create_prompt": "Educational scene about the company's history and global reach"
     }
     
     # Enhance educational content

@@ -479,14 +479,14 @@ def test_image_style_selector():
     # Test scene data
     test_scene = {
         "scene_type": "hook",
-        "dialogue": "Did you know that 90% of people don't know this shocking statistic about Coca-Cola?",
+        "dialogue": "Did you know that 90% of people don't know this shocking statistic about the company?",
         "educational_content": {
             "statistics": ["90% of people", "shocking statistic"],
-            "key_concepts": ["Coca-Cola", "statistics"]
+            "key_concepts": ["the company", "statistics"]
         },
         "visual_elements": {
             "primary_focus": "statistical data",
-            "secondary_elements": ["Coca-Cola branding", "surprised reactions"]
+            "secondary_elements": ["the company branding", "surprised reactions"]
         }
     }
     

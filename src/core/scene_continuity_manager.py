@@ -469,7 +469,7 @@ def test_scene_continuity_manager():
             "lighting": "bright educational"
         },
         "educational_content": {
-            "key_concepts": ["Coca-Cola origin"],
+            "key_concepts": ["the company origin"],
             "specific_facts": ["Created in 1886"]
         }
     }
@@ -484,8 +484,8 @@ def test_scene_continuity_manager():
             "lighting": "warm historical"
         },
         "educational_content": {
-            "key_concepts": ["Coca-Cola ingredients"],
-            "specific_facts": ["Contains coca leaves"]
+            "key_concepts": ["the company ingredients"],
+            "specific_facts": ["Contains ingredient leaves"]
         }
     }
     

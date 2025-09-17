@@ -315,7 +315,7 @@ def test_story_validator():
         ("Elon Musk", "How Elon Musk bought a house in Austin and moved Tesla headquarters there"),
         ("Machine Learning", "How Netflix uses machine learning to recommend movies you'll love"),
         ("Climate Change", "How a small island nation is fighting rising sea levels with innovative solutions"),
-        ("K-pop", "How BTS broke into the American market and changed K-pop forever")
+        ("music industry", "How BTS broke into the American market and changed music industry forever")
     ]
     
     for subject, story in test_cases:

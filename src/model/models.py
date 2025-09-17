@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Dict, Any
 from enum import Enum
+from datetime import datetime
 
 class SceneType(str, Enum):
     EXPLANATION = "explanation"  # Character explaining concepts
@@ -172,7 +173,7 @@ class StoryScript(BaseModel):
     """Story script model for overall story planning"""
     title: str
     main_character_description: str = Field(description="Consistent character description for all scenes")
-    character_cosplay_instructions: str = Field(description="Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a K-pop idol')")
+    character_cosplay_instructions: str = Field(description="Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a music industry idol')")
     overall_style: str = Field(description="Overall video style: 'educational', 'entertaining', 'documentary'")
     overall_story: str = Field(description="The specific, focused story developed from the subject")
     story_summary: str = Field(description="Brief summary of the overall narrative and key points")
@@ -185,7 +186,7 @@ class VideoScript(BaseModel):
     """
     title: str
     main_character_description: str = Field(description="Consistent character description for all scenes")
-    character_cosplay_instructions: str = Field(description="Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a K-pop idol')")
+    character_cosplay_instructions: str = Field(description="Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a music industry idol')")
     overall_style: str = Field(description="Overall video style: 'educational', 'entertaining', 'documentary'")
     overall_story: str = Field(description="The specific, focused story developed from the subject")
     story_summary: str = Field(description="Brief summary of the overall narrative and key points")
@@ -242,3 +243,92 @@ Good video_prompt examples:
 - "Character nods thoughtfully while abstract thought bubbles float above their head"
 - "Character gestures excitedly as colorful particles swirl around them to illustrate the concept"
 """
+
+# Validation Models for 2-Stage Validation System
+
+class ValidationStatus(str, Enum):
+    """Status of validation result"""
+    PASS = "pass"
+    REVISE = "revise"
+    CRITICAL_FAILURE = "critical_failure"
+
+class ValidationSeverity(str, Enum):
+    """Severity of validation issues"""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+class ValidationIssue(BaseModel):
+    """Individual validation issue"""
+    severity: ValidationSeverity
+    category: str  # "fun_factor", "interest_level", "uniqueness", etc.
+    description: str
+    suggestion: str
+    affected_element: Optional[str] = None  # Which part of the script/scene
+
+class ValidationResult(BaseModel):
+    """Result of validation process"""
+    status: ValidationStatus
+    overall_score: float  # 0.0 to 1.0
+    issues: List[ValidationIssue] = []
+    feedback: str
+    revision_instructions: Optional[str] = None
+    revision_count: int = 0
+    max_revisions: int = 3
+
+class ScriptValidationResult(ValidationResult):
+    """Result of script-level validation"""
+    fun_score: float
+    interest_score: float
+    uniqueness_score: float
+    educational_score: float
+    coherence_score: float
+
+class SceneValidationResult(ValidationResult):
+    """Result of scene-level validation"""
+    scene_number: int
+    scene_quality_score: float
+    visual_potential_score: float
+    educational_density_score: float
+    character_utilization_score: float
+    connection_score: float
+
+class SceneValidationSummary(BaseModel):
+    """Summary of all scene validations"""
+    total_scenes: int
+    passed_scenes: int
+    failed_scenes: int
+    overall_connection_score: float
+    scene_results: List[SceneValidationResult]
+    needs_revision: bool
+    revision_scenes: List[int] = []  # Scene numbers that need revision
+
+# State Management Models
+
+class ScriptState(str, Enum):
+    """State of script in the workflow"""
+    DRAFT = "draft"
+    UNDER_REVIEW = "under_review"
+    APPROVED = "approved"
+    NEEDS_REVISION = "needs_revision"
+    REVISION_LIMIT_REACHED = "revision_limit_reached"
+
+class SceneState(str, Enum):
+    """State of individual scene"""
+    DRAFT = "draft"
+    UNDER_REVIEW = "under_review"
+    APPROVED = "approved"
+    NEEDS_REVISION = "needs_revision"
+    REVISION_LIMIT_REACHED = "revision_limit_reached"
+
+class WorkflowState(BaseModel):
+    """Overall workflow state tracking"""
+    session_id: str
+    current_stage: str  # "script_generation", "script_validation", "scene_generation", etc.
+    script_state: ScriptState
+    scene_states: Dict[int, SceneState] = {}  # scene_number -> state
+    revision_history: List[Dict[str, Any]] = []
+    validation_history: List[ValidationResult] = []
+    created_at: datetime = Field(default_factory=datetime.now)
+    updated_at: datetime = Field(default_factory=datetime.now)

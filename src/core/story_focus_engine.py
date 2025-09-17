@@ -469,7 +469,7 @@ def test_story_focus_engine():
     
     # Test cases
     test_cases = [
-        ("Coca Cola", "The history of Coca Cola and how it became popular"),
+        ("the company", "The history of the company and how it became popular"),
         ("Tesla", "How Tesla is changing the automotive industry"),
         ("Netflix", "The story of Netflix and streaming services"),
         ("BTS", "How BTS became popular in the music industry")

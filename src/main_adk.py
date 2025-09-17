@@ -171,10 +171,52 @@ class ADKShortFactoryRunner:
     async def _generate_script_with_adk(self, subject: str, language: str, max_scenes: int) -> VideoScript:
         """Generate script using ADK Script Writer Agent"""
         try:
-            # Use ADK agent to generate script
-            script = await self.script_writer_agent.generate_script(subject, language, max_scenes)
-            logger.info(f"Script generated with {len(script.scenes)} scenes")
-            return script
+            # Use ADK agent to generate story script
+            story_script = await self.script_writer_agent.generate_story_script(subject, language, max_scenes)
+            logger.info(f"Story script generated with {len(story_script.scene_plan)} scenes")
+            
+            # Convert StoryScript to VideoScript for compatibility
+            from model.models import VideoScript, Scene, SceneType, ImageStyle, VoiceTone
+            
+            # Create scenes from scene plan
+            from model.models import ElevenLabsSettings
+            scenes = []
+            for scene_plan in story_script.scene_plan:
+                scene = Scene(
+                    scene_number=scene_plan.scene_number,
+                    scene_type=scene_plan.scene_type,
+                    dialogue=f"Scene {scene_plan.scene_number}: {scene_plan.key_content}",
+                    voice_tone=VoiceTone.FRIENDLY,
+                    elevenlabs_settings=ElevenLabsSettings(
+                        stability=0.3,
+                        similarity_boost=0.8,
+                        style=0.8,
+                        speed=1.1,
+                        loudness=0.2
+                    ),
+                    image_style=ImageStyle.SINGLE_CHARACTER,
+                    image_create_prompt=f"Educational scene about {scene_plan.key_content}",
+                    character_pose="pointing",
+                    character_expression="smiling",
+                    background_description="educational setting",
+                    needs_animation=True,
+                    video_prompt=f"Animated explanation of {scene_plan.key_content}",
+                    transition_to_next="fade"
+                )
+                scenes.append(scene)
+            
+            # Create VideoScript
+            video_script = VideoScript(
+                title=story_script.title,
+                main_character_description=story_script.main_character_description,
+                character_cosplay_instructions=story_script.character_cosplay_instructions,
+                overall_style=story_script.overall_style,
+                overall_story=story_script.overall_story,
+                story_summary=story_script.story_summary,
+                scenes=scenes
+            )
+            
+            return video_script
         except Exception as e:
             logger.error(f"Error generating script with ADK: {str(e)}")
             raise
@@ -268,7 +310,7 @@ async def test_adk_workflow():
         runner = ADKShortFactoryRunner()
         
         # Test with a simple subject
-        results = await runner.create_video("What is K-pop?", "English", 3)
+        results = await runner.create_video("What is music industry?", "English", 3)
         
         if results["status"] == "completed":
             print("✅ ADK workflow test completed successfully!")

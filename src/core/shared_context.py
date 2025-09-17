@@ -64,25 +64,23 @@ class SharedContext:
     # Visual style continuity
     visual_style: VisualStyle
     color_palette: List[str]
-    established_visual_elements: List[VisualElement] = field(default_factory=list)
     
     # Narrative arc progression
     narrative_momentum: NarrativeMomentum
     story_arc_position: float  # 0.0 to 1.0 (beginning to end)
     
-    # Educational content tracking
+    # Technical constraints
+    target_audience: str
+    video_duration_target: int  # seconds
+    scene_count: int
+    
+    # Optional fields with defaults
+    established_visual_elements: List[VisualElement] = field(default_factory=list)
     established_facts: List[EducationalFact] = field(default_factory=list)
     learning_objectives: List[str] = field(default_factory=list)
     complexity_progression: List[int] = field(default_factory=list)
-    
-    # Scene continuity
     previous_scene_summary: Optional[str] = None
     next_scene_hints: List[str] = field(default_factory=list)
-    
-    # Technical constraints
-    target_audience: str = "general"
-    video_duration_target: int = 60  # seconds
-    scene_count: int = 6
     
     def add_visual_element(self, element: VisualElement) -> None:
         """Add a visual element to maintain consistency"""

@@ -22,6 +22,11 @@ if __name__ == "__main__":
         from main_adk import test_adk_workflow
         print("🧪 Running ADK workflow test...")
         asyncio.run(test_adk_workflow())
+    elif len(sys.argv) > 1:
+        # Run with subject parameter
+        subject = sys.argv[1]
+        print(f"🎯 Running ADK with subject: {subject}")
+        asyncio.run(main_adk(subject))
     else:
         # Run main ADK application
         asyncio.run(main_adk())

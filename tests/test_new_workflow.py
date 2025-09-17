@@ -33,19 +33,19 @@ async def test_new_workflow():
     print("🧪 Testing New Workflow: Story Writer + Scene Writer...")
     
     try:
-    # Initialize managers
-    shared_context_manager = SharedContextManager()
-    continuity_manager = SceneContinuityManager()
-    style_selector = ImageStyleSelector()
-    educational_enhancer = EducationalEnhancer()
-    
-    # Initialize agents with shared context, continuity manager, style selector, and educational enhancer
-    session_manager = SessionManager()
-    story_writer = ADKScriptWriterAgent(shared_context_manager)
-    scene_writer = ADKSceneWriterAgent(session_manager, shared_context_manager, continuity_manager, style_selector, educational_enhancer)
+        # Initialize managers
+        shared_context_manager = SharedContextManager()
+        continuity_manager = SceneContinuityManager()
+        style_selector = ImageStyleSelector()
+        educational_enhancer = EducationalEnhancer()
+        
+        # Initialize agents with shared context, continuity manager, style selector, and educational enhancer
+        session_manager = SessionManager()
+        story_writer = ADKScriptWriterAgent(shared_context_manager)
+        scene_writer = ADKSceneWriterAgent(session_manager, shared_context_manager, continuity_manager, style_selector, educational_enhancer)
         
         # Test subject
-        subject = "Coca Cola"
+        subject = "Texas"
         
         print(f"📝 Testing with subject: {subject}")
         print("🎯 Focus: Story development + detailed scene writing")

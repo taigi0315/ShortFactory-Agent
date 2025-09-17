@@ -114,62 +114,52 @@ class ADKSceneWriterAgent(Agent):
     def _get_instruction(self) -> str:
         """Get the instruction prompt for the scene writer agent"""
         return """
-You are a professional scene writer specializing in creating detailed, engaging scene scripts for educational videos. Your task is to write comprehensive scene scripts that provide ALL the information needed to create the BEST possible images and videos.
+You are a master of educational storytelling who creates INFORMATION-RICH, VISUALLY-SPECIFIC scenes.
 
-## Your Role:
-- Write detailed scene scripts with comprehensive information
-- Focus on educational value and creative storytelling
-- Provide specific, actionable details for image/video generation
-- Ensure each scene has clear purpose and educational impact
+## SCENE CREATION RULES:
 
-## Scene Writing Requirements:
+### 1. DIALOGUE REQUIREMENTS
+- Start with the most surprising/important fact
+- Use conversational language, not teacher-speak
+- Include specific numbers, names, dates
+- React to information like a real person would
 
-### 1. Story Context Understanding:
-- You will receive the overall story and full script context
-- Understand your scene's role in the larger narrative
-- Maintain consistency with the overall story arc
-- Build upon previous scenes and set up future scenes
+GOOD: "Wait, Netflix watched 30 MILLION hours of user data before greenlighting House of Cards? They literally knew it would succeed before filming a single scene!"
 
-### 2. Detailed Scene Information:
-For each scene, provide:
+BAD: "Let me tell you about how Netflix uses data to make decisions."
 
-#### A. Educational Content:
-- Specific facts, data, or concepts to teach
-- Key takeaways and learning objectives
-- Examples, analogies, or demonstrations
-- Statistics, numbers, or measurable information
+### 2. VISUAL PROMPT REQUIREMENTS
+Must specify:
+- Exact data visualizations (charts, graphs, comparisons)
+- Specific visual metaphors (e.g., "1 billion users shown as Earth's population")
+- Before/after comparisons with real images/data
+- Timeline visualizations with specific dates
+- Size comparisons for scale understanding
 
-#### B. Visual Elements:
-- Detailed description of what should be shown
-- Specific objects, charts, diagrams, or visuals
-- Color schemes, lighting, and atmosphere
-- Background elements and setting details
+### 3. EDUCATIONAL CONTENT STRUCTURE
+educational_content must contain:
+- key_concepts: Technical terms with definitions
+- specific_facts: Numbers, dates, names (minimum 3)
+- examples: Real-world applications
+- statistics: Comparative data, growth metrics
 
-#### C. Character Actions:
-- Specific poses and expressions
-- Character interactions with objects/environment
-- Gestures and body language
-- Dialogue delivery style
+### 4. IMAGE CREATE PROMPT FORMULA
+"[PRIMARY CONTENT: Educational visualization showing X] + [SPECIFIC DATA: Include numbers Y, Z] + [VISUAL METAPHOR: Represent as A] + [CHARACTER: Small guide in corner reacting with B emotion] + [STYLE: C approach with D color scheme]"
 
-#### D. Technical Details:
-- Camera angles and framing
-- Animation requirements
-- Transition effects
-- Timing and pacing
+### 5. SCENE-TO-SCENE FLOW
+Each scene must:
+- Reference the previous scene's revelation
+- Build tension toward the next reveal
+- Maintain narrative momentum
+- Increase complexity progressively
 
-### 3. Creative Storytelling:
-- Use engaging narrative techniques
-- Include surprising facts or interesting angles
-- Create emotional connections
-- Make complex topics accessible and fun
-
-### 4. Output Format:
+## Output Format:
 You MUST output a valid JSON object with this structure:
 
 {
   "scene_number": 1,
   "scene_type": "hook",
-  "dialogue": "2-4 sentences of engaging dialogue with specific information",
+  "dialogue": "Conversational dialogue with specific facts and reactions",
   "voice_tone": "excited",
   "elevenlabs_settings": {
     "stability": 0.3,
@@ -179,7 +169,7 @@ You MUST output a valid JSON object with this structure:
     "loudness": 0.2
   },
   "image_style": "infographic",
-  "image_create_prompt": "DETAILED visual description focusing on educational content with character from given image as small guide",
+  "image_create_prompt": "[PRIMARY CONTENT: Educational visualization showing X] + [SPECIFIC DATA: Include numbers Y, Z] + [VISUAL METAPHOR: Represent as A] + [CHARACTER: Small guide in corner reacting with B emotion] + [STYLE: C approach with D color scheme]",
   "character_pose": "specific pose description",
   "character_expression": "specific expression",
   "background_description": "detailed background description",
@@ -189,7 +179,7 @@ You MUST output a valid JSON object with this structure:
   "hook_technique": "shocking_fact",
   "educational_content": {
     "key_concepts": ["concept1", "concept2"],
-    "specific_facts": ["fact1", "fact2"],
+    "specific_facts": ["fact1", "fact2", "fact3"],
     "examples": ["example1", "example2"],
     "statistics": ["stat1", "stat2"]
   },
@@ -206,17 +196,11 @@ You MUST output a valid JSON object with this structure:
   }
 }
 
-## Guidelines:
-- Be extremely specific and detailed in all descriptions
-- Focus on educational value and learning outcomes
-- Make content engaging and memorable
-- Provide actionable information for image/video generation
-- Ensure character from given image is used as a guide, not the main focus
-- Create scenes that teach something valuable and interesting
-- Use creative storytelling techniques to make learning fun
-- Include specific data, examples, and concrete information
-- Make each scene unique and purposeful
-- Build a cohesive narrative across all scenes
+## VALIDATION CHECK:
+✓ Can someone screenshot this scene and learn something?
+✓ Are there at least 3 specific facts visible?
+✓ Would this visual go viral on its own?
+✓ Does the character add value, not distraction?
 """
 
     async def write_scene_script(self, scene_number: int, scene_type: str, 
@@ -432,12 +416,13 @@ Please generate a complete scene script following the format and guidelines prov
             str: Simulated response
         """
         # This is a placeholder - in real implementation, this would use ADK Runner
-        # For now, return a mock response
-        return """
+        # For now, return a mock response based on the subject in the prompt
+        if "Texas" in prompt:
+            return """
 {
   "scene_number": 1,
   "scene_type": "hook",
-  "dialogue": "Did you know that Coca-Cola was originally created as a medicine by a pharmacist in 1886? Let me tell you the incredible story of how this 'brain tonic' became the world's most recognized brand!",
+  "dialogue": "Did you know that Texas was once its own independent country for 9 years? From 1836 to 1845, Texas was the Republic of Texas with its own president, flag, and currency! Let me tell you the incredible story of how this wild frontier became America's second-largest state!",
   "voice_tone": "excited",
   "elevenlabs_settings": {
     "stability": 0.3,
@@ -447,30 +432,73 @@ Please generate a complete scene script following the format and guidelines prov
     "loudness": 0.2
   },
   "image_style": "infographic",
-  "image_create_prompt": "Educational infographic showing 1886 pharmacy with Dr. John Pemberton mixing Coca-Cola syrup, original recipe ingredients (coca leaves, kola nuts), and character from given image as small guide pointing at the historical timeline and original bottle design",
+  "image_create_prompt": "Educational infographic showing 1836 Republic of Texas with the Lone Star flag, Sam Houston as president, Texas independence from Mexico, and character from given image as small guide pointing at the historical timeline and Texas state symbols",
   "character_pose": "pointing at historical timeline",
   "character_expression": "excited",
-  "background_description": "19th century pharmacy with original Coca-Cola ingredients and equipment",
+  "background_description": "19th century Texas frontier with Republic of Texas symbols and historical landmarks",
   "needs_animation": true,
-  "video_prompt": "Animated sequence showing 1886 pharmacy, Dr. Pemberton mixing the original formula, evolution of the bottle design, and character from given image guiding through the historical journey",
+  "video_prompt": "Animated sequence showing 1836 Texas independence, the Republic of Texas period, Sam Houston's presidency, and character from given image guiding through the historical journey to statehood",
   "transition_to_next": "fade",
   "hook_technique": "shocking_fact",
   "educational_content": {
-    "key_concepts": ["Coca-Cola origin story", "Pharmaceutical beginnings", "Brand evolution", "Global marketing strategy"],
-    "specific_facts": ["Created by Dr. John Pemberton in 1886", "Originally sold as medicine for $0.05", "Contained coca leaves and kola nuts", "First sold at Jacob's Pharmacy in Atlanta"],
-    "examples": ["Original recipe with coca leaves", "First Coca-Cola advertisement", "Evolution of bottle design", "Global expansion strategy"],
-    "statistics": ["1886 creation date", "$0.05 original price", "1.9 billion servings daily worldwide", "200+ countries selling Coca-Cola"]
+    "key_concepts": ["Texas independence", "Republic of Texas", "Statehood process", "Frontier expansion"],
+    "specific_facts": ["Texas was independent from 1836-1845", "Sam Houston was first president", "Lone Star flag adopted in 1839", "Annexed by US in 1845"],
+    "examples": ["Battle of San Jacinto", "Treaty of Velasco", "Texas Declaration of Independence", "State constitution"],
+    "statistics": ["9 years of independence", "1836-1845 period", "268,596 square miles", "Second largest US state"]
   },
   "visual_elements": {
-    "primary_focus": "1886 pharmacy with original Coca-Cola ingredients and equipment",
-    "secondary_elements": ["original recipe ingredients", "historical timeline", "first bottle design", "Dr. Pemberton's laboratory"],
-    "color_scheme": "vintage sepia tones with Coca-Cola red accents",
-    "lighting": "warm historical lighting with pharmacy ambiance"
+    "primary_focus": "1836 Republic of Texas with Lone Star flag and historical symbols",
+    "secondary_elements": ["Lone Star flag", "historical timeline", "Sam Houston portrait", "Texas state symbols"],
+    "color_scheme": "vintage sepia tones with Texas red, white, and blue accents",
+    "lighting": "warm historical lighting with frontier ambiance"
   },
   "story_context": {
-    "purpose": "Hook viewers with surprising fact about Coca-Cola's medicinal origins",
-    "connection_to_previous": "Opening scene to grab attention with unexpected origin story",
-    "setup_for_next": "Sets up the story of how a medicine became a global beverage empire"
+    "purpose": "Hook viewers with surprising fact about Texas's independent history",
+    "connection_to_previous": "Opening scene to grab attention with unexpected independence story",
+    "setup_for_next": "Sets up the story of how an independent republic became a US state"
+  }
+}
+"""
+        else:
+            # Default fallback for other subjects
+            return """
+{
+  "scene_number": 1,
+  "scene_type": "hook",
+  "dialogue": "Let me tell you an amazing story about this fascinating topic!",
+  "voice_tone": "excited",
+  "elevenlabs_settings": {
+    "stability": 0.3,
+    "similarity_boost": 0.8,
+    "style": 0.8,
+    "speed": 1.1,
+    "loudness": 0.2
+  },
+  "image_style": "infographic",
+  "image_create_prompt": "Educational infographic about the topic with character from given image as small guide",
+  "character_pose": "pointing",
+  "character_expression": "excited",
+  "background_description": "educational setting",
+  "needs_animation": true,
+  "video_prompt": "Animated explanation of the topic with character guide",
+  "transition_to_next": "fade",
+  "hook_technique": "question",
+  "educational_content": {
+    "key_concepts": ["main concept"],
+    "specific_facts": ["key fact"],
+    "examples": ["example"],
+    "statistics": ["statistic"]
+  },
+  "visual_elements": {
+    "primary_focus": "educational content",
+    "secondary_elements": ["character guide"],
+    "color_scheme": "educational colors",
+    "lighting": "bright and clear"
+  },
+  "story_context": {
+    "purpose": "introduce the topic",
+    "connection_to_previous": "opening scene",
+    "setup_for_next": "sets up the story"
   }
 }
 """

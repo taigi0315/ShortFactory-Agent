@@ -40,9 +40,9 @@ class MockADKScriptWriterAgent:
                 
                 # Update scene dialogues to match subject
                 for scene in script_data['scenes']:
-                    scene['dialogue'] = scene['dialogue'].replace("What is K-pop?", subject)
-                    scene['image_create_prompt'] = scene['image_create_prompt'].replace("What is K-pop?", subject)
-                    scene['video_prompt'] = scene['video_prompt'].replace("What is K-pop?", subject) if scene['video_prompt'] else None
+                    scene['dialogue'] = scene['dialogue'].replace("What is music industry?", subject)
+                    scene['image_create_prompt'] = scene['image_create_prompt'].replace("What is music industry?", subject)
+                    scene['video_prompt'] = scene['video_prompt'].replace("What is music industry?", subject) if scene['video_prompt'] else None
                     
                     # Update image prompts to focus on educational content
                     if 'image_create_prompt' in scene:

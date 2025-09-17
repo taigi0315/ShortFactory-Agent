@@ -664,7 +664,7 @@ async def test_adk_image_generate():
         test_script = VideoScript(
             title="Test ADK Video",
             main_character_description="Huh - a cute, blob-like cartoon character",
-            character_cosplay_instructions="cosplay like a K-pop idol",
+            character_cosplay_instructions="cosplay like a music industry idol",
             overall_style="educational",
             scenes=[
                 Scene(
