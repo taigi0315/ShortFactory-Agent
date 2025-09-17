@@ -1,6 +1,6 @@
 # ShortFactory Agent - Project Status 2025
 
-*Last updated: September 16, 2025*
+*Last updated: September 17, 2025*
 
 ## 🎯 Project Overview
 
@@ -16,6 +16,7 @@
 - **Full Script Writer (FSW)**: High-level story structure and scene planning
 - **Scene Script Writer (SSW)**: Production-ready scene packages with timing
 - **Image Create Agent (ICA)**: Visual asset generation with metadata
+- **Voice Generate Agent (VGA)**: ElevenLabs TTS integration with scene-specific settings
 - **Orchestrator Agent**: Pipeline management and validation
 
 #### 📋 **JSON Schema System**
@@ -27,7 +28,8 @@
 #### 🎨 **Enhanced Content Generation**
 - **Rich Scene Packages**: Detailed narration with millisecond timing
 - **Multiple Visual Frames**: 3-8 frames per scene for cinematic storytelling
-- **Production TTS Settings**: Complete ElevenLabs configuration
+- **High-Quality Voice Generation**: ElevenLabs TTS with scene-specific settings
+- **Production TTS Settings**: Complete ElevenLabs configuration per scene
 - **Visual Specifications**: Shot types, camera motion, lighting, character poses
 - **Continuity Management**: Callback tags and visual motifs
 

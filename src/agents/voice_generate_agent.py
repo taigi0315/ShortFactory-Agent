@@ -31,8 +31,21 @@ class VoiceGenerateAgent:
         
         if not self.api_key:
             raise ValueError("ELEVENLABS_API_KEY is required in .env file")
-        if not self.voice_id:
-            raise ValueError("ELEVENLABS_VOICE_ID is required in .env file")
+        
+        # Use default voice if not specified or if current voice fails
+        # Try common free voices
+        free_voice_ids = [
+            "pNInz6obpgDQGcFmaJgB",  # Adam (free)
+            "EXAVITQu4vr4xnSDxMaL",  # Sarah (free)  
+            "VR6AewLTigWG4xSOukaG",  # Arnold (free)
+            "21m00Tcm4TlvDq8ikWAM",  # Rachel
+            "AZnzlk1XvdvUeBnXmlld",  # Domi
+        ]
+        
+        if not self.voice_id or self.voice_id not in free_voice_ids:
+            # Use first free voice
+            self.voice_id = free_voice_ids[0]  # Adam
+            logger.info(f"Using free voice 'Adam': {self.voice_id}")
         
         # ElevenLabs API endpoint
         self.base_url = "https://api.elevenlabs.io/v1"

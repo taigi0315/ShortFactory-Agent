@@ -10,8 +10,10 @@ Transform any topic into a polished, narrated short video with rich visual story
 # 1. Set up environment
 pip install -r requirements.txt
 
-# 2. Set API key in .env file
+# 2. Set API keys in .env file
 echo "GEMINI_API_KEY=your-api-key-here" > .env
+echo "ELEVENLABS_API_KEY=your-elevenlabs-key" >> .env
+echo "ELEVENLABS_VOICE_ID=your-voice-id-or-leave-blank-for-default" >> .env
 
 # 3. Run the system
 python run_shortfactory.py "Your Topic Here" --cost
@@ -19,25 +21,28 @@ python run_shortfactory.py "Your Topic Here" --cost
 
 ## ✨ What It Does
 
-**New Multi-Agent Architecture** creates production-ready video content:
+**New Multi-Agent Architecture** creates production-ready video content:                                                                  
 
-1. **📖 Story Planning**: AI analyzes topic and creates engaging narrative structure (3-8 scenes)
-2. **🎬 Scene Production**: Each scene expanded into detailed production package with timing
-3. **🖼️ Visual Creation**: 3-8 visual frames per scene for rich storytelling (15-40 images total)
-4. **🎭 Character Consistency**: Huh character maintains cosplay throughout all frames
-5. **📊 Quality Control**: Multi-layer validation and comprehensive build reporting
+1. **📖 Story Planning**: AI analyzes topic and creates engaging narrative structure (3-8 scenes)                                         
+2. **🎬 Scene Production**: Each scene expanded into detailed production package with timing                                              
+3. **🖼️ Visual Creation**: 3-8 visual frames per scene for rich storytelling (15-40 images total)                                          
+4. **🎤 Voice Generation**: High-quality TTS audio with ElevenLabs integration and scene-specific settings
+5. **🎭 Character Consistency**: Huh character maintains cosplay throughout all frames                                                    
+6. **📊 Quality Control**: Multi-layer validation and comprehensive build reporting
 
 ## 🏗️ New Architecture Overview
 
 ### **True Multi-Agent System**:
-- **Full Script Writer (FSW)**: High-level story structure and scene planning
-- **Scene Script Writer (SSW)**: Production-ready scene packages with timing
+- **Full Script Writer (FSW)**: High-level story structure and scene planning                                                             
+- **Scene Script Writer (SSW)**: Production-ready scene packages with timing                                                              
 - **Image Create Agent (ICA)**: Visual asset generation with metadata
+- **Voice Generate Agent (VGA)**: ElevenLabs TTS integration with scene-specific settings
 - **Orchestrator**: Pipeline management and validation
 
 ### **Production-Ready Output**:
 - Detailed narration scripts with millisecond timing
-- Complete TTS settings (ElevenLabs configuration)
+- High-quality voice audio files (MP3 format with ElevenLabs TTS)
+- Complete TTS settings (ElevenLabs configuration per scene)
 - Rich visual specifications (shot types, camera motion, lighting)
 - Comprehensive metadata and build reports
 

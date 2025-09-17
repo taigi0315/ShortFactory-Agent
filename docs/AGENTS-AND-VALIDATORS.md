@@ -1,6 +1,6 @@
 # Agents and Validators - Detailed Guide
 
-*New Multi-Agent Architecture - September 16, 2025*
+*New Multi-Agent Architecture - September 17, 2025*
 
 ## 🤖 Agent Ecosystem Overview
 
@@ -107,7 +107,37 @@ OUTPUT: ImageAsset[].json (image_uri, metadata, generation_info)
 
 ---
 
-### 4. Orchestrator Agent
+### 4. Voice Generate Agent (VGA)
+**File**: `src/agents/voice_generate_agent.py`
+**Role**: **Voice Artist** - Generates high-quality TTS audio files
+
+#### What it does:
+- Extracts narration text from Scene Script Writer packages
+- Applies scene-specific ElevenLabs TTS settings
+- Generates MP3 audio files using ElevenLabs API
+- Manages voice file storage with ordered naming
+- Creates comprehensive voice asset metadata
+
+#### Key Features:
+- **ElevenLabs Integration**: Professional TTS with voice customization
+- **Scene-Specific Settings**: Each scene can have different TTS parameters
+- **Default Voice Fallback**: Uses free Adam voice if custom voice unavailable
+- **Metadata Tracking**: Generation parameters, file size, timing
+- **Error Handling**: Detailed API response logging and fallback mechanisms
+
+#### Key Dependencies:
+- **Session Manager**: Voice file storage organization
+- **ElevenLabs API**: External TTS service integration
+
+#### Input/Output:
+```
+INPUT: ScenePackage[].json (narration_script, elevenlabs_settings)
+OUTPUT: voice_assets.json (voice_file, metadata, generation_info)
+```
+
+---
+
+### 5. Orchestrator Agent
 **File**: `src/agents/orchestrator_agent.py`
 **Role**: **Pipeline Manager** - Controls entire workflow and quality
 
@@ -237,9 +267,11 @@ OUTPUT: Complete video package + build_report.json
    ↓ (Schema Validation)
 5. ICA generates images for all frames (ImageAsset.json)
    ↓ (Schema Validation)
-6. Orchestrator assembles final package + build report
+6. VGA generates voice files for all scenes (voice_assets.json)
+   ↓ (Schema Validation)
+7. Orchestrator assembles final package + build report
    ↓
-7. Complete video production package ready
+8. Complete video production package ready
 ```
 
 ## 📈 Quality Assurance
@@ -272,4 +304,5 @@ OUTPUT: Complete video package + build_report.json
 - **FSW**: ~25 seconds (story planning)
 - **SSW**: ~300 seconds (detailed scene expansion)
 - **ICA**: <1 second (cost-saving mode) / ~60 seconds (AI mode)
-- **Total**: ~5-6 minutes for complete video package
+- **VGA**: ~65 seconds (voice generation for 5 scenes)
+- **Total**: ~6-7 minutes for complete video package

@@ -1,165 +1,225 @@
-# Architecture Diagram
+# New Multi-Agent Architecture Diagram
 
-## 2-Stage Validation System Workflow
+*Updated for the new production-ready architecture - September 16, 2025*
+
+## 🎬 Complete Video Production Pipeline
 
 ```mermaid
 graph TD
-    A[User Input: Subject] --> B[ADK Runner]
-    B --> C[ADKScriptWriterAgent]
-    C --> D[Story Script + Scene Plan]
-    D --> E[ADKScriptValidatorAgent]
+    A[User Input: Topic] --> B[Orchestrator Agent]
+    B --> C[Full Script Writer - FSW]
+    C --> D[High-Level Story Structure]
+    D --> E{Schema Validation}
     
-    E --> F{Story Quality Check}
-    F -->|PASS| G[ADKSceneWriterAgent]
-    F -->|REVISE| H[Feedback to Script Writer]
-    H --> C
+    E -->|PASS| F[Scene Script Writer - SSW]
+    E -->|WARN| F
     
-    G --> I[Detailed Scene Scripts]
-    I --> J[ADKSceneScriptValidatorAgent]
+    F --> G[Scene 1 Package]
+    F --> H[Scene 2 Package]
+    F --> I[Scene N Package]
     
-    J --> K{Scene Quality Check}
-    K -->|PASS| L[ADKImageGenerateAgent]
-    K -->|REVISE| M[Feedback to Scene Writer]
-    M --> G
+    G --> J{Scene Schema Validation}
+    H --> K{Scene Schema Validation}
+    I --> L{Scene Schema Validation}
     
-    L --> N[Character Cosplay Generation]
-    N --> O[Scene Image Generation]
-    O --> P[Session Storage]
-    P --> Q[Complete Assets]
+    J -->|PASS| M[Image Create Agent - ICA]
+    K -->|PASS| M
+    L -->|PASS| M
     
+    M --> N[Frame 1A, 1B, ...]
+    M --> O[Frame 2A, 2B, ...]
+    M --> P[Frame NA, NB, ...]
+    
+    N --> Q[Image Assets]
+    O --> Q
+    P --> Q
+    
+    Q --> R[Build Report & Final Assembly]
+    R --> S[Complete Video Package]
+    
+    style C fill:#e3f2fd
+    style F fill:#fff3e0
+    style M fill:#e8f5e8
+    style B fill:#f3e5f5
     style E fill:#ffeb3b
     style J fill:#ffeb3b
-    style F fill:#4caf50
-    style K fill:#4caf50
-    style H fill:#f44336
-    style M fill:#f44336
+    style K fill:#ffeb3b
+    style L fill:#ffeb3b
 ```
 
-## Agent Communication Flow
+## 🤖 Agent Interaction Flow
 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant R as ADK Runner
-    participant SW as Script Writer
-    participant SV as Script Validator
-    participant SCW as Scene Writer
-    participant SCV as Scene Validator
-    participant IG as Image Generator
+    participant O as Orchestrator
+    participant FSW as Full Script Writer
+    participant SSW as Scene Script Writer
+    participant ICA as Image Create Agent
+    participant SM as Session Manager
     
-    U->>R: Subject Input
-    R->>SW: Generate Story Script
-    SW->>SV: Story Script for Validation
-    SV->>SV: Validate Quality (Fun, Interest, Uniqueness, Educational Value)
+    U->>O: Topic + Preferences
+    O->>SM: Create Session (YYYYMMDD-UUID)
     
-    alt Story PASS
-        SV->>SCW: Approved Story Script
-        SCW->>SCV: Scene Scripts for Validation
-        SCV->>SCV: Validate Scene Quality & Connections
-        
-        alt Scenes PASS
-            SCV->>IG: Approved Scene Scripts
-            IG->>IG: Generate Images
-            IG->>U: Complete Video Assets
-        else Scenes REVISE
-            SCV->>SCW: Feedback for Specific Scenes
-            SCW->>SCV: Revised Scene Scripts
-        end
-    else Story REVISE
-        SV->>SW: Detailed Feedback
-        SW->>SV: Revised Story Script
+    Note over O: Stage 1: High-Level Planning
+    O->>FSW: Generate Story Structure
+    FSW->>FSW: Apply Story Focus Engine
+    FSW->>FSW: Validate with Story Validator
+    FSW->>O: FullScript.json
+    O->>O: Schema Validation
+    O->>SM: Save full_script.json
+    
+    Note over O: Stage 2: Detailed Scene Scripts
+    loop For Each Scene
+        O->>SSW: Expand Scene Beat
+        SSW->>SSW: Educational Enhancement
+        SSW->>SSW: Generate Production Package
+        SSW->>O: ScenePackage.json
+        O->>O: Schema Validation
+        O->>SM: Save scene_package_N.json
     end
+    
+    Note over O: Stage 3: Image Generation
+    loop For Each Scene Package
+        O->>ICA: Generate Scene Images
+        loop For Each Visual Frame
+            ICA->>ICA: Enhance Prompt + Character Consistency
+            ICA->>ICA: Generate/Mock Image
+            ICA->>SM: Save Image + Metadata
+        end
+        ICA->>O: ImageAsset[].json
+    end
+    
+    Note over O: Stage 4: Final Assembly
+    O->>SM: Save image_assets.json
+    O->>SM: Save build_report.json
+    O->>U: Complete Video Package
 ```
 
-## Validation Criteria System
-
-```mermaid
-graph LR
-    A[Script Validator] --> B[Fun Factor]
-    A --> C[Interest Level]
-    A --> D[Uniqueness]
-    A --> E[Educational Value]
-    A --> F[Narrative Coherence]
-    
-    G[Scene Validator] --> H[Scene Quality]
-    G --> I[Visual Potential]
-    G --> J[Educational Density]
-    G --> K[Character Utilization]
-    G --> L[Smooth Connection]
-    
-    B --> M[Overall Score]
-    C --> M
-    D --> M
-    E --> M
-    F --> M
-    
-    H --> N[Scene Score]
-    I --> N
-    J --> N
-    K --> N
-    L --> N
-    
-    M --> O{Score >= 0.7?}
-    N --> P{Score >= 0.7?}
-    
-    O -->|Yes| Q[PASS]
-    O -->|No| R[REVISE]
-    P -->|Yes| S[PASS]
-    P -->|No| T[REVISE]
-    
-    style A fill:#ffeb3b
-    style G fill:#ffeb3b
-    style Q fill:#4caf50
-    style S fill:#4caf50
-    style R fill:#f44336
-    style T fill:#f44336
-```
-
-## Core Components Architecture
+## 🏗️ New Architecture Components
 
 ```mermaid
 graph TB
-    subgraph "ADK Agents"
-        A1[Script Writer Agent]
-        A2[Scene Writer Agent]
-        A3[Script Validator Agent]
-        A4[Scene Validator Agent]
-        A5[Image Generate Agent]
+    subgraph "New Multi-Agent System"
+        direction TB
+        
+        subgraph "Core Agents"
+            FSW[Full Script Writer<br/>High-level story planning]
+            SSW[Scene Script Writer<br/>Production-ready packages]
+            ICA[Image Create Agent<br/>Visual asset generation]
+            ORC[Orchestrator<br/>Pipeline management]
+        end
+        
+        subgraph "JSON Schemas"
+            FS[FullScript.json]
+            SP[ScenePackage.json]
+            IA[ImageAsset.json]
+        end
+        
+        subgraph "Validation System"
+            SV[Schema Validation]
+            SF[Safety Checks]
+            QC[Quality Control]
+        end
+        
+        subgraph "Core Services"
+            SM[Session Manager]
+            SC[Shared Context]
+            SE[Story Engine]
+            EE[Educational Enhancer]
+        end
     end
     
-    subgraph "Core Components"
-        C1[Shared Context Manager]
-        C2[Story Focus Engine]
-        C3[Scene Continuity Manager]
-        C4[Image Style Selector]
-        C5[Educational Enhancer]
-        C6[Session Manager]
-    end
+    FSW --> FS
+    SSW --> SP
+    ICA --> IA
     
-    subgraph "Data Models"
-        D1[StoryScript]
-        D2[Scene]
-        D3[ValidationResult]
-        D4[SharedContext]
-    end
+    ORC --> FSW
+    ORC --> SSW
+    ORC --> ICA
     
-    A1 --> C1
-    A1 --> C2
-    A2 --> C1
-    A2 --> C3
-    A2 --> C4
-    A2 --> C5
-    A3 --> D3
-    A4 --> D3
-    A5 --> C6
+    FSW --> SE
+    SSW --> EE
+    SSW --> SC
+    ICA --> SM
     
-    C1 --> D4
-    A1 --> D1
-    A2 --> D2
+    FS --> SV
+    SP --> SV
+    IA --> SV
     
-    style A1 fill:#e3f2fd
-    style A2 fill:#e3f2fd
-    style A3 fill:#fff3e0
-    style A4 fill:#fff3e0
-    style A5 fill:#e8f5e8
+    SV --> QC
+    QC --> SF
+    
+    style FSW fill:#e3f2fd
+    style SSW fill:#fff3e0
+    style ICA fill:#e8f5e8
+    style ORC fill:#f3e5f5
+    style FS fill:#ffeb3b
+    style SP fill:#ffeb3b
+    style IA fill:#ffeb3b
 ```
+
+## 📊 Data Flow & File Organization
+
+```mermaid
+graph LR
+    subgraph "Input"
+        T[Topic]
+        P[Preferences]
+    end
+    
+    subgraph "Processing"
+        FSW[FSW] --> FS[full_script.json]
+        SSW[SSW] --> SP1[scene_package_1.json]
+        SSW --> SP2[scene_package_2.json]
+        SSW --> SPN[scene_package_N.json]
+        ICA[ICA] --> IA[image_assets.json]
+    end
+    
+    subgraph "Assets"
+        IMG1[1a.png, 1b.png, ...]
+        IMG2[2a.png, 2b.png, ...]
+        IMGN[Na.png, Nb.png, ...]
+    end
+    
+    subgraph "Metadata"
+        BR[build_report.json]
+        META[metadata.json]
+        PROMPTS[prompts/]
+    end
+    
+    subgraph "Session: YYYYMMDD-UUID"
+        FS --> SESSION
+        SP1 --> SESSION
+        SP2 --> SESSION
+        SPN --> SESSION
+        IA --> SESSION
+        IMG1 --> SESSION
+        IMG2 --> SESSION
+        IMGN --> SESSION
+        BR --> SESSION
+        META --> SESSION
+        PROMPTS --> SESSION
+    end
+    
+    T --> FSW
+    P --> FSW
+    FS --> SSW
+    SP1 --> ICA
+    SP2 --> ICA
+    SPN --> ICA
+```
+
+## 🔄 Legacy vs New Architecture Comparison
+
+| Aspect | Legacy Architecture | New Architecture |
+|--------|-------------------|------------------|
+| **Agent Count** | 5 agents (mixed roles) | 4 agents (clear separation) |
+| **Data Flow** | Implicit, mixed | Explicit JSON contracts |
+| **Validation** | Basic | Multi-layer (Schema + Semantic + Safety) |
+| **Output Quality** | Variable | Production-ready |
+| **Scene Detail** | Basic dialogue + simple prompts | Rich packages with timing, TTS, continuity |
+| **Image Generation** | 1 image per scene | 3-8 frames per scene |
+| **File Organization** | Basic script.json | Comprehensive session structure |
+| **Debugging** | Limited logging | Full prompt/response tracking |
+| **Extensibility** | Monolithic | Modular, schema-driven |
