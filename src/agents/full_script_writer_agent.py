@@ -115,6 +115,7 @@ Focus on creating a compelling, well-structured narrative framework that other a
                                  length_preference: str = "60-90s",
                                  style_profile: str = "educational and engaging",
                                  target_audience: str = "general",
+                                 language: str = "English",
                                  knowledge_refs: Optional[List[str]] = None,
                                  max_retries: int = 3) -> Dict[str, Any]:
         """
@@ -154,6 +155,7 @@ Focus on creating a compelling, well-structured narrative framework that other a
                     length_preference=length_preference,
                     style_profile=style_profile,
                     target_audience=target_audience,
+                    language=language,
                     knowledge_refs=knowledge_refs
                 )
                 
@@ -209,7 +211,7 @@ Focus on creating a compelling, well-structured narrative framework that other a
                     await asyncio.sleep(wait_time)
     
     def _create_fsw_prompt(self, topic: str, length_preference: str, style_profile: str, 
-                          target_audience: str, knowledge_refs: Optional[List[str]] = None) -> str:
+                          target_audience: str, language: str, knowledge_refs: Optional[List[str]] = None) -> str:
         """Create the FSW prompt"""
         
         knowledge_section = ""
@@ -228,12 +230,14 @@ TOPIC: {topic}
 LENGTH PREFERENCE: {length_preference}
 STYLE PROFILE: {style_profile}
 TARGET AUDIENCE: {target_audience}
+LANGUAGE: {language}
 
 {knowledge_section}
 
 MISSION:
 Create a compelling story structure with high-level beats and scene planning.
 Focus on narrative flow, educational value, and engagement.
+Generate content in {language} language.
 
 OUTPUT REQUIREMENTS:
 - Follow FullScript.json schema exactly

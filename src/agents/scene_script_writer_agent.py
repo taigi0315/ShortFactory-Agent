@@ -199,6 +199,7 @@ Key principles:
         main_character = global_context.get('main_character', 'Huh - a cute, blob-like cartoon character')
         cosplay = global_context.get('cosplay_instructions', '')
         story_summary = global_context.get('story_summary', '')
+        language = global_context.get('language', 'English')
         
         # Previous scenes context
         continuity_context = ""
@@ -235,6 +236,7 @@ STORY CONTEXT:
 - Main Character: {main_character}
 - Character Cosplay: {cosplay}
 - Story Summary: {story_summary}
+- Language: {language}
 
 SCENE BEATS TO EXPAND:
 {chr(10).join([f"- {beat}" for beat in beats])}
@@ -248,6 +250,7 @@ LEARNING OBJECTIVES:
 
 ELABORATION & HOOKING MISSION:
 Your job is to ELABORATE the story beats and ADD HOOKING elements to make this scene compelling.
+Generate all content in {language} language.
 
 ELABORATION REQUIREMENTS:
 - EXPAND on the basic beats with rich details, interesting facts, and compelling narratives
@@ -336,7 +339,7 @@ EXAMPLE OUTPUT STRUCTURE:
   "tts": {{
     "engine": "elevenlabs",
     "voice": "friendly-narrator",
-    "language": "en-US",
+    "language": "{language}",
     "elevenlabs_settings": {{
       "stability": 0.35,
       "similarity_boost": 0.8,

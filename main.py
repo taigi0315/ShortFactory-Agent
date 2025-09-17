@@ -46,6 +46,7 @@ class NewArchitectureRunner:
                           length_preference: str = "60-90s",
                           style_profile: str = "educational and engaging",
                           target_audience: str = "general",
+                          language: str = "English",
                           knowledge_refs: Optional[List[str]] = None,
                           cost_saving_mode: bool = False) -> dict:
         """
@@ -56,6 +57,7 @@ class NewArchitectureRunner:
             length_preference: Desired video length (e.g., "60-90s", "2-3min")
             style_profile: Overall style and tone
             target_audience: Target audience description
+            language: Content language (e.g., "English", "Korean", "Spanish")
             knowledge_refs: Optional list of reference sources for grounding facts
             cost_saving_mode: Use mock images to save costs
             
@@ -68,6 +70,7 @@ class NewArchitectureRunner:
             logger.info(f"⏱️ Length: {length_preference}")
             logger.info(f"🎨 Style: {style_profile}")
             logger.info(f"👥 Audience: {target_audience}")
+            logger.info(f"🌐 Language: {language}")
             logger.info(f"💰 Cost-saving mode: {cost_saving_mode}")
             
             # Use orchestrator to manage the complete pipeline
@@ -76,6 +79,7 @@ class NewArchitectureRunner:
                 length_preference=length_preference,
                 style_profile=style_profile,
                 target_audience=target_audience,
+                language=language,
                 knowledge_refs=knowledge_refs,
                 cost_saving_mode=cost_saving_mode
             )
@@ -93,7 +97,8 @@ class NewArchitectureRunner:
 async def main_new_architecture(topic: Optional[str] = None, 
                                length_preference: str = "60-90s",
                                style_profile: str = "educational and engaging",
-                               target_audience: str = "general", 
+                               target_audience: str = "general",
+                               language: str = "English",
                                knowledge_refs: Optional[List[str]] = None,
                                cost_saving_mode: bool = False):
     """
@@ -104,6 +109,7 @@ async def main_new_architecture(topic: Optional[str] = None,
         length_preference: Desired length
         style_profile: Style and tone
         target_audience: Target audience
+        language: Content language
         knowledge_refs: Reference sources
         cost_saving_mode: Use mock images
     """
@@ -138,6 +144,7 @@ async def main_new_architecture(topic: Optional[str] = None,
         logger.info(f"📝 Title: {results['full_script'].get('title', 'N/A')}")
         logger.info(f"🎬 Scenes: {len(results['scene_packages'])}")
         logger.info(f"🖼️ Images: {len(results['image_assets'])}")
+        logger.info(f"🎤 Voices: {len(results.get('voice_assets', []))}")
         logger.info(f"⏱️ Total time: {results['total_time_seconds']:.2f} seconds")
         
         # Print build report summary

@@ -33,6 +33,8 @@ Examples:
                        help='Style profile (default: educational and engaging)')
     parser.add_argument('--audience', default='general', 
                        help='Target audience (default: general)')
+    parser.add_argument('--language', default='English', 
+                       help='Content language (default: English)')
     parser.add_argument('--cost', action='store_true', 
                        help='Use cost-saving mode (mock images)')
     parser.add_argument('--refs', nargs='*', 
@@ -59,6 +61,7 @@ def main():
             length_preference=args.length,
             style_profile=args.style,
             target_audience=args.audience,
+            language=args.language,
             knowledge_refs=test_refs,
             cost_saving_mode=args.cost
         ))
@@ -75,6 +78,7 @@ def main():
             length_preference=args.length,
             style_profile=args.style,
             target_audience=args.audience,
+            language=args.language,
             knowledge_refs=args.refs,
             cost_saving_mode=args.cost
         ))

@@ -14,6 +14,7 @@ from core.session_manager import SessionManager
 from agents.full_script_writer_agent import FullScriptWriterAgent
 from agents.scene_script_writer_agent import SceneScriptWriterAgent
 from agents.image_create_agent import ImageCreateAgent
+from agents.voice_generate_agent import VoiceGenerateAgent
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -39,6 +40,7 @@ class OrchestratorAgent:
         self.full_script_writer = FullScriptWriterAgent()
         self.scene_script_writer = SceneScriptWriterAgent()
         self.image_create_agent = ImageCreateAgent()
+        self.voice_generate_agent = VoiceGenerateAgent()
         
         logger.info("Orchestrator Agent initialized with new architecture")
     
@@ -87,6 +89,7 @@ class OrchestratorAgent:
                           length_preference: str = "60-90s",
                           style_profile: str = "educational and engaging", 
                           target_audience: str = "general",
+                          language: str = "English",
                           knowledge_refs: Optional[List[str]] = None,
                           cost_saving_mode: bool = False) -> Dict[str, Any]:
         """
@@ -106,7 +109,7 @@ class OrchestratorAgent:
         start_time = time.time()
         
         # Create session
-        session_id = self.session_manager.create_session(topic)
+        session_id = self.session_manager.create_session(topic, language)
         logger.info(f"Created session: {session_id}")
         
         # Initialize build report
@@ -115,6 +118,7 @@ class OrchestratorAgent:
             "topic": topic,
             "style_profile": style_profile,
             "target_audience": target_audience,
+            "language": language,
             "cost_saving_mode": cost_saving_mode,
             "start_time": start_time,
             "stages": {},
@@ -134,6 +138,7 @@ class OrchestratorAgent:
                 length_preference=length_preference,
                 style_profile=style_profile,
                 target_audience=target_audience,
+                language=language,
                 knowledge_refs=knowledge_refs
             )
             
@@ -169,7 +174,8 @@ class OrchestratorAgent:
                 "main_character": full_script.get("main_character", "Huh"),
                 "cosplay_instructions": full_script.get("cosplay_instructions", ""),
                 "story_summary": full_script.get("story_summary", ""),
-                "target_audience": target_audience
+                "target_audience": target_audience,
+                "language": language
             }
             
             for scene_data in scenes:
@@ -267,8 +273,45 @@ class OrchestratorAgent:
             with open(assets_file, 'w', encoding='utf-8') as f:
                 json.dump(all_image_assets, f, indent=2, ensure_ascii=False)
             
-            # Stage 4: Final Assembly (placeholder for now)
-            logger.info("🎞️ Stage 4: Final assembly...")
+            # Stage 4: Voice Generation
+            logger.info("🎤 Stage 4: Generating voice files...")
+            stage_start = time.time()
+            
+            try:
+                voice_assets = await self.voice_generate_agent.generate_voices_for_session(
+                    session_id=session_id,
+                    scene_packages=scene_packages
+                )
+                
+                stage_time = time.time() - stage_start
+                build_report["stages"]["voice_generation"] = {
+                    "status": "success",
+                    "time_ms": int(stage_time * 1000),
+                    "voices_generated": len(voice_assets),
+                    "voices_successful": len([v for v in voice_assets if v and v.get("voice_file")])
+                }
+                
+                logger.info(f"✅ Generated {len(voice_assets)} voice files")
+                
+            except Exception as e:
+                logger.error(f"❌ Voice generation failed: {str(e)}")
+                build_report["errors"].append({
+                    "stage": "voice_generation",
+                    "error": str(e)
+                })
+                
+                stage_time = time.time() - stage_start
+                build_report["stages"]["voice_generation"] = {
+                    "status": "failed",
+                    "time_ms": int(stage_time * 1000),
+                    "error": str(e)
+                }
+                
+                # Continue without voice (non-critical failure)
+                voice_assets = []
+            
+            # Stage 5: Final Assembly
+            logger.info("🎞️ Stage 5: Final assembly...")
             
             # Calculate total time
             total_time = time.time() - start_time
@@ -286,6 +329,7 @@ class OrchestratorAgent:
                 "full_script": full_script,
                 "scene_packages": scene_packages,
                 "image_assets": all_image_assets,
+                "voice_assets": voice_assets,
                 "build_report": build_report,
                 "total_time_seconds": total_time
             }
@@ -294,6 +338,7 @@ class OrchestratorAgent:
             logger.info(f"📁 Session: {session_id}")
             logger.info(f"📝 Scenes: {len(scene_packages)}")
             logger.info(f"🖼️ Images: {len(all_image_assets)}")
+            logger.info(f"🎤 Voices: {len(voice_assets)}")
             logger.info(f"⏱️ Total time: {total_time:.2f}s")
             
             return results

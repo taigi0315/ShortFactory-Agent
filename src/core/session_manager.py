@@ -36,6 +36,10 @@ class SessionManager:
         │   ├── scene_1.wav
         │   ├── scene_2.wav
         │   └── ...
+        ├── voices/                  # Generated voice files
+        │   ├── scene_01_voice.mp3
+        │   ├── scene_02_voice.mp3
+        │   └── ...
         ├── metadata.json           # Session metadata
         └── logs/                   # Session logs
             └── session.log
@@ -75,6 +79,7 @@ class SessionManager:
         (session_dir / "images").mkdir(exist_ok=True)
         (session_dir / "videos").mkdir(exist_ok=True)
         (session_dir / "audios").mkdir(exist_ok=True)
+        (session_dir / "voices").mkdir(exist_ok=True)
         (session_dir / "logs").mkdir(exist_ok=True)
         
         # Create metadata
