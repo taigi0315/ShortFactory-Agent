@@ -13,7 +13,7 @@ pip install -r requirements.txt
 # 2. Set API key in .env file
 echo "GEMINI_API_KEY=your-api-key-here" > .env
 
-# 3. Run the new architecture system
+# 3. Run the system
 python run_shortfactory.py "Your Topic Here" --cost
 ```
 

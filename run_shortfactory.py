@@ -11,7 +11,7 @@ import argparse
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from main_new_architecture import main_new_architecture
+from main import main_new_architecture
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
