@@ -6,6 +6,7 @@ Generates detailed scene scripts with comprehensive information for image/video 
 import json
 import logging
 from typing import Dict, Any, List
+from pathlib import Path
 from google.adk.agents import Agent
 from google.adk.tools import BaseTool
 
@@ -111,6 +112,37 @@ class ADKSceneWriterAgent(Agent):
         
         logger.info("ADK Scene Writer Agent initialized with Gemini 2.5 Flash, Shared Context, Continuity Manager, Image Style Selector, and Educational Enhancer")
     
+    def _save_prompt_and_response(self, session_id: str, scene_number: int, prompt: str, response: str):
+        """
+        Save prompt and response to session directory
+        
+        Args:
+            session_id: Session ID for the current run
+            scene_number: Scene number being processed
+            prompt: The prompt sent to the AI
+            response: The response received from the AI
+        """
+        try:
+            # Create prompts directory in session
+            session_dir = Path(f"sessions/{session_id}")
+            prompts_dir = session_dir / "prompts"
+            prompts_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Save prompt
+            prompt_file = prompts_dir / f"scene_writer_scene_{scene_number}_prompt.txt"
+            with open(prompt_file, 'w', encoding='utf-8') as f:
+                f.write(prompt)
+            
+            # Save response
+            response_file = prompts_dir / f"scene_writer_scene_{scene_number}_response.txt"
+            with open(response_file, 'w', encoding='utf-8') as f:
+                f.write(response)
+            
+            logger.info(f"Saved scene {scene_number} prompt and response to {prompts_dir}")
+            
+        except Exception as e:
+            logger.error(f"Failed to save scene {scene_number} prompt and response: {str(e)}")
+    
     def _get_instruction(self) -> str:
         """Get the instruction prompt for the scene writer agent"""
         return """
@@ -205,7 +237,7 @@ You MUST output a valid JSON object with this structure:
 
     async def write_scene_script(self, scene_number: int, scene_type: str, 
                                 overall_story: str, full_script_context: str, 
-                                subject: str, shared_context: SharedContext = None) -> Dict[str, Any]:
+                                subject: str, session_id: str, shared_context: SharedContext = None) -> Dict[str, Any]:
         """
         Write detailed scene script
         
@@ -260,38 +292,64 @@ IMPORTANT: Use these enhanced educational elements to create rich, detailed cont
             
             # Create comprehensive prompt for scene writing
             prompt = f"""
-Write a detailed scene script for:
+You are a master scene writer specializing in ELABORATION and HOOKING techniques.
 
-Scene Number: {scene_number}
-Scene Type: {scene_type}
-Subject: {subject}
-Overall Story: {overall_story}
+Scene Details:
+- Scene Number: {scene_number}
+- Scene Type: {scene_type}
+- Subject: {subject}
+- Overall Story: {overall_story}
 
 Full Script Context:
 {full_script_context}
 {context_info}
 {educational_enhancement_info}
 
-Requirements:
+ELABORATION & HOOKING MISSION:
+Your job is to ELABORATE the story and ADD HOOKING elements to make each scene compelling and engaging.
+
+ELABORATION REQUIREMENTS:
+- EXPAND on the basic scene content with rich details, interesting facts, and compelling narratives
+- ADD depth to the story with specific examples, case studies, and real-world applications
+- INCLUDE fascinating details, surprising facts, and intriguing information
+- CREATE vivid descriptions and compelling storytelling elements
+- DEVELOP the scene content into something truly engaging and memorable
+
+HOOKING REQUIREMENTS:
+- START with attention-grabbing elements (questions, surprising facts, intriguing statements)
+- USE compelling storytelling techniques to maintain viewer interest
+- INCLUDE emotional hooks, curiosity gaps, and engaging narrative elements
+- CREATE moments that make viewers want to keep watching
+- ADD suspense, intrigue, or compelling questions throughout the scene
+
+TECHNICAL REQUIREMENTS:
 - Write a comprehensive scene script with ALL details needed for image/video generation
-- Focus on educational value and creative storytelling
-- Include specific facts, examples, and data
-- Provide detailed visual and technical information
-- Make the scene engaging and memorable
+- Include specific facts, examples, and data points
+- Provide detailed visual and technical information for image generation
 - Ensure character from given image is used as a small guide
-- Create educational content that teaches something valuable
 - MAINTAIN CONSISTENCY with shared context provided above
 - Avoid repeating facts from previous scenes
 - Build upon established visual elements and character state
-- USE ENHANCED EDUCATIONAL ELEMENTS to create rich, detailed content
-- Include data points, visual metaphors, and learning objectives
-- Ensure educational density and complexity are appropriate for target audience
+- Include data points, visual metaphors, and compelling visual elements
 
-Please generate a complete scene script following the format and guidelines provided in your instructions.
+VOICE & TONE SPECIFICATIONS:
+- Add appropriate voice tone (excited, informative, enthusiastic, impressed, encouraging, friendly)
+- Include elevenlabs settings for voice generation
+- Specify character expressions and poses for visual consistency
+
+OUTPUT FORMAT:
+Generate a complete scene script in JSON format with all required fields for image/video generation.
+
+Remember: Your primary goal is to ELABORATE the content and ADD HOOKING elements to make this scene truly compelling and engaging!
 """
             
             # Use ADK agent's built-in content generation
             response = await self._simulate_adk_response(prompt)
+            
+            # Save prompt and response
+            if response:
+                response_text = response.text if hasattr(response, 'text') else str(response)
+                self._save_prompt_and_response(session_id, scene_number, prompt, response_text)
             
             if response:
                 if hasattr(response, 'text') and response.text:
@@ -375,8 +433,39 @@ Please generate a complete scene script following the format and guidelines prov
         try:
             logger.info("Using actual ADK API for scene generation")
             
-            # Use the ADK Agent's run method
-            response = await self.run(prompt)
+            # Try different methods to call the ADK agent
+            response = None
+            
+            # Method 1: Try run() method
+            try:
+                response = await self.run(prompt)
+                logger.info("Successfully used run() method")
+            except AttributeError:
+                logger.info("run() method not available, trying generate_content()")
+                
+                # Method 2: Try generate_content() method
+                try:
+                    response = await self.generate_content(prompt)
+                    logger.info("Successfully used generate_content() method")
+                except AttributeError:
+                    logger.info("generate_content() method not available, trying direct model call")
+                    
+                    # Method 3: Direct model call
+                    import google.genai as genai
+                    client = genai.Client()
+                    
+                    response = client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=[prompt],
+                        config={
+                            "temperature": 0.8,
+                            "top_p": 0.9,
+                            "top_k": 40,
+                            "max_output_tokens": 8192,
+                            "response_mime_type": "application/json"
+                        }
+                    )
+                    logger.info("Successfully used direct model call")
             
             if response and hasattr(response, 'text') and response.text:
                 logger.info("Successfully received scene response from ADK API")

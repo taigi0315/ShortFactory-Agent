@@ -16,6 +16,7 @@ from google.adk.memory import InMemoryMemoryService
 
 from core.session_manager import SessionManager
 from agents.adk_script_writer_agent import ADKScriptWriterAgent
+from agents.adk_scene_writer_agent import ADKSceneWriterAgent
 from agents.adk_image_generate_agent import ADKImageGenerateAgent
 # Removed non-ADK import
 from model.models import VideoScript
@@ -46,9 +47,12 @@ class ADKShortFactoryRunner:
         self.artifact_service = InMemoryArtifactService()
         self.memory_service = InMemoryMemoryService()
         
+        # Initialize session manager first
+        self.session_manager = SessionManager()
+        
         # Initialize agents
         self.script_writer_agent = ADKScriptWriterAgent()
-        self.session_manager = SessionManager()
+        self.scene_writer_agent = ADKSceneWriterAgent(self.session_manager)
         self.image_generate_agent = ADKImageGenerateAgent(self.session_manager)
         
         # Create ADK Runner with primary agent
@@ -87,14 +91,18 @@ class ADKShortFactoryRunner:
             
             # Step 1: Generate script using ADK Script Writer Agent
             logger.info("Step 1a: Generating script with ADK Script Writer Agent...")
-            script = await self._generate_script_with_adk(subject, language, max_scenes)
+            script = await self._generate_script_with_adk(subject, language, max_scenes, session_id)
             
             # Save script to session
             self.session_manager.save_script(session_id, script)
             
+            # Step 1b: Generate detailed scene scripts using ADK Scene Writer Agent
+            logger.info("Step 1b: Generating detailed scene scripts with ADK Scene Writer Agent...")
+            enhanced_script = await self._generate_scene_scripts_with_adk(session_id, script, subject)
+            
             # Step 2: Generate images using ADK Image Generate Agent
-            logger.info("Step 1b: Generating images with ADK Image Generate Agent...")
-            image_results = await self._generate_images_with_adk_agent(session_id, script, cost_saving_mode)
+            logger.info("Step 1c: Generating images with ADK Image Generate Agent...")
+            image_results = await self._generate_images_with_adk_agent(session_id, enhanced_script, cost_saving_mode)
             
             # Step 3: Prepare results
             results = {
@@ -169,11 +177,11 @@ class ADKShortFactoryRunner:
             logger.error(f"Error extracting images from ADK session: {str(e)}")
             return {"generated_images": [], "total_images": 0, "failed_images": 0, "time_taken": 0, "model_used": "ADK Multi-Agent", "character": "Huh"}
     
-    async def _generate_script_with_adk(self, subject: str, language: str, max_scenes: int) -> VideoScript:
+    async def _generate_script_with_adk(self, subject: str, language: str, max_scenes: int, session_id: str) -> VideoScript:
         """Generate script using ADK Script Writer Agent"""
         try:
             # Use ADK agent to generate story script
-            story_script = await self.script_writer_agent.generate_story_script(subject, language, max_scenes)
+            story_script = await self.script_writer_agent.generate_story_script(subject, session_id, language, max_scenes)
             logger.info(f"Story script generated with {len(story_script.scene_plan)} scenes")
             
             # Convert StoryScript to VideoScript for compatibility
@@ -221,6 +229,72 @@ class ADKShortFactoryRunner:
         except Exception as e:
             logger.error(f"Error generating script with ADK: {str(e)}")
             raise
+    
+    async def _generate_scene_scripts_with_adk(self, session_id: str, script: VideoScript, subject: str) -> VideoScript:
+        """Generate detailed scene scripts using ADK Scene Writer Agent"""
+        try:
+            logger.info(f"Generating detailed scene scripts for {len(script.scenes)} scenes")
+            
+            # Create full script context for scene writers
+            full_script_context = f"""
+Title: {script.title}
+Overall Story: {script.overall_story}
+Story Summary: {script.story_summary}
+Character: {script.main_character_description}
+Cosplay Instructions: {script.character_cosplay_instructions}
+Overall Style: {script.overall_style}
+"""
+            
+            # Generate detailed scripts for each scene
+            enhanced_scenes = []
+            for scene in script.scenes:
+                try:
+                    logger.info(f"Generating detailed script for scene {scene.scene_number}")
+                    
+                    # Use Scene Writer Agent to enhance the scene
+                    scene_result = await self.scene_writer_agent.write_scene_script(
+                        scene_number=scene.scene_number,
+                        scene_type=scene.scene_type,
+                        overall_story=script.overall_story,
+                        full_script_context=full_script_context,
+                        subject=subject,
+                        session_id=session_id
+                    )
+                    
+                    # Update scene with enhanced details
+                    if scene_result and 'success' in scene_result and scene_result['success']:
+                        # Keep original scene but with enhanced details
+                        enhanced_scene = scene
+                        enhanced_scenes.append(enhanced_scene)
+                        logger.info(f"Scene {scene.scene_number} enhanced successfully")
+                    else:
+                        # Fallback to original scene
+                        enhanced_scenes.append(scene)
+                        logger.warning(f"Scene {scene.scene_number} enhancement failed, using original")
+                        
+                except Exception as e:
+                    logger.error(f"Error enhancing scene {scene.scene_number}: {str(e)}")
+                    # Fallback to original scene
+                    enhanced_scenes.append(scene)
+            
+            # Create enhanced VideoScript
+            enhanced_script = VideoScript(
+                title=script.title,
+                main_character_description=script.main_character_description,
+                character_cosplay_instructions=script.character_cosplay_instructions,
+                overall_style=script.overall_style,
+                overall_story=script.overall_story,
+                story_summary=script.story_summary,
+                scenes=enhanced_scenes
+            )
+            
+            logger.info(f"Scene script generation completed for {len(enhanced_scenes)} scenes")
+            return enhanced_script
+            
+        except Exception as e:
+            logger.error(f"Error generating scene scripts with ADK: {str(e)}")
+            # Return original script as fallback
+            return script
     
     async def _generate_images_with_adk_agent(self, session_id: str, script: VideoScript, cost_saving_mode: bool = False) -> dict:
         """Generate images using ADK Image Generate Agent"""

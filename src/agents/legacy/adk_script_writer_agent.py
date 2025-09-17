@@ -8,6 +8,7 @@ import json
 import logging
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
+from pathlib import Path
 from google.adk import Agent
 from google.adk.models import BaseLlm
 from model.models import SceneType, ImageStyle, VoiceTone, TransitionType, HookTechnique, VideoScript, StoryScript, Scene, ScenePlan, ElevenLabsSettings
@@ -65,6 +66,37 @@ class ADKScriptWriterAgent(Agent):
         
         logger.info("ADK Script Writer Agent initialized with Gemini 2.5 Flash, Shared Context, Story Validator, and Story Focus Engine")
     
+    def _save_prompt_and_response(self, session_id: str, prompt: str, response: str, attempt: int = 1):
+        """
+        Save prompt and response to session directory
+        
+        Args:
+            session_id: Session ID for the current run
+            prompt: The prompt sent to the AI
+            response: The response received from the AI
+            attempt: Attempt number (for retries)
+        """
+        try:
+            # Create prompts directory in session
+            session_dir = Path(f"sessions/{session_id}")
+            prompts_dir = session_dir / "prompts"
+            prompts_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Save prompt
+            prompt_file = prompts_dir / f"script_writer_prompt_attempt_{attempt}.txt"
+            with open(prompt_file, 'w', encoding='utf-8') as f:
+                f.write(prompt)
+            
+            # Save response
+            response_file = prompts_dir / f"script_writer_response_attempt_{attempt}.txt"
+            with open(response_file, 'w', encoding='utf-8') as f:
+                f.write(response)
+            
+            logger.info(f"Saved prompt and response for attempt {attempt} to {prompts_dir}")
+            
+        except Exception as e:
+            logger.error(f"Failed to save prompt and response: {str(e)}")
+    
     def _get_instruction(self) -> str:
         """
         Get the instruction prompt for the agent
@@ -89,64 +121,57 @@ Every scene must contain:
 - Concrete examples with names, places, times
 - Data points that viewers will remember
 
-### 3. NARRATIVE STRUCTURE
-Use the "Curiosity Gap" framework:
-- Scene 1: Present an impossible-seeming outcome
-- Scene 2-3: Reveal the obstacles that made it impossible
-- Scene 4-5: Show the specific actions/decisions that changed everything
-- Scene 6: Reveal the unexpected consequences/current impact
+### 3. STORYTELLING GUIDELINES
+Create a compelling narrative that:
+- Flows naturally from beginning to end
+- Builds engagement and maintains interest
+- Uses diverse scene types to keep viewers engaged
+- Focuses on depth and detail rather than surface-level information
+- Creates a cohesive story arc that makes sense
 
-### 4. BANNED PHRASES (NEVER USE):
-- "Let me explain..."
-- "Did you know..."
-- "It's fascinating..."
-- "Here's what you need to know..."
-- Any generic educational filler
+### 4. QUALITY STANDARDS
+Ensure your story:
+- Goes deep into the subject matter
+- Provides rich, detailed content
+- Uses compelling storytelling techniques
+- Maintains viewer engagement throughout
+- Creates memorable moments and insights
 
-### 5. SCENE REQUIREMENTS
-Each scene MUST have:
-- A specific claim or revelation
-- Supporting data/evidence
-- Visual proof points
-- Connection to viewer's life/interests
-
-### 6. CHARACTER INTEGRATION
+### 5. CHARACTER INTEGRATION
 The character should:
-- React to surprising information (not just present it)
-- Show genuine emotions (shock, confusion, amazement)
-- Ask the questions viewers are thinking
-- Challenge assumptions
+- Be actively engaged with the content
+- Show genuine reactions and emotions
+- Help guide viewers through the story
+- Add personality and relatability to the narrative
 
 ## Output Format:
 Return a JSON object with:
-- title: Specific, engaging title (not generic)
+- title: Engaging, specific title
 - main_character_description: Huh character description
 - character_cosplay_instructions: Specific cosplay for this story
-- overall_style: Educational style with specific focus
-- overall_story: The ultra-specific story being told
-- story_summary: Brief summary with key facts
-- scene_plan: Array of scene plans with specific content
+- overall_style: Engaging style description
+- overall_story: The compelling story being told
+- story_summary: Brief summary of the story
+- scene_plan: Array of scene plans with rich content
 
 ## Scene Planning Requirements:
 - scene_number: Sequential number
-- scene_type: hook, explanation, example, statistic, call_to_action, summary
-- scene_purpose: Specific educational goal
-- key_content: Concrete facts and data points
-- scene_focus: The specific revelation or claim
+- scene_type: Choose from available scene types
+- scene_purpose: What this scene accomplishes in the story
+- key_content: Rich, detailed content for this scene
+- scene_focus: The main focus or revelation of this scene
 
-## VALIDATION CRITERIA:
-✓ Can you name 5 specific facts from the script?
-✓ Is there a clear story arc with tension and resolution?
-✓ Would a viewer retell this story to friends?
-✓ Are there at least 10 concrete data points?
-✓ Does each scene advance the narrative?
-
-## CRITICAL: Create exactly 6 scenes for a complete video
-Each scene must be information-dense and memorable.
+## CREATIVE FREEDOM:
+You have complete creative freedom to:
+- Choose the number of scenes that best serves the story
+- Select scene types that create the best narrative flow
+- Structure the story in the most engaging way
+- Focus on the most interesting aspects of the subject
+- Create your own unique approach to the topic
 """
 
-    async def generate_story_script(self, subject: str, language: str = "English", max_video_scenes: int = 8, 
-                                   target_audience: str = "general", visual_style: VisualStyle = VisualStyle.MODERN, 
+    async def generate_story_script(self, subject: str, session_id: str, language: str = "English", max_video_scenes: int = None,
+                                   target_audience: str = "general", visual_style: VisualStyle = VisualStyle.MODERN,
                                    max_retries: int = 3) -> StoryScript:
         """
         Generate a story script using ADK Agent
@@ -154,12 +179,16 @@ Each scene must be information-dense and memorable.
         Args:
             subject: The topic for the video
             language: Language for the script (default: English)
-            max_video_scenes: Maximum number of scenes (default: 8)
+            max_video_scenes: Maximum number of scenes (default: from env or 6)
             
         Returns:
             StoryScript: Generated story script with scene plan
         """
         import asyncio
+        
+        # Get max scenes from environment variable
+        if max_video_scenes is None:
+            max_video_scenes = int(os.getenv('MAX_NUMBER_OF_IMAGE_SCENE', '6'))
         
         for attempt in range(max_retries):
             try:
@@ -176,20 +205,32 @@ Each scene must be information-dense and memorable.
                 logger.info(f"Story focus refined: {focus_result.applied_pattern.value} pattern applied")
                 logger.info(f"Focus score: {focus_result.focus_score:.2f}")
                 
-                # Create a more specific and detailed prompt
+                # Create a flexible and creative prompt
                 prompt = f"""
-You are creating an educational video story about: {subject}
+You are creating a compelling video story about: {subject}
 
 CRITICAL REQUIREMENTS:
-1. You MUST create content ONLY about {subject}
+1. You MUST create content about {subject}
 2. You MUST follow this EXACT JSON format
-3. You MUST NOT create stories about other topics like Coca-Cola, K-pop, or any other subject
-4. Output ONLY the JSON, no other text
 
-Create a story that focuses specifically on {subject}. Think about:
-- What makes {subject} interesting or important?
-- What are the key facts, concepts, or aspects of {subject}?
-- How can you tell an engaging story about {subject}?
+5. Focus on DETAILED, DEEP storytelling with rich narrative elements
+
+STORYTELLING APPROACH:
+- Create a well-structured narrative that goes DEEP into {subject}
+- Use diverse scene styles to maintain engagement
+- Focus on compelling details, interesting facts, and engaging storytelling
+- Make each scene information-dense and memorable
+- Build a cohesive story arc that flows naturally
+
+AVAILABLE SCENE TYPES (choose what works best for your story):
+- hook, explanation, example, statistic, call_to_action, summary, story, controversy, comparison, timeline, interview, demonstration, analysis, prediction, debate, revelation, journey, transformation, conflict, resolution
+
+CREATIVE FREEDOM:
+- Choose the number of scenes that best serves your story (recommended: 4-8 scenes)
+- Select scene types that create the best narrative flow
+- Structure the story in the most engaging way
+- Focus on the most interesting aspects of {subject}
+- Create your own unique approach to the topic
 
 Output ONLY this JSON (no other text):
 
@@ -197,56 +238,27 @@ Output ONLY this JSON (no other text):
   "title": "The Story of {subject}",
   "main_character_description": "Huh - a cute, blob-like cartoon character",
   "character_cosplay_instructions": "Dress Huh as an expert or character related to {subject}",
-  "overall_style": "educational",
-  "overall_story": "A specific, engaging story about {subject} that explains its importance, history, or key concepts",
-  "story_summary": "A brief summary of the story about {subject}",
+  "overall_style": "engaging",
+  "overall_story": "A detailed, compelling story about {subject} that explores its depth, significance, and fascinating aspects",
+  "story_summary": "A brief summary of the rich story about {subject}",
   "scene_plan": [
     {{
       "scene_number": 1,
       "scene_type": "hook",
-      "scene_purpose": "Grab attention with an interesting fact about {subject}",
-      "key_content": "Surprising or important facts about {subject}",
-      "scene_focus": "What makes {subject} worth learning about"
-    }},
-    {{
-      "scene_number": 2,
-      "scene_type": "explanation",
-      "scene_purpose": "Explain the core concepts of {subject}",
-      "key_content": "Main concepts, definitions, or principles of {subject}",
-      "scene_focus": "Understanding the basics of {subject}"
-    }},
-    {{
-      "scene_number": 3,
-      "scene_type": "example",
-      "scene_purpose": "Show real-world examples of {subject}",
-      "key_content": "Concrete examples, case studies, or applications of {subject}",
-      "scene_focus": "How {subject} works in practice"
-    }},
-    {{
-      "scene_number": 4,
-      "scene_type": "statistic",
-      "scene_purpose": "Share impressive statistics about {subject}",
-      "key_content": "Numbers, data, and statistics related to {subject}",
-      "scene_focus": "The scale and impact of {subject}"
-    }},
-    {{
-      "scene_number": 5,
-      "scene_type": "call_to_action",
-      "scene_purpose": "Encourage further learning about {subject}",
-      "key_content": "Ways to learn more about {subject}",
-      "scene_focus": "Next steps for exploring {subject}"
-    }},
-    {{
-      "scene_number": 6,
-      "scene_type": "summary",
-      "scene_purpose": "Summarize key points about {subject}",
-      "key_content": "Main takeaways and key points about {subject}",
-      "scene_focus": "What viewers should remember about {subject}"
+      "scene_purpose": "Grab attention with a compelling opening about {subject}",
+      "key_content": "Surprising, intriguing, or fascinating facts about {subject}",
+      "scene_focus": "What makes {subject} compelling and worth exploring"
     }}
   ]
 }}
 
-REMEMBER: This story must be about {subject} and {subject} only. Do not create content about any other topic.
+REMEMBER: 
+- This story must be about {subject} and {subject} only
+- You have complete creative freedom to structure your story
+- Focus on DETAILED, DEEP storytelling
+- Make each scene rich with information and engaging content
+- NO elevenlabs settings or voice tone specifications
+- Choose the number and types of scenes that create the best story flow
 """
                 
                 # Log the prompt being sent to AI
@@ -259,6 +271,9 @@ REMEMBER: This story must be about {subject} and {subject} only. Do not create c
                 response = await self._simulate_adk_response(prompt)
                 
                 if response:
+                    # Save prompt and response
+                    self._save_prompt_and_response(session_id, prompt, response, attempt + 1)
+                    
                     # Log the full response for debugging
                     logger.info(f"AI Response length: {len(response)}")
                     logger.info(f"AI Response preview: {response[:200]}...")

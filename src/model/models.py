@@ -14,6 +14,21 @@ class SceneType(str, Enum):
     STATISTIC = "statistic"  # Statistical information scene
     CALL_TO_ACTION = "call_to_action"  # Call to action scene
     SUMMARY = "summary"  # Summary scene
+    
+    # Additional scene types for diverse storytelling
+    STORY = "story"  # Detailed narrative scene
+    ANALYSIS = "analysis"  # Deep analysis scene
+    CONTROVERSY = "controversy"  # Debate/controversy scene
+    TIMELINE = "timeline"  # Timeline/historical scene
+    INTERVIEW = "interview"  # Interview-style scene
+    DEMONSTRATION = "demonstration"  # Live demonstration scene
+    PREDICTION = "prediction"  # Future prediction scene
+    DEBATE = "debate"  # Debate discussion scene
+    REVELATION = "revelation"  # Surprising revelation scene
+    JOURNEY = "journey"  # Journey/process scene
+    TRANSFORMATION = "transformation"  # Transformation scene
+    CONFLICT = "conflict"  # Conflict/tension scene
+    RESOLUTION = "resolution"  # Resolution scene
 
 class ImageStyle(str, Enum):
     # Basic styles

@@ -41,7 +41,7 @@ class ImageGenerationTool(BaseTool):
         
         # Get image settings
         self.image_ratio = os.getenv('IMAGE_RATIO', 'vertical')
-        self.number_of_images_to_video = int(os.getenv('NUMBER_OF_IMAGE_TO_VIDEO', '5'))
+        self.number_of_images_to_video = int(os.getenv('NUMBER_OF_VIDEO_SCENE', '5'))
         
         # Load Huh character image
         self.huh_image_path = Path("src/assets/huh.png")

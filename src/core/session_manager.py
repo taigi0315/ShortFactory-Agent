@@ -63,8 +63,9 @@ class SessionManager:
         Returns:
             str: Session ID (UUID)
         """
-        # Generate unique session ID
-        session_id = str(uuid.uuid4())
+        # Generate unique session ID with date prefix
+        date_prefix = datetime.now().strftime("%Y%m%d")
+        session_id = f"{date_prefix}-{str(uuid.uuid4())}"
         
         # Create session directory
         session_dir = self.base_dir / session_id
