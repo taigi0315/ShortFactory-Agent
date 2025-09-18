@@ -10,9 +10,11 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
-from agents.adk_full_script_agent import ADKFullScriptAgent
-from agents.adk_scene_script_agent import ADKSceneScriptAgent
+from agents.full_script_writer_agent import FullScriptWriterAgent
+from agents.scene_script_writer_agent import SceneScriptWriterAgent
 from core.session_manager import SessionManager
+from model.input_models import FullScriptInput, SceneExpansionInput, LengthPreference, Language
+from model.output_models import FullScriptOutput, ScenePackageOutput
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +29,8 @@ class ADKOrchestratorAgent:
         self.session_manager = session_manager
         
         # Initialize sub-agents
-        self.full_script_agent = ADKFullScriptAgent()
-        self.scene_script_agent = ADKSceneScriptAgent()
+        self.full_script_agent = FullScriptWriterAgent()
+        self.scene_script_agent = SceneScriptWriterAgent()
         
         logger.info("🚀 ADK Orchestrator Agent initialized with structured sub-agents")
     
@@ -78,20 +80,23 @@ class ADKOrchestratorAgent:
             logger.info("📝 Stage 1: Generating full script structure with ADK...")
             stage_start = time.time()
             
-            full_script = await self.full_script_agent.generate_full_script(
+            # Create Pydantic input for full script agent
+            full_script_input = FullScriptInput(
                 topic=topic,
                 length_preference=length_preference,
                 style_profile=style_profile,
                 target_audience=target_audience,
                 language=language,
-                knowledge_refs=knowledge_refs
+                knowledge_refs=knowledge_refs or []
             )
+            
+            full_script_output = await self.full_script_agent.generate_script(full_script_input)
             
             stage_time = time.time() - stage_start
             build_report["stages"]["full_script"] = {
                 "status": "success",
                 "time_ms": int(stage_time * 1000),
-                "scenes_count": len(full_script.get("scenes", [])),
+                "scenes_count": len(full_script_output.scenes),
                 "agent_type": "adk_structured"
             }
             
