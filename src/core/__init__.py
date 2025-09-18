@@ -1,8 +1,8 @@
 """
-Core module for ShortFactory
+Core module for ShortFactory - Clean and Simple
+Only essential utilities, no complex processing logic
 """
 
-from model.models import *
 from .session_manager import SessionManager
 
 __all__ = [
