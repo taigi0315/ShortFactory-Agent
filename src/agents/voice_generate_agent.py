@@ -8,6 +8,7 @@ import json
 import logging
 import time
 import requests
+import re
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 
@@ -52,6 +53,45 @@ class VoiceGenerateAgent:
         
         logger.info("Voice Generate Agent initialized with ElevenLabs API")
         logger.info(f"Voice ID: {self.voice_id}")
+    
+    def clean_text_for_tts(self, text: str) -> str:
+        """
+        Clean text for TTS by removing special characters that ElevenLabs might read aloud
+        
+        Args:
+            text: Raw text from dialogue
+            
+        Returns:
+            Cleaned text suitable for TTS
+        """
+        if not text:
+            return ""
+        
+        # Remove markdown formatting
+        text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)  # **bold** -> bold
+        text = re.sub(r'\*([^*]+)\*', r'\1', text)      # *italic* -> italic
+        text = re.sub(r'_([^_]+)_', r'\1', text)        # _underline_ -> underline
+        
+        # Remove brackets and parentheses content that are stage directions
+        text = re.sub(r'\[([^\]]+)\]', '', text)        # [stage directions]
+        text = re.sub(r'\(([^)]+)\)', '', text)         # (parentheses)
+        
+        # Remove special punctuation that TTS might read
+        text = re.sub(r'[#@$%^&*+=<>{}|\\]', '', text)  # Remove special symbols
+        text = re.sub(r'["""''`]', '"', text)           # Normalize quotes
+        
+        # Clean up multiple spaces and line breaks
+        text = re.sub(r'\s+', ' ', text)                # Multiple spaces -> single space
+        text = re.sub(r'\n+', '. ', text)               # Line breaks -> periods
+        
+        # Remove leading/trailing whitespace
+        text = text.strip()
+        
+        # Ensure proper sentence ending
+        if text and not text.endswith(('.', '!', '?')):
+            text += '.'
+        
+        return text
     
     def _save_voice_metadata(self, session_id: str, scene_number: int, voice_data: Dict[str, Any]):
         """Save voice generation metadata to session directory"""
@@ -204,9 +244,12 @@ class VoiceGenerateAgent:
                         dialogue_lines.append(line)
             
             # Join with appropriate pauses
-            dialogue_text = ". ".join(dialogue_lines)
+            raw_dialogue_text = ". ".join(dialogue_lines)
             
-            logger.info(f"Extracted dialogue text: {len(dialogue_text)} characters")
+            # Clean text for TTS
+            dialogue_text = self.clean_text_for_tts(raw_dialogue_text)
+            
+            logger.info(f"Extracted dialogue text: {len(dialogue_text)} characters (cleaned from {len(raw_dialogue_text)})")
             return dialogue_text
             
         except Exception as e:

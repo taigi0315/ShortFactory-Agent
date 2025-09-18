@@ -1,0 +1,125 @@
+{
+  "scene_number": 2,
+  "narration_script": [
+    {
+      "line": "Ever wondered how your online transactions, like buying a coffee or sending a message, actually get recorded and protected in the vast digital world?",
+      "at_ms": 0,
+      "pause_ms": 500
+    },
+    {
+      "line": "Well, at the very foundation of blockchain technology, we find something called a 'block'.",
+      "at_ms": 5500,
+      "pause_ms": 300
+    },
+    {
+      "line": "Imagine it as a super-secure, transparent digital container.",
+      "at_ms": 9300,
+      "pause_ms": 200
+    },
+    {
+      "line": "Inside each of these blocks, you'll find a meticulously organized list of verified transactions and other important data.",
+      "at_ms": 12500,
+      "pause_ms": 400
+    },
+    {
+      "line": "Think of it like a single, tamper-proof page in an unbreakable, constantly updated digital ledger.",
+      "at_ms": 17900,
+      "pause_ms": 300
+    },
+    {
+      "line": "This isn't just any old page, though. Every entry is cryptographically sealed, making it incredibly secure and trustworthy.",
+      "at_ms": 23200,
+      "pause_ms": 500
+    }
+  ],
+  "dialogue": [],
+  "visuals": [
+    {
+      "frame_id": "2A",
+      "shot_type": "medium",
+      "camera_motion": "slow zoom out to reveal the block, then steady",
+      "character_pose": "starts confused with a question mark above head, then shifts to curious, then enlightened and pointing towards the block",
+      "expression": "confused -> curious -> enlightened",
+      "background": "clean, minimalistic digital space with subtle, flowing light patterns and grid lines, suggesting a futuristic data environment",
+      "foreground_props": "Blocky, a translucent, glowing digital cube forming centrally",
+      "lighting": "soft, ambient glow with highlights on Blocky and the block, creating an inviting educational mood",
+      "color_mood": "cool blues and purples for the digital environment, with warm, vibrant glows from the data and Blocky's expression",
+      "image_prompt": "Blocky, a friendly block-shaped character, initially appears confused with a floating question mark. As the scene progresses, Blocky's expression shifts to curious, then enlightened, and it points towards a central element. This central element is a translucent, glowing digital cube, representing a 'block', which visibly forms from glowing particles. Inside this forming block, dynamic streams of digital data, including abstract transaction symbols (like currency icons, arrows), numbers, and lines of code, actively flow into it and settle, securely filling the container. The background is a clean, minimalistic digital space with subtle, flowing light patterns. Educational and engaging 3D illustration style, vibrant colors.",
+      "negative_prompt": "blurry, low resolution, messy, ugly, distorted, extra limbs, multiple blocks, complex scene, human characters, text on block that is not specified, dark, gloomy",
+      "model_hints": [
+        "3D illustration",
+        "educational animation style",
+        "vector art",
+        "clean lines"
+      ],
+      "aspect_ratio": "16:9",
+      "seed": 123456,
+      "guidance_scale": 8.0
+    }
+  ],
+  "tts": {
+    "engine": "elevenlabs",
+    "voice": "Blocky's_Narrator_Voice",
+    "language": "English",
+    "elevenlabs_settings": {
+      "stability": 0.4,
+      "similarity_boost": 0.85,
+      "style": 0.8,
+      "speed": 1.0,
+      "loudness": 0.3
+    }
+  },
+  "sfx_cues": [
+    {
+      "sfx_name": "digital_whirring_subtle",
+      "at_ms": 0,
+      "volume": 0.5
+    },
+    {
+      "sfx_name": "block_formation_chime",
+      "at_ms": 3000,
+      "volume": 0.7
+    },
+    {
+      "sfx_name": "data_stream_flow",
+      "at_ms": 5500,
+      "volume": 0.6
+    },
+    {
+      "sfx_name": "verification_ding_subtle",
+      "at_ms": 15000,
+      "volume": 0.6
+    }
+  ],
+  "on_screen_text": [
+    {
+      "text": "BLOCK",
+      "at_ms": 9300,
+      "duration_ms": 1000,
+      "position": "center",
+      "font_size": "48px",
+      "color": "#00FFFF"
+    },
+    {
+      "text": "VERIFIED TRANSACTIONS",
+      "at_ms": 17900,
+      "duration_ms": 1500,
+      "position": "bottom_center",
+      "font_size": "36px",
+      "color": "#00FF00"
+    }
+  ],
+  "timing": {
+    "total_ms": 29700
+  },
+  "continuity": {
+    "in_from": "fade",
+    "out_to": "slide_left",
+    "callback_tags": [
+      "block_concept_introduced",
+      "data_storage_explained",
+      "verification_hinted"
+    ]
+  },
+  "safety_checks": []
+}

@@ -1,0 +1,169 @@
+{
+  "scene_number": 1,
+  "narration_script": [
+    {
+      "line": "Ever wonder how you truly *trust* something online... without a human or central company in the middle?",
+      "at_ms": 0,
+      "pause_ms": 700
+    },
+    {
+      "line": "Every online transaction, every piece of shared data... it often relies on a single, powerful authority.",
+      "at_ms": 7000,
+      "pause_ms": 800
+    },
+    {
+      "line": "Think about it: your bank, social media platforms, even online shopping. You're trusting *them* with your information, your money, your digital life.",
+      "at_ms": 15000,
+      "pause_ms": 900
+    },
+    {
+      "line": "But what if we could remove that single point of failure? What if trust wasn't granted, but *built-in*?",
+      "at_ms": 23000,
+      "pause_ms": 1000
+    },
+    {
+      "line": "Imagine a world where digital transactions are inherently trustworthy, secure, and transparent... without needing a middleman at all.",
+      "at_ms": 32000,
+      "pause_ms": 1200
+    },
+    {
+      "line": "Welcome to the revolutionary world of **Blockchain**.",
+      "at_ms": 42000,
+      "pause_ms": 500
+    }
+  ],
+  "dialogue": [],
+  "visuals": [
+    {
+      "frame_id": "1A",
+      "shot_type": "wide",
+      "camera_motion": "slow push-in",
+      "character_pose": "confused, hands up in question",
+      "expression": "perplexed",
+      "background": "a vast, sterile digital landscape with abstract piles of glowing data cubes and streams of information flowing towards a prominent, empty central void or dark abyss. No visible central authority.",
+      "foreground_props": "Blocky, a friendly block-shaped character, stands prominently in the foreground looking confused, a tiny question mark subtly floating above its head.",
+      "lighting": "cool, analytical blue and white light, with a darker, ominous shadow around the central void.",
+      "color_mood": "pensive, slightly unsettling, questioning",
+      "image_prompt": "Blocky character, confused, standing in a digital landscape. Piles of abstract, glowing data cubes and streams of digital information flowing towards a prominent, dark, empty central void. The void represents the missing trust authority. Question mark above Blocky's head. Educational, engaging, vector illustration style.",
+      "negative_prompt": "human characters, messy, chaotic, real-world objects, unorganized data, happy, clear solution, ugly, deformed, blurry, low resolution, bad anatomy",
+      "model_hints": [
+        "illustration",
+        "educational",
+        "vector art",
+        "3D rendering"
+      ],
+      "aspect_ratio": "16:9",
+      "seed": 101,
+      "guidance_scale": 8.0
+    },
+    {
+      "frame_id": "1B",
+      "shot_type": "medium",
+      "camera_motion": "dolly zoom out, revealing more of the network",
+      "character_pose": "arms wide, looking up in awe and understanding",
+      "expression": "enlightened, curious, hopeful",
+      "background": "The previous central void is now being filled and surrounded by an intricate, glowing, interconnected network of 'blocks' and 'chains' of light, radiating outwards. The network feels secure, distributed, and vibrant.",
+      "foreground_props": "Blocky, the block-shaped character, now stands with an enlightened expression, its body subtly glowing, looking up at the emerging network. A small, stylized 'lightbulb' icon appears above its head.",
+      "lighting": "warm, inviting, and radiant glow emanating from the newly formed network, contrasting with the previous cool tones. Spotlight on Blocky.",
+      "color_mood": "optimistic, revolutionary, bright, secure",
+      "image_prompt": "Blocky character, enlightened, looking up in awe. The previous dark void is now replaced by a vibrant, glowing, interconnected network of geometric 'blocks' linked by 'chains' of light, radiating outwards. The network is distributed and secure. A small lightbulb icon above Blocky's head. Educational, engaging, vector illustration style.",
+      "negative_prompt": "human characters, messy, chaotic, single central point, dark, confused, ugly, deformed, blurry, low resolution, bad anatomy",
+      "model_hints": [
+        "illustration",
+        "educational",
+        "vector art",
+        "3D rendering"
+      ],
+      "aspect_ratio": "16:9",
+      "seed": 102,
+      "guidance_scale": 8.5
+    }
+  ],
+  "tts": {
+    "engine": "elevenlabs",
+    "voice": "onyx",
+    "language": "English",
+    "elevenlabs_settings": {
+      "stability": 0.4,
+      "similarity_boost": 0.85,
+      "style": 0.75,
+      "speed": 1.05,
+      "loudness": 0.15
+    }
+  },
+  "sfx_cues": [
+    {
+      "sfx_name": "subtle_digital_hum_eerie",
+      "start_ms": 0,
+      "end_ms": 14000,
+      "volume": 0.6
+    },
+    {
+      "sfx_name": "data_flow_whoosh_subtle",
+      "start_ms": 8000,
+      "end_ms": 12000,
+      "volume": 0.5
+    },
+    {
+      "sfx_name": "void_ambience_deep_low",
+      "start_ms": 14000,
+      "end_ms": 30000,
+      "volume": 0.7
+    },
+    {
+      "sfx_name": "synth_reveal_hopeful_build",
+      "start_ms": 30000,
+      "end_ms": 42000,
+      "volume": 0.8
+    },
+    {
+      "sfx_name": "sparkle_chime_lightbulb",
+      "start_ms": 32000,
+      "volume": 0.9
+    }
+  ],
+  "on_screen_text": [
+    {
+      "text": "How do we truly TRUST?",
+      "start_ms": 1000,
+      "end_ms": 5000,
+      "position": "center",
+      "font_size": "large",
+      "color": "#FFFFFF",
+      "animation_in": "fade_in",
+      "animation_out": "fade_out"
+    },
+    {
+      "text": "The Middleman Problem",
+      "start_ms": 17000,
+      "end_ms": 22000,
+      "position": "bottom_center",
+      "font_size": "medium",
+      "color": "#FFD700",
+      "animation_in": "slide_up",
+      "animation_out": "slide_down"
+    },
+    {
+      "text": "BLOCKCHAIN",
+      "start_ms": 42500,
+      "end_ms": 45000,
+      "position": "center",
+      "font_size": "extra_large",
+      "color": "#00FFC0",
+      "animation_in": "zoom_in_bounce",
+      "animation_out": "fade_out"
+    }
+  ],
+  "timing": {
+    "total_ms": 45500
+  },
+  "continuity": {
+    "in_from": "fade_from_black",
+    "out_to": "cut_to_black_then_reveal",
+    "callback_tags": [
+      "introduction_trust_problem",
+      "blockchain_reveal_hook"
+    ]
+  },
+  "safety_checks": []
+}

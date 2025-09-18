@@ -8,6 +8,7 @@ import asyncio
 import logging
 import json
 from typing import Optional, List
+from pathlib import Path
 from dotenv import load_dotenv
 from agents.orchestrator_agent import OrchestratorAgent
 
@@ -145,6 +146,13 @@ async def main_new_architecture(topic: Optional[str] = None,
         logger.info(f"🎬 Scenes: {len(results['scene_packages'])}")
         logger.info(f"🖼️ Images: {len(results['image_assets'])}")
         logger.info(f"🎤 Voices: {len(results.get('voice_assets', []))}")
+        if results.get('video_path'):
+            video_name = Path(results['video_path']).name
+            logger.info(f"🎬 Video: {video_name}")
+            if results.get('video_metadata'):
+                duration = results['video_metadata'].get('total_duration', 0)
+                size_mb = results['video_metadata'].get('file_size_bytes', 0) / (1024*1024)
+                logger.info(f"   Duration: {duration:.1f}s, Size: {size_mb:.1f}MB")
         logger.info(f"⏱️ Total time: {results['total_time_seconds']:.2f} seconds")
         
         # Print build report summary

@@ -14,6 +14,7 @@ pip install -r requirements.txt
 echo "GEMINI_API_KEY=your-api-key-here" > .env
 echo "ELEVENLABS_API_KEY=your-elevenlabs-key" >> .env
 echo "ELEVENLABS_VOICE_ID=your-voice-id-or-leave-blank-for-default" >> .env
+echo "STABILITY_API_KEY=your-stability-ai-key-for-real-images" >> .env
 
 # 3. Run the system
 python run_shortfactory.py "Your Topic Here" --cost
@@ -27,7 +28,7 @@ python run_shortfactory.py "Your Topic Here" --cost
 2. **🎬 Scene Production**: Each scene expanded into detailed production package with timing                                              
 3. **🖼️ Visual Creation**: 3-8 visual frames per scene for rich storytelling (15-40 images total)                                          
 4. **🎤 Voice Generation**: High-quality TTS audio with ElevenLabs integration and scene-specific settings
-5. **🎭 Character Consistency**: Huh character maintains cosplay throughout all frames                                                    
+5. **🎭 Character Consistency**: Glowbie character maintains cosplay throughout all frames                                                    
 6. **📊 Quality Control**: Multi-layer validation and comprehensive build reporting
 
 ## 🏗️ New Architecture Overview
@@ -50,10 +51,13 @@ python run_shortfactory.py "Your Topic Here" --cost
 
 ### Basic Usage
 ```bash
-# Generate video about any topic
+# Cost-saving mode (mock images, fast)
 python run_shortfactory.py "Climate Change" --cost
 
-# Educational content
+# AI image generation mode (real images, requires STABILITY_API_KEY)
+python run_shortfactory.py "Climate Change"
+
+# Educational content with mock images
 python run_shortfactory.py "Why are dachshunds short?" --cost
 
 # Technology topics
@@ -103,12 +107,35 @@ sessions/20250916-{uuid}/
     └── ...                      # Additional scene frames
 ```
 
-## 🎭 Huh Character System
+## 🎭 Glowbie Character System
 
-- **Base Character**: `src/assets/huh.png` - Cute, blob-like cartoon character
+- **Base Character**: `src/assets/glowbie.png` - Cute, blob-like cartoon character
 - **Dynamic Cosplay**: Character transforms based on topic (e.g., scientist, historian, programmer)
 - **Visual Consistency**: Same character appearance maintained across all frames
 - **Rich Expressions**: Multiple poses and expressions for engaging storytelling
+
+## 🎨 Image Generation Modes
+
+### 💰 Cost-Saving Mode (`--cost` flag)
+- **Speed**: Instant (<1 second per image)
+- **Cost**: $0 (no API calls)
+- **Quality**: High-quality mock images
+- **Use case**: Development, testing, rapid prototyping
+
+### 🤖 AI Generation Mode (no `--cost` flag)
+- **Speed**: 10-30 seconds per image
+- **Cost**: ~$0.04 per image (Stability AI pricing)
+- **Quality**: AI-generated images with Glowbie character
+- **Requirements**: `STABILITY_API_KEY` in .env file
+- **Fallback**: Enhanced mock generation if API key not available
+
+```bash
+# Fast mock images (recommended for testing)
+python run_shortfactory.py "Your Topic" --cost
+
+# Real AI images (requires Stability AI API key)
+python run_shortfactory.py "Your Topic"
+```
 
 ## 🔧 Technical Features
 

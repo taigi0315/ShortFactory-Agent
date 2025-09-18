@@ -1,0 +1,162 @@
+
+You are the Scene Script Writer (SSW). Expand this scene beat into a production-ready package.
+
+SCENE DETAILS:
+- Scene Number: 5
+- Scene Type: summary
+- Importance Level: 5/5
+- Needs Animation: True
+- Transition Out: fade_to_black
+
+STORY CONTEXT:
+- Title: Blockchain Unlocked: Your Digital Trust Guide
+- Overall Style: educational and engaging
+- Main Character: Blocky - a friendly, inquisitive block-shaped character with expressive eyes and limbs.
+- Character Cosplay: Blocky should wear a small, digital 'lock' icon on its chest in Scene 4, and a tiny 'chain' accessory linking to its back in Scene 3. For the hook, Blocky looks confused, then enlightened.
+- Story Summary: This video demystifies blockchain technology, explaining its core concepts in an engaging and easy-to-understand manner. We start by posing a fundamental question about trust in digital transactions, setting the stage for blockchain as the revolutionary answer. Through simple analogies, we break down what a 'block' is – a secure container for data – and how these blocks are cryptographically linked to form an immutable 'chain'. The concept of decentralization, where many copies of this chain exist, is introduced as the cornerstone of its security and transparency. We then explore why blockchain is virtually unhackable and how it's poised to transform industries far beyond cryptocurrency, leaving the audience with a clear understanding of its power and potential.
+- Language: English
+
+SCENE BEATS TO EXPAND:
+- Recap: Blockchain offers transparency, security, and decentralization.
+- Beyond crypto: Briefly mention other applications like supply chain tracking, voting, digital identities.
+- Concluding thought: Blockchain isn't just a technology; it's a new way to build trust in a digital world.
+
+LEARNING OBJECTIVES:
+- Summarize the key benefits of blockchain.
+- Understand that blockchain's applications extend beyond cryptocurrency.
+- Reinforce the idea of blockchain as a foundation for digital trust.
+
+
+EDUCATIONAL ENHANCEMENT:
+Density score: 0.47
+Complexity score: 0.53
+Key concepts: N/A
+
+
+
+CONTINUITY CONTEXT:
+Previous scenes have established:
+- Scene 3: N/A - Key elements: 
+- Scene 4: N/A - Key elements: 
+
+Maintain visual and narrative consistency.
+
+
+ELABORATION & HOOKING MISSION:
+Your job is to ELABORATE the story beats and ADD HOOKING elements to make this scene compelling.
+Generate all content in English language.
+
+ELABORATION REQUIREMENTS:
+- EXPAND on the basic beats with rich details, interesting facts, and compelling narratives
+- ADD depth with specific examples, case studies, and real-world applications
+- INCLUDE fascinating details, surprising facts, and intriguing information
+- CREATE vivid descriptions and compelling storytelling elements
+- DEVELOP the content into something truly engaging and memorable
+
+HOOKING REQUIREMENTS:
+- START with attention-grabbing elements (questions, surprising facts, intriguing statements)
+- USE compelling storytelling techniques to maintain viewer interest
+- INCLUDE emotional hooks, curiosity gaps, and engaging narrative elements
+- CREATE moments that make viewers want to keep watching
+- ADD suspense, intrigue, or compelling questions throughout the scene
+
+TECHNICAL REQUIREMENTS:
+- Follow ScenePackage.json schema exactly
+- MUST include ALL required fields: scene_number, narration_script, visuals, tts, timing, continuity
+- Create detailed narration_script with timing (at_ms, pause_ms)
+- Design comprehensive visuals array with detailed image_prompts
+- Include proper TTS settings with elevenlabs_settings
+- Add appropriate sfx_cues and on_screen_text
+- Calculate realistic timing.total_ms
+- Maintain continuity with callback_tags
+- Use frame_ids like "1A", "1B", etc.
+
+REQUIRED FIELDS CHECKLIST:
+✓ scene_number (integer)
+✓ narration_script (array with line, at_ms)
+✓ visuals (array with frame_id, shot_type, image_prompt, aspect_ratio)
+✓ tts (object with engine, voice, elevenlabs_settings)
+✓ timing (object with total_ms)
+✓ continuity (object with in_from, out_to, callback_tags)
+
+VISUAL REQUIREMENTS:
+- Create 1-2 key visual frames per scene (not more than 2)
+- Create compelling image_prompts (minimum 40 characters)
+- Include negative_prompts to avoid unwanted elements
+- Specify shot_types: wide, medium, close, macro, extreme_wide, extreme_close
+- Add camera_motion, character_pose, expression, background, lighting
+- Use aspect_ratio: 16:9, 9:16, 1:1, 4:5, 3:2, 2:3
+- Include model_hints for style consistency
+- Set appropriate guidance_scale (1.0-20.0)
+- Focus on the MOST IMPORTANT visual moment(s) of the scene
+
+TTS REQUIREMENTS:
+- Use engine: "elevenlabs"
+- Set voice appropriately
+- Configure elevenlabs_settings:
+  - stability: 0.0-1.0
+  - similarity_boost: 0.0-1.0  
+  - style: 0.0-1.0
+  - speed: 0.7-1.3
+  - loudness: 0.0-1.0
+
+OUTPUT FORMAT:
+Generate ONLY valid JSON following ScenePackage.json schema.
+
+EXAMPLE OUTPUT STRUCTURE:
+{
+  "scene_number": 5,
+  "narration_script": [
+    {"line": "Opening line...", "at_ms": 0, "pause_ms": 200},
+    {"line": "Second line...", "at_ms": 2000}
+  ],
+  "dialogue": [],
+  "visuals": [
+    {
+      "frame_id": "5A",
+      "shot_type": "wide",
+      "camera_motion": "slow push-in",
+      "character_pose": "pointing",
+      "expression": "curious",
+      "background": "educational setting",
+      "foreground_props": "relevant props",
+      "lighting": "soft key lighting",
+      "color_mood": "warm and engaging",
+      "image_prompt": "Detailed 40+ character prompt for image generation...",
+      "negative_prompt": "low quality, blurry, distorted",
+      "model_hints": ["illustration", "educational"],
+      "aspect_ratio": "16:9",
+      "seed": 123456,
+      "guidance_scale": 7.5
+    }
+  ],
+  "tts": {
+    "engine": "elevenlabs",
+    "voice": "friendly-narrator",
+    "language": "English",
+    "elevenlabs_settings": {
+      "stability": 0.35,
+      "similarity_boost": 0.8,
+      "style": 0.85,
+      "speed": 1.08,
+      "loudness": 0.2
+    }
+  },
+  "sfx_cues": [],
+  "on_screen_text": [],
+  "timing": {
+    "total_ms": 5000
+  },
+  "continuity": {
+    "in_from": "fade",
+    "out_to": "fade_to_black",
+    "callback_tags": ["relevant_tags"]
+  },
+  "safety_checks": []
+}
+
+Remember: You are creating production-ready content. Every field should be meaningful and detailed.
+Make this scene 5 truly compelling and engaging while maintaining educational value.
+INCLUDE ALL REQUIRED FIELDS: scene_number, narration_script, visuals, tts, timing, continuity.
+
+IMPORTANT: Create only 1-2 visual frames per scene. Focus on the most impactful visual moment.

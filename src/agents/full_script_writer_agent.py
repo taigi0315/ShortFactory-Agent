@@ -264,8 +264,8 @@ EXAMPLE STRUCTURE:
   "title": "Engaging title about {topic}",
   "logline": "One-sentence summary",
   "overall_style": "{style_profile}",
-  "main_character": "Huh - a cute, blob-like cartoon character",
-  "cosplay_instructions": "How to dress Huh for this topic",
+  "main_character": "Glowbie - a cute, blob-like cartoon character",
+  "cosplay_instructions": "How to dress Glowbie for this topic",
   "story_summary": "120-180 word comprehensive summary",
   "scenes": [
     {{

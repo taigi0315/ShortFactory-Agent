@@ -1,0 +1,159 @@
+{
+  "scene_number": 3,
+  "narration_script": [
+    {
+      "line": "Remember how we talked about blocks securely holding data? Well, that's just the beginning of the magic!",
+      "at_ms": 0,
+      "pause_ms": 500
+    },
+    {
+      "line": "Imagine each new block isn't just added randomly. Oh no, it's like a super-secure digital puzzle piece that cryptographically locks itself to the previous one.",
+      "at_ms": 4500,
+      "pause_ms": 700
+    },
+    {
+      "line": "This creates an unbroken, tamper-proof sequence, a digital ledger so robust, we call it... the 'blockchain'!",
+      "at_ms": 12200,
+      "pause_ms": 600
+    },
+    {
+      "line": "Blocky here, with its tiny chain accessory, is really getting the hang of it – seeing how each link strengthens the whole!",
+      "at_ms": 18800,
+      "pause_ms": 800
+    },
+    {
+      "line": "But here's the truly revolutionary part, and why blockchain is so groundbreaking: this entire chain isn't stored in one central location.",
+      "at_ms": 26600,
+      "pause_ms": 700
+    },
+    {
+      "line": "Instead, copies of this complete, identical chain are distributed across thousands, even millions, of computers all over the world. We call these computers 'nodes'.",
+      "at_ms": 33300,
+      "pause_ms": 900
+    },
+    {
+      "line": "Think of it like everyone having an identical copy of the same unbreakable diary. If one copy is tampered with, all the others instantly know, making it virtually impossible to cheat the system.",
+      "at_ms": 42200,
+      "pause_ms": 1000
+    },
+    {
+      "line": "This 'decentralization' means no single person, company, or government controls the entire ledger. It's truly a community-driven, transparent record.",
+      "at_ms": 52200,
+      "pause_ms": 0
+    }
+  ],
+  "dialogue": [],
+  "visuals": [
+    {
+      "frame_id": "3A",
+      "shot_type": "medium",
+      "camera_motion": "slow zoom out, slight pan to follow linking",
+      "character_pose": "observing intently, then understanding",
+      "expression": "confused, then enlightened",
+      "background": "abstract digital space, glowing lines",
+      "foreground_props": "Blocky, wearing a tiny chain accessory on its back, looks at the process.",
+      "lighting": "soft, warm digital glow emanating from linking blocks",
+      "color_mood": "enlightening, secure, dynamic blues and purples",
+      "image_prompt": "Blocky, a friendly block-shaped character with expressive eyes and limbs, wearing a tiny chain accessory linked to its back, looks initially confused then enlightened. In front of Blocky, multiple stylized, glowing data blocks are visibly linking together with subtle digital energy effects, forming a continuous, flowing 'chain'. A digital 'lock' icon appears and clicks into place with each new block connection. The background is an abstract digital space with subtle glowing lines.",
+      "negative_prompt": "low quality, blurry, distorted, messy, chaotic, dull colors, human figures, text, complicated interface",
+      "model_hints": [
+        "illustration",
+        "educational",
+        "3d render"
+      ],
+      "aspect_ratio": "16:9",
+      "seed": 3001,
+      "guidance_scale": 8.0
+    },
+    {
+      "frame_id": "3B",
+      "shot_type": "wide",
+      "camera_motion": "slow pull back and reveal",
+      "character_pose": "gesturing outwards, confident",
+      "expression": "confident, insightful",
+      "background": "stylized global network of glowing nodes",
+      "foreground_props": "Blocky stands in front of the distributed network.",
+      "lighting": "bright, encompassing light from the network",
+      "color_mood": "expansive, connected, vibrant greens and blues",
+      "image_prompt": "Blocky, the friendly block-shaped character, now looks confident and insightful, gesturing outwards. Behind Blocky, the glowing blockchain visually branches out into a vast, interconnected network of thousands of stylized computer servers or 'nodes' scattered across a subtle representation of a digital globe. Each node visibly holds a smaller, identical representation of the blockchain, emphasized by a subtle shimmering effect. The overall scene conveys a sense of global distribution and interconnectedness.",
+      "negative_prompt": "low quality, blurry, distorted, messy, chaotic, dull colors, human figures, text, complicated interface, single server, centralized system",
+      "model_hints": [
+        "illustration",
+        "educational",
+        "3d render"
+      ],
+      "aspect_ratio": "16:9",
+      "seed": 3002,
+      "guidance_scale": 8.5
+    }
+  ],
+  "tts": {
+    "engine": "elevenlabs",
+    "voice": "friendly-narrator",
+    "language": "English",
+    "elevenlabs_settings": {
+      "stability": 0.35,
+      "similarity_boost": 0.8,
+      "style": 0.85,
+      "speed": 1.05,
+      "loudness": 0.2
+    }
+  },
+  "sfx_cues": [
+    {
+      "sfx_name": "sfx_digital_link_click",
+      "at_ms": 8000
+    },
+    {
+      "sfx_name": "sfx_digital_chain_form",
+      "at_ms": 14000
+    },
+    {
+      "sfx_name": "sfx_network_hum_subtle",
+      "at_ms": 30000
+    },
+    {
+      "sfx_name": "sfx_data_transmission_light",
+      "at_ms": 38000
+    }
+  ],
+  "on_screen_text": [
+    {
+      "text": "CRYPTOGRAPHICALLY LINKED",
+      "at_ms": 7000,
+      "duration_ms": 5000,
+      "style": "bold, digital font, subtle glow"
+    },
+    {
+      "text": "THE BLOCKCHAIN",
+      "at_ms": 15000,
+      "duration_ms": 4000,
+      "style": "large, prominent, glowing digital font"
+    },
+    {
+      "text": "DECENTRALIZATION",
+      "at_ms": 30000,
+      "duration_ms": 4000,
+      "style": "bold, digital font, subtle glow"
+    },
+    {
+      "text": "NODES",
+      "at_ms": 37000,
+      "duration_ms": 3000,
+      "style": "highlighted, smaller digital font"
+    }
+  ],
+  "timing": {
+    "total_ms": 62000
+  },
+  "continuity": {
+    "in_from": "cut",
+    "out_to": "wipe_up",
+    "callback_tags": [
+      "blockchain_concept_established",
+      "decentralization_introduced",
+      "trust_foundation_set"
+    ]
+  },
+  "safety_checks": []
+}

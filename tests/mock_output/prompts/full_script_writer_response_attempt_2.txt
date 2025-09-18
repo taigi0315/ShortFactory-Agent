@@ -1,0 +1,95 @@
+{
+  "title": "Blockchain Unlocked: Your Digital Trust Guide",
+  "logline": "Discover how blockchain creates unshakeable digital trust without central authorities, from transactions to future innovations.",
+  "overall_style": "educational and engaging",
+  "main_character": "Blocky - a friendly, inquisitive block-shaped character with expressive eyes and limbs.",
+  "cosplay_instructions": "Blocky should wear a small, digital 'lock' icon on its chest in Scene 4, and a tiny 'chain' accessory linking to its back in Scene 3. For the hook, Blocky looks confused, then enlightened.",
+  "story_summary": "This video demystifies blockchain technology, explaining its core concepts in an engaging and easy-to-understand manner. We start by posing a fundamental question about trust in digital transactions, setting the stage for blockchain as the revolutionary answer. Through simple analogies, we break down what a 'block' is – a secure container for data – and how these blocks are cryptographically linked to form an immutable 'chain'. The concept of decentralization, where many copies of this chain exist, is introduced as the cornerstone of its security and transparency. We then explore why blockchain is virtually unhackable and how it's poised to transform industries far beyond cryptocurrency, leaving the audience with a clear understanding of its power and potential.",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "scene_type": "hook",
+      "beats": [
+        "Opening question: How do we trust digital transactions without a middleman?",
+        "Visual: Piles of data, then a 'void' where a central authority usually sits.",
+        "Introduce 'blockchain' as the innovative solution to this trust problem."
+      ],
+      "learning_objectives": [
+        "Capture audience attention.",
+        "Introduce the core problem blockchain solves (digital trust).",
+        "Spark curiosity about blockchain's mechanism."
+      ],
+      "needs_animation": true,
+      "transition_to_next": "cut_to_black_then_reveal",
+      "scene_importance": 5
+    },
+    {
+      "scene_number": 2,
+      "scene_type": "explanation",
+      "beats": [
+        "Visual: A single 'block' forming, with data (transactions) flowing into it.",
+        "Explain: A 'block' is like a digital container, holding a list of verified transactions.",
+        "Analogy: Think of it as a page in a very secure, digital ledger."
+      ],
+      "learning_objectives": [
+        "Define what a 'block' is in the context of blockchain.",
+        "Understand that blocks store transaction data.",
+        "Grasp the concept of data verification within a block."
+      ],
+      "needs_animation": true,
+      "transition_to_next": "slide_left",
+      "scene_importance": 4
+    },
+    {
+      "scene_number": 3,
+      "scene_type": "explanation",
+      "beats": [
+        "Visual: Multiple blocks linking together, forming a 'chain'.",
+        "Explain: Each new block is cryptographically linked to the previous one, forming an unbroken 'chain'.",
+        "Introduce decentralization: This chain isn't stored in one place, but across many computers globally (nodes)."
+      ],
+      "learning_objectives": [
+        "Understand how blocks are linked to form a 'chain'.",
+        "Grasp the concept of decentralization and distributed ledgers.",
+        "Recognize that no single entity controls the entire chain."
+      ],
+      "needs_animation": true,
+      "transition_to_next": "wipe_up",
+      "scene_importance": 5
+    },
+    {
+      "scene_number": 4,
+      "scene_type": "revelation",
+      "beats": [
+        "Visual: A hacker trying to break into a block, but failing due to cryptographic locks.",
+        "Explain: Why this system is incredibly secure – changing one block would break the entire chain, instantly noticed by all.",
+        "Highlight immutability: Once a transaction is on the blockchain, it's permanent and unchangeable."
+      ],
+      "learning_objectives": [
+        "Understand the security features of blockchain (cryptography, distributed consensus).",
+        "Grasp the concept of immutability.",
+        "Appreciate why blockchain is considered tamper-proof."
+      ],
+      "needs_animation": true,
+      "transition_to_next": "dissolve",
+      "scene_importance": 4
+    },
+    {
+      "scene_number": 5,
+      "scene_type": "summary",
+      "beats": [
+        "Recap: Blockchain offers transparency, security, and decentralization.",
+        "Beyond crypto: Briefly mention other applications like supply chain tracking, voting, digital identities.",
+        "Concluding thought: Blockchain isn't just a technology; it's a new way to build trust in a digital world."
+      ],
+      "learning_objectives": [
+        "Summarize the key benefits of blockchain.",
+        "Understand that blockchain's applications extend beyond cryptocurrency.",
+        "Reinforce the idea of blockchain as a foundation for digital trust."
+      ],
+      "needs_animation": true,
+      "transition_to_next": "fade_to_black",
+      "scene_importance": 5
+    }
+  ]
+}

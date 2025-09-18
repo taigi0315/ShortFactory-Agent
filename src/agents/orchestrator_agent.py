@@ -15,6 +15,7 @@ from agents.full_script_writer_agent import FullScriptWriterAgent
 from agents.scene_script_writer_agent import SceneScriptWriterAgent
 from agents.image_create_agent import ImageCreateAgent
 from agents.voice_generate_agent import VoiceGenerateAgent
+from agents.video_maker_agent import VideoMakerAgent
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -41,6 +42,7 @@ class OrchestratorAgent:
         self.scene_script_writer = SceneScriptWriterAgent()
         self.image_create_agent = ImageCreateAgent()
         self.voice_generate_agent = VoiceGenerateAgent()
+        self.video_maker_agent = VideoMakerAgent()
         
         logger.info("Orchestrator Agent initialized with new architecture")
     
@@ -171,7 +173,7 @@ class OrchestratorAgent:
             global_context = {
                 "title": full_script.get("title", ""),
                 "overall_style": full_script.get("overall_style", style_profile),
-                "main_character": full_script.get("main_character", "Huh"),
+                "main_character": full_script.get("main_character", "Glowbie"),
                 "cosplay_instructions": full_script.get("cosplay_instructions", ""),
                 "story_summary": full_script.get("story_summary", ""),
                 "target_audience": target_audience,
@@ -310,8 +312,40 @@ class OrchestratorAgent:
                 # Continue without voice (non-critical failure)
                 voice_assets = []
             
-            # Stage 5: Final Assembly
-            logger.info("🎞️ Stage 5: Final assembly...")
+            # Initialize results early for video creation
+            results = {
+                "session_id": session_id,
+                "status": "in_progress",
+                "full_script": full_script,
+                "scene_packages": scene_packages,
+                "image_assets": all_image_assets,
+                "voice_assets": voice_assets,
+                "video_path": None,
+                "video_metadata": None
+            }
+            
+            # Stage 5: Video Creation
+            logger.info("🎬 Stage 5: Creating final video...")
+            
+            try:
+                session_path = f"sessions/{session_id}"
+                video_path = self.video_maker_agent.create_final_video(session_path)
+                video_metadata = self.video_maker_agent.create_video_metadata(session_path, video_path)
+                
+                logger.info(f"✅ Video created: {video_path}")
+                logger.info(f"📊 Video duration: {video_metadata.get('total_duration', 0):.2f}s")
+                logger.info(f"💾 Video size: {video_metadata.get('file_size_bytes', 0) / (1024*1024):.2f}MB")
+                
+                results['video_path'] = video_path
+                results['video_metadata'] = video_metadata
+                
+            except Exception as e:
+                logger.error(f"❌ Video creation failed: {e}")
+                results['video_path'] = None
+                results['video_error'] = str(e)
+            
+            # Stage 6: Final Assembly
+            logger.info("🎞️ Stage 6: Final assembly...")
             
             # Calculate total time
             total_time = time.time() - start_time
@@ -322,23 +356,20 @@ class OrchestratorAgent:
             # Save build report
             self._save_build_report(session_id, build_report)
             
-            # Create final results
-            results = {
-                "session_id": session_id,
+            # Update final results
+            results.update({
                 "status": "success",
-                "full_script": full_script,
-                "scene_packages": scene_packages,
-                "image_assets": all_image_assets,
-                "voice_assets": voice_assets,
                 "build_report": build_report,
                 "total_time_seconds": total_time
-            }
+            })
             
             logger.info(f"🎉 Video creation completed successfully!")
             logger.info(f"📁 Session: {session_id}")
             logger.info(f"📝 Scenes: {len(scene_packages)}")
             logger.info(f"🖼️ Images: {len(all_image_assets)}")
             logger.info(f"🎤 Voices: {len(voice_assets)}")
+            if results.get('video_path'):
+                logger.info(f"🎬 Video: {Path(results['video_path']).name}")
             logger.info(f"⏱️ Total time: {total_time:.2f}s")
             
             return results

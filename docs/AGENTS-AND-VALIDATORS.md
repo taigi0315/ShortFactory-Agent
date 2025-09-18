@@ -89,7 +89,7 @@ OUTPUT: ScenePackage.json (narration_script, visuals[], tts, timing, continuity)
 - Manages file organization and thumbnails
 
 #### Key Features:
-- **Character Consistency**: Uses Huh character reference for consistent appearance
+- **Character Consistency**: Uses Glowbie character reference for consistent appearance
 - **Prompt Enhancement**: Adds style keywords and quality modifiers
 - **Safety Validation**: Content safety and appropriateness checks
 - **Metadata Tracking**: Generation parameters, timing, file info
@@ -97,7 +97,7 @@ OUTPUT: ScenePackage.json (narration_script, visuals[], tts, timing, continuity)
 
 #### Key Dependencies:
 - **Session Manager**: File storage and organization
-- **Huh Character Reference**: Maintains visual consistency
+- **Glowbie Character Reference**: Maintains visual consistency
 
 #### Input/Output:
 ```

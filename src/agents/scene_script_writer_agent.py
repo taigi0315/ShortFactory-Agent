@@ -196,7 +196,7 @@ Key principles:
         # Context from global
         title = global_context.get('title', '')
         overall_style = global_context.get('overall_style', 'engaging')
-        main_character = global_context.get('main_character', 'Huh - a cute, blob-like cartoon character')
+        main_character = global_context.get('main_character', 'Glowbie - a cute, blob-like cartoon character')
         cosplay = global_context.get('cosplay_instructions', '')
         story_summary = global_context.get('story_summary', '')
         language = global_context.get('language', 'English')
@@ -300,11 +300,11 @@ TTS REQUIREMENTS:
 - Use engine: "elevenlabs"
 - Set voice appropriately
 - Configure elevenlabs_settings:
-  - stability: 0.0-1.0
-  - similarity_boost: 0.0-1.0  
-  - style: 0.0-1.0
-  - speed: 0.7-1.3
-  - loudness: 0.0-1.0
+  - stability: 0.2-0.6 (lower for more expressive, varied voice)
+  - similarity_boost: 0.8-1.0 (higher for better voice consistency)  
+  - style: 0.7-1.0 (higher for more emotional expression and mood)
+  - speed: 1.2-1.5 (20-30% faster for better engagement)
+  - loudness: 0.1-0.4 (moderate levels for clear audio)
 
 OUTPUT FORMAT:
 Generate ONLY valid JSON following ScenePackage.json schema.
@@ -341,11 +341,11 @@ EXAMPLE OUTPUT STRUCTURE:
     "voice": "friendly-narrator",
     "language": "{language}",
     "elevenlabs_settings": {{
-      "stability": 0.35,
-      "similarity_boost": 0.8,
+      "stability": 0.4,
+      "similarity_boost": 0.9,
       "style": 0.85,
-      "speed": 1.08,
-      "loudness": 0.2
+      "speed": 1.3,
+      "loudness": 0.25
     }}
   }},
   "sfx_cues": [],
@@ -365,7 +365,9 @@ Remember: You are creating production-ready content. Every field should be meani
 Make this scene {scene_number} truly compelling and engaging while maintaining educational value.
 INCLUDE ALL REQUIRED FIELDS: scene_number, narration_script, visuals, tts, timing, continuity.
 
-IMPORTANT: Create only 1-2 visual frames per scene. Focus on the most impactful visual moment.
+IMPORTANT: Create 3-6 visual frames per scene for better engagement (target 5-7 seconds per image). 
+Each frame should represent a different moment or angle in the dialogue/narration.
+Multiple images per dialogue segment are encouraged for dynamic storytelling.
 """
     
     async def _simulate_adk_response(self, prompt: str) -> str:
@@ -473,9 +475,15 @@ IMPORTANT: Create only 1-2 visual frames per scene. Focus on the most impactful 
             
             valid_tts = True
             for key, value in elevenlabs.items():
-                if key in ['stability', 'similarity_boost', 'style', 'loudness'] and not (0.0 <= value <= 1.0):
+                if key == 'stability' and not (0.2 <= value <= 0.6):
                     valid_tts = False
-                elif key == 'speed' and not (0.7 <= value <= 1.3):
+                elif key == 'similarity_boost' and not (0.8 <= value <= 1.0):
+                    valid_tts = False
+                elif key == 'style' and not (0.7 <= value <= 1.0):
+                    valid_tts = False
+                elif key == 'loudness' and not (0.1 <= value <= 0.4):
+                    valid_tts = False
+                elif key == 'speed' and not (1.2 <= value <= 1.5):
                     valid_tts = False
             
             if valid_tts:

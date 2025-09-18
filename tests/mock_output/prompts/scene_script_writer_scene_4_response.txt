@@ -1,0 +1,143 @@
+{
+  "scene_number": 4,
+  "narration_script": [
+    {
+      "line": "So, we've seen how blocks are linked, forming a growing chain. But how secure is this chain, really? Could someone just sneak in and change a transaction?",
+      "at_ms": 0,
+      "pause_ms": 200
+    },
+    {
+      "line": "Imagine a mischievous digital hacker, attempting to alter a single block. They try to pry it open, to fiddle with the data inside.",
+      "at_ms": 7500,
+      "pause_ms": 200
+    },
+    {
+      "line": "But each block isn't just linked; it's protected by powerful cryptographic locks. Think of it as an incredibly complex digital puzzle, where every piece is uniquely connected to the next.",
+      "at_ms": 13500,
+      "pause_ms": 300
+    },
+    {
+      "line": "Our hacker tries to tamper with one detail... and *poof*! The cryptographic seal instantly breaks. The entire chain, across thousands of copies, immediately detects the change!",
+      "at_ms": 22000,
+      "pause_ms": 200
+    },
+    {
+      "line": "Why? Because changing even one tiny detail in a block would completely alter its unique digital fingerprint, its 'hash'. This breaks its link to the next block, like pulling a single Jenga block that collapses the whole tower.",
+      "at_ms": 29000,
+      "pause_ms": 300
+    },
+    {
+      "line": "This brings us to the incredible concept of **immutability**. Once a transaction or any piece of data is added to the blockchain, it's permanent. It's etched in digital stone, unchangeable, irreversible.",
+      "at_ms": 38000,
+      "pause_ms": 300
+    },
+    {
+      "line": "This tamper-proof nature, secured by cryptography and verified across the network, is why blockchain is so revolutionary. It creates trust not through a central authority, but through mathematical certainty and collective agreement.",
+      "at_ms": 47000,
+      "pause_ms": 200
+    },
+    {
+      "line": "So, how does this collective agreement, this distributed verification, actually work with all those thousands of copies? Let's unlock the secret of decentralization next.",
+      "at_ms": 56000,
+      "pause_ms": 0
+    }
+  ],
+  "dialogue": [],
+  "visuals": [
+    {
+      "frame_id": "4A",
+      "shot_type": "wide",
+      "camera_motion": "slow zoom in on hacker",
+      "character_pose": "observing with curiosity",
+      "expression": "curious, slightly confused",
+      "background": "Dark, digital matrix environment, hinting at cybersecurity with lines of code and data flowing.",
+      "foreground_props": null,
+      "lighting": "Dramatic, with a spotlight on the hacker and the block, casting Blocky in a slightly less illuminated, observant role.",
+      "color_mood": "Tense, mysterious, digital blues and purples.",
+      "image_prompt": "A wide shot of Blocky, a friendly block-shaped character with expressive eyes and limbs, wearing a digital 'lock' icon on its chest, observing from the left side with a curious and slightly confused expression. In the center, a shadowy, hooded hacker figure with glowing red eyes is intensely trying to break into a futuristic, glowing blue block covered in intricate cryptographic lock patterns. The hacker's digital hands are attempting to pry the block open. In the background, a faint chain of interconnected, glowing blocks extends. Dark, digital matrix environment, dramatic lighting, cybersecurity theme, educational animation style, clean lines, high detail.",
+      "negative_prompt": "human, realistic, ugly, deformed, blurry, low resolution, bad anatomy, extra limbs, text, watermark, signature, cartoon, 3D render",
+      "model_hints": ["illustration", "educational"],
+      "aspect_ratio": "16:9",
+      "seed": 4004,
+      "guidance_scale": 8.0
+    },
+    {
+      "frame_id": "4B",
+      "shot_type": "medium",
+      "camera_motion": "smooth pan to Blocky and glowing chain",
+      "character_pose": "confident, pointing towards the chain",
+      "expression": "enlightened, triumphant",
+      "background": "Vibrant digital matrix environment, now with more illuminating blue and green tones, suggesting success and security.",
+      "foreground_props": null,
+      "lighting": "Brighter, triumphant, illuminating Blocky and the glowing chain.",
+      "color_mood": "Victorious, secure, enlightening, bright blues and greens.",
+      "image_prompt": "A medium shot of Blocky, a friendly block-shaped character with expressive eyes and limbs, wearing a digital 'lock' icon on its chest, standing confidently and enlightened on the right side, with a triumphant expression. In the center, the shadowy hacker figure is recoiling in frustration, defeated, hands up, as the tampered block emits shattered lock icons and red error signals. The long, interconnected blockchain behind Blocky glows vibrantly with secure, blue and green light, indicating its unbroken integrity. The word 'IMUTABLE' subtly glows as digital text along the chain. Digital matrix environment, triumphant lighting, educational animation style, clean lines, high detail.",
+      "negative_prompt": "human, realistic, ugly, deformed, blurry, low resolution, bad anatomy, extra limbs, text, watermark, signature, cartoon, 3D render",
+      "model_hints": ["illustration", "educational"],
+      "aspect_ratio": "16:9",
+      "seed": 4005,
+      "guidance_scale": 8.0
+    }
+  ],
+  "tts": {
+    "engine": "elevenlabs",
+    "voice": "shirley",
+    "language": "English",
+    "elevenlabs_settings": {
+      "stability": 0.38,
+      "similarity_boost": 0.85,
+      "style": 0.88,
+      "speed": 1.05,
+      "loudness": 0.25
+    }
+  },
+  "sfx_cues": [
+    {
+      "cue": "SFX_HACKER_TYPING_SUBTLE",
+      "at_ms": 8000,
+      "duration_ms": 5000
+    },
+    {
+      "cue": "SFX_DIGITAL_ATTEMPT_FAIL",
+      "at_ms": 24000,
+      "duration_ms": 800
+    },
+    {
+      "cue": "SFX_ERROR_ALERT_SHORT",
+      "at_ms": 24200,
+      "duration_ms": 500
+    },
+    {
+      "cue": "SFX_CHAIN_GLOW_PULSE",
+      "at_ms": 40000,
+      "duration_ms": 10000
+    }
+  ],
+  "on_screen_text": [
+    {
+      "text": "CRYPTOGRAPHIC LOCKS",
+      "at_ms": 16000,
+      "display_duration_ms": 3000
+    },
+    {
+      "text": "IMUTABLE",
+      "at_ms": 40000,
+      "display_duration_ms": 5000
+    }
+  ],
+  "timing": {
+    "total_ms": 65000
+  },
+  "continuity": {
+    "in_from": "cut",
+    "out_to": "dissolve",
+    "callback_tags": [
+      "blockchain_security",
+      "cryptography",
+      "immutability",
+      "tamper_proof",
+      "digital_trust"
+    ]
+  },
+  "safety_checks": []
+}
