@@ -241,10 +241,14 @@ class OrchestratorAgent:
                     scene_number = scene_package.get("scene_number", 1)
                     logger.info(f"Generating images for scene {scene_number}...")
                     
+                    # Get cosplay instructions from full script
+                    cosplay_instructions = full_script.get("cosplay_instructions", "")
+                    
                     image_assets = await self.image_create_agent.generate_images_for_scene(
                         scene_package=scene_package,
                         session_id=session_id,
-                        cost_saving_mode=cost_saving_mode
+                        cost_saving_mode=cost_saving_mode,
+                        cosplay_instructions=cosplay_instructions
                     )
                     
                     # Validate image assets (warning only)

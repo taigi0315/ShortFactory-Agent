@@ -509,7 +509,7 @@ class RobustJSONParser:
                         {
                             'frame_id': '1A',
                             'shot_type': 'medium',
-                            'image_prompt': 'A simple educational scene with a friendly character',
+                            'image_prompt': 'A simple informative scene with a friendly character',
                             'aspect_ratio': '16:9'
                         }
                     ]),
@@ -531,8 +531,8 @@ class RobustJSONParser:
             elif 'FullScript' in model_name:
                 fallback_data.update({
                     'title': fallback_data.get('title', 'Generated Content'),
-                    'overall_style': fallback_data.get('overall_style', 'educational'),
-                    'story_summary': fallback_data.get('story_summary', 'A brief educational video about the requested topic.'),
+                    'overall_style': fallback_data.get('overall_style', 'informative'),
+                    'story_summary': fallback_data.get('story_summary', 'A brief informative video about the requested topic.'),
                     'scenes': fallback_data.get('scenes', [
                         {
                             'scene_number': 1,

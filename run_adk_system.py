@@ -36,7 +36,7 @@ async def main():
     parser.add_argument("topic", nargs="?", help="Video topic (not required in test mode)")
     parser.add_argument("--length", default="60-90s", choices=["30-45s", "60-90s", "2-3min", "3-5min"], 
                        help="Video length preference")
-    parser.add_argument("--style", default="educational and engaging", 
+    parser.add_argument("--style", default="informative and engaging", 
                        help="Overall style profile")
     parser.add_argument("--audience", default="general", 
                        help="Target audience")
@@ -154,19 +154,19 @@ async def run_test_mode():
         {
             "topic": "Why do cats purr? The surprising science behind feline happiness",
             "length": "60-90s",
-            "style": "educational and heartwarming",
+            "style": "informative and heartwarming",
             "audience": "general"
         },
         {
             "topic": "The hidden mathematics in everyday objects",
             "length": "2-3min", 
-            "style": "educational and mysterious",
+            "style": "informative and mysterious",
             "audience": "students"
         },
         {
             "topic": "How artificial intelligence learns to be creative",
             "length": "60-90s",
-            "style": "educational and futuristic",
+            "style": "informative and futuristic",
             "audience": "professionals"
         }
     ]

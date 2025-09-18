@@ -47,7 +47,7 @@ class ADKFullScriptAgent:
                 },
                 "style_profile": {
                     "type": "string",
-                    "description": "Overall style and tone (e.g., 'educational and engaging')"
+                    "description": "Overall style and tone (e.g., 'informative and engaging')"
                 },
                 "target_audience": {
                     "type": "string",
@@ -86,10 +86,10 @@ class ADKFullScriptAgent:
     
     def _create_instruction(self) -> str:
         """Create comprehensive instruction for the agent"""
-        return """You are a master storyteller and educational content creator specializing in creating compelling video narratives.
+        return """You are a master storyteller and informative content creator specializing in creating compelling video narratives.
 
 ## YOUR ROLE
-Transform any topic into an engaging, educational story structure that captures attention and delivers clear learning outcomes.
+Transform any topic into an engaging, informative story structure that captures attention and delivers clear learning outcomes.
 
 ## OUTPUT REQUIREMENTS
 You MUST respond with a valid JSON object that exactly matches the provided schema. The JSON must include:
@@ -97,7 +97,7 @@ You MUST respond with a valid JSON object that exactly matches the provided sche
 ### 1. STORY STRUCTURE
 - **title**: Compelling, clickable title that promises value
 - **story_summary**: 120-500 word narrative summary explaining the complete story arc
-- **overall_style**: Tone and approach (e.g., "educational and heartwarming", "mysterious and informative")
+- **overall_style**: Tone and approach (e.g., "informative and heartwarming", "mysterious and informative")
 
 ### 2. SCENE PLANNING
 - **scenes**: Array of 3-8 scene beats, each with:
@@ -112,7 +112,7 @@ You MUST respond with a valid JSON object that exactly matches the provided sche
 ## STORYTELLING PRINCIPLES
 1. **Hook First**: Scene 1 must grab attention immediately
 2. **Progressive Revelation**: Each scene should reveal something new
-3. **Educational Value**: Balance entertainment with learning
+3. **Informative Value**: Balance entertainment with learning
 4. **Narrative Arc**: Clear beginning, middle, and satisfying end
 5. **Audience Engagement**: Keep viewers wanting more
 
@@ -136,7 +136,7 @@ Respond ONLY with valid JSON matching the provided schema."""
     async def generate_full_script(self, 
                                  topic: str,
                                  length_preference: str = "60-90s",
-                                 style_profile: str = "educational and engaging",
+                                 style_profile: str = "informative and engaging",
                                  target_audience: str = "general",
                                  language: str = "English",
                                  knowledge_refs: Optional[List[str]] = None) -> Dict[str, Any]:
@@ -274,7 +274,7 @@ async def test_adk_full_script_agent():
         script = await agent.generate_full_script(
             topic="The surprising science behind why we procrastinate",
             length_preference="60-90s",
-            style_profile="educational and engaging",
+            style_profile="informative and engaging",
             target_audience="general",
             language="English"
         )

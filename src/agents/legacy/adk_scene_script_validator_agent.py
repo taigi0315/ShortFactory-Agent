@@ -2,7 +2,7 @@
 ADK Scene Script Validator Agent
 
 This agent validates individual scene quality and smooth connections between scenes.
-It checks scene quality, visual potential, educational density, character utilization, and smooth connections.
+It checks scene quality, visual potential, informative density, character utilization, and smooth connections.
 """
 
 import os
@@ -99,19 +99,19 @@ class SceneValidationTool:
         # Calculate individual scores
         scene_quality_score = self._assess_scene_quality(scene_data)
         visual_potential_score = self._assess_visual_potential(scene_data)
-        educational_density_score = self._assess_educational_density(scene_data)
+        informative_density_score = self._assess_informative_density(scene_data)
         character_utilization_score = self._assess_character_utilization(scene_data)
         connection_score = self._assess_scene_connection(scene_data, shared_context)
         
         # Calculate overall score
         overall_score = (scene_quality_score + visual_potential_score + 
-                        educational_density_score + character_utilization_score + 
+                        informative_density_score + character_utilization_score + 
                         connection_score) / 5.0
         
         # Generate issues and feedback
         issues = self._generate_scene_validation_issues(
             scene_data, scene_quality_score, visual_potential_score, 
-            educational_density_score, character_utilization_score, connection_score
+            informative_density_score, character_utilization_score, connection_score
         )
         
         # Determine status
@@ -131,7 +131,7 @@ class SceneValidationTool:
             scene_number=scene_number,
             scene_quality_score=scene_quality_score,
             visual_potential_score=visual_potential_score,
-            educational_density_score=educational_density_score,
+            informative_density_score=informative_density_score,
             character_utilization_score=character_utilization_score,
             connection_score=connection_score,
             issues=issues,
@@ -193,26 +193,26 @@ class SceneValidationTool:
         
         return min(1.0, score)
     
-    def _assess_educational_density(self, scene_data: Dict[str, Any]) -> float:
-        """Assess the educational content density"""
+    def _assess_informative_density(self, scene_data: Dict[str, Any]) -> float:
+        """Assess the informative content density"""
         score = 0.5  # Base score
         
-        # Check educational content
-        educational_content = scene_data.get('educational_content', {})
-        if educational_content:
-            # Count educational elements
+        # Check informative content
+        informative_content = scene_data.get('informative_content', {})
+        if informative_content:
+            # Count informative elements
             elements_count = 0
             for key in ['key_concepts', 'specific_facts', 'examples', 'statistics']:
-                if educational_content.get(key):
-                    elements_count += len(educational_content[key])
+                if informative_content.get(key):
+                    elements_count += len(informative_content[key])
             
             if elements_count > 0:
-                score += min(0.4, elements_count * 0.05)  # Up to 0.4 for educational elements
+                score += min(0.4, elements_count * 0.05)  # Up to 0.4 for informative elements
         
-        # Check dialogue for educational value
+        # Check dialogue for informative value
         dialogue = scene_data.get('dialogue', '')
-        educational_words = ['learn', 'understand', 'explain', 'teach', 'show', 'demonstrate']
-        for word in educational_words:
+        informative_words = ['learn', 'understand', 'explain', 'teach', 'show', 'demonstrate']
+        for word in informative_words:
             if word in dialogue.lower():
                 score += 0.05
         
@@ -308,7 +308,7 @@ class SceneValidationTool:
     
     def _generate_scene_validation_issues(self, scene_data: Dict[str, Any], 
                                         scene_quality_score: float, visual_potential_score: float, 
-                                        educational_density_score: float, character_utilization_score: float, 
+                                        informative_density_score: float, character_utilization_score: float, 
                                         connection_score: float) -> List[ValidationIssue]:
         """Generate validation issues for a scene"""
         issues = []
@@ -329,11 +329,11 @@ class SceneValidationTool:
                 suggestion="Add more specific visual descriptions and elements to the image prompt"
             ))
         
-        if educational_density_score < 0.6:
+        if informative_density_score < 0.6:
             issues.append(ValidationIssue(
                 severity=ValidationSeverity.HIGH,
-                category="educational_density",
-                description="Scene lacks sufficient educational content",
+                category="informative_density",
+                description="Scene lacks sufficient informative content",
                 suggestion="Add more key concepts, facts, examples, or statistics"
             ))
         
@@ -382,7 +382,7 @@ class SceneValidationTool:
         for issue in issues:
             instructions += f"**{issue.category.replace('_', ' ').title()}**: {issue.suggestion}\n"
         
-        instructions += "\nFocus on making the scene more engaging, educational, and visually appealing."
+        instructions += "\nFocus on making the scene more engaging, informative, and visually appealing."
         return instructions
 
 class ADKSceneScriptValidatorAgent(Agent):
@@ -434,7 +434,7 @@ class ADKSceneScriptValidatorAgent(Agent):
     def _get_instruction(self) -> str:
         """Get the instruction for the scene script validator agent"""
         return """
-You are a STRICT Scene Script Validator Agent responsible for rejecting mediocre scenes and demanding educational excellence.
+You are a STRICT Scene Script Validator Agent responsible for rejecting mediocre scenes and demanding informative excellence.
 
 ## STRICT VALIDATION CRITERIA:
 
@@ -444,7 +444,7 @@ You are a STRICT Scene Script Validator Agent responsible for rejecting mediocre
 - Ensure variety in fact types
 - Penalize generic statements
 
-### 2. VISUAL EDUCATIONAL VALUE (Fail if not screenshot-worthy):
+### 2. VISUAL INFORMATIVE VALUE (Fail if not screenshot-worthy):
 - Can someone learn from a screenshot?
 - Are there specific data visualizations?
 - Is the information clearly presented?
@@ -456,7 +456,7 @@ You are a STRICT Scene Script Validator Agent responsible for rejecting mediocre
 - Include specific numbers/names
 - Show genuine reactions
 
-### 4. EDUCATIONAL IMPACT (Fail if not memorable):
+### 4. INFORMATIVE IMPACT (Fail if not memorable):
 - Would viewer remember 3 facts?
 - Is there clear learning outcome?
 - Are concepts explained through examples?
@@ -469,9 +469,9 @@ You are a STRICT Scene Script Validator Agent responsible for rejecting mediocre
 - Should guide, not dominate
 
 ## REJECTION CRITERIA:
-- Generic educational filler
+- Generic informative filler
 - Lack of specific data points
-- No visual educational value
+- No visual informative value
 - Character dominates the frame
 - No clear learning outcome
 
@@ -489,7 +489,7 @@ Return a JSON object with:
 - PASS: Overall score >= 0.8, all criteria >= 0.7
 - REVISE: Overall score < 0.8 or any criterion < 0.7
 
-Be merciless in rejecting generic content. Demand educational excellence.
+Be merciless in rejecting generic content. Demand informative excellence.
 """
     
     async def validate_all_scenes(self, scenes: List[Dict[str, Any]], 
@@ -537,10 +537,10 @@ async def test_scene_script_validator():
                 "scene_number": 1,
                 "scene_type": "hook",
                 "dialogue": "Did you know that Texas was once its own independent country?",
-                "image_create_prompt": "Educational infographic showing Texas independence",
+                "image_create_prompt": "Informative infographic showing Texas independence",
                 "character_pose": "pointing",
                 "character_expression": "excited",
-                "educational_content": {
+                "informative_content": {
                     "key_concepts": ["Texas independence"],
                     "specific_facts": ["Texas was independent from 1836-1845"],
                     "examples": ["Republic of Texas"],

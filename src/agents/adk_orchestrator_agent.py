@@ -35,7 +35,7 @@ class ADKOrchestratorAgent:
     async def create_video_package(self,
                                  topic: str,
                                  length_preference: str = "60-90s",
-                                 style_profile: str = "educational and engaging",
+                                 style_profile: str = "informative and engaging",
                                  target_audience: str = "general",
                                  language: str = "English",
                                  knowledge_refs: Optional[List[str]] = None,
@@ -332,7 +332,7 @@ async def test_adk_orchestrator():
         package = await orchestrator.create_video_package(
             topic="The surprising science behind why we procrastinate",
             length_preference="60-90s",
-            style_profile="educational and engaging",
+            style_profile="informative and engaging",
             target_audience="general",
             language="English"
         )

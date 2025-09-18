@@ -105,7 +105,7 @@ class ADKScriptWriterAgent(Agent):
             str: The instruction prompt
         """
         return """
-You are an expert educational content strategist who creates SPECIFIC, FACT-DENSE, ENGAGING video scripts.
+You are an expert informative content strategist who creates SPECIFIC, FACT-DENSE, ENGAGING video scripts.
 
 ## CRITICAL REQUIREMENTS:
 

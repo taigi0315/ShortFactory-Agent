@@ -15,7 +15,7 @@ class ContinuityIssue(Enum):
     VISUAL_INCONSISTENCY = "visual_inconsistency"
     CHARACTER_STATE_MISMATCH = "character_state_mismatch"
     NARRATIVE_GAP = "narrative_gap"
-    EDUCATIONAL_REPETITION = "educational_repetition"
+    EDUCATIONAL_REPETITION = "informative_repetition"
     PACE_MISMATCH = "pace_mismatch"
     TRANSITION_ISSUE = "transition_issue"
 
@@ -82,7 +82,7 @@ class SceneContinuityManager:
             },
             "narrative_flow": {
                 "max_complexity_jump": 2,  # Max complexity increase between scenes
-                "min_educational_progression": 1,  # Min learning progression
+                "min_informative_progression": 1,  # Min learning progression
                 "max_repetition_distance": 3  # Max scenes between similar facts
             }
         }
@@ -97,7 +97,7 @@ class SceneContinuityManager:
                 ["#E74C3C", "#F39C12", "#F1C40F"]   # Vibrant
             ],
             "lighting_styles": [
-                "bright_educational", "warm_historical", "cool_modern", "dramatic_focus"
+                "bright_informative", "warm_historical", "cool_modern", "dramatic_focus"
             ],
             "background_types": [
                 "minimal_clean", "detailed_informative", "atmospheric_context", "interactive_demo"
@@ -134,9 +134,9 @@ class SceneContinuityManager:
         narrative_issues = self._check_narrative_flow(prev_scene, next_scene)
         issues.extend(narrative_issues)
         
-        # Check educational progression
-        educational_issues = self._check_educational_progression(prev_scene, next_scene)
-        issues.extend(educational_issues)
+        # Check informative progression
+        informative_issues = self._check_informative_progression(prev_scene, next_scene)
+        issues.extend(informative_issues)
         
         logger.debug(f"Found {len(issues)} continuity issues between scenes")
         return issues
@@ -232,7 +232,7 @@ class SceneContinuityManager:
                 description=f"Large complexity jump from {prev_complexity} to {next_complexity}",
                 scene_number=next_scene.get("scene_number", 0),
                 suggested_fix="Consider gradual complexity progression or intermediate scene",
-                affected_elements=["educational_content", "scene_type"]
+                affected_elements=["informative_content", "scene_type"]
             ))
         
         # Check transition appropriateness
@@ -252,23 +252,23 @@ class SceneContinuityManager:
         
         return issues
     
-    def _check_educational_progression(self, prev_scene: Dict[str, Any], next_scene: Dict[str, Any]) -> List[ContinuityIssue]:
-        """Check educational progression between scenes"""
+    def _check_informative_progression(self, prev_scene: Dict[str, Any], next_scene: Dict[str, Any]) -> List[ContinuityIssue]:
+        """Check informative progression between scenes"""
         issues = []
         
         # Check for repetition
-        prev_facts = self._extract_educational_facts(prev_scene)
-        next_facts = self._extract_educational_facts(next_scene)
+        prev_facts = self._extract_informative_facts(prev_scene)
+        next_facts = self._extract_informative_facts(next_scene)
         
         repetition_score = self._calculate_fact_repetition(prev_facts, next_facts)
         if repetition_score > 0.7:  # High repetition threshold
             issues.append(ContinuityIssue(
                 issue_type=ContinuityIssue.EDUCATIONAL_REPETITION,
                 severity=ContinuitySeverity.MEDIUM,
-                description="High similarity in educational content between scenes",
+                description="High similarity in informative content between scenes",
                 scene_number=next_scene.get("scene_number", 0),
-                suggested_fix="Consider different educational angle or building upon previous content",
-                affected_elements=["educational_content", "key_concepts"]
+                suggested_fix="Consider different informative angle or building upon previous content",
+                affected_elements=["informative_content", "key_concepts"]
             ))
         
         return issues
@@ -302,9 +302,9 @@ class SceneContinuityManager:
         """Calculate complexity score for a scene"""
         complexity = 0
         
-        # Count educational concepts
-        educational_content = scene_data.get("educational_content", {})
-        for category, items in educational_content.items():
+        # Count informative concepts
+        informative_content = scene_data.get("informative_content", {})
+        for category, items in informative_content.items():
             complexity += len(items)
         
         # Add complexity for scene type
@@ -336,12 +336,12 @@ class SceneContinuityManager:
         key = (prev_type, next_type)
         return transition_type in appropriate_transitions.get(key, ["fade", "cut"])
     
-    def _extract_educational_facts(self, scene_data: Dict[str, Any]) -> List[str]:
-        """Extract educational facts from scene data"""
+    def _extract_informative_facts(self, scene_data: Dict[str, Any]) -> List[str]:
+        """Extract informative facts from scene data"""
         facts = []
-        educational_content = scene_data.get("educational_content", {})
+        informative_content = scene_data.get("informative_content", {})
         
-        for category, items in educational_content.items():
+        for category, items in informative_content.items():
             facts.extend(items)
         
         return facts
@@ -466,9 +466,9 @@ def test_scene_continuity_manager():
         "character_pose": "pointing",
         "visual_elements": {
             "color_scheme": "warm red and blue tones",
-            "lighting": "bright educational"
+            "lighting": "bright informative"
         },
-        "educational_content": {
+        "informative_content": {
             "key_concepts": ["the company origin"],
             "specific_facts": ["Created in 1886"]
         }
@@ -483,7 +483,7 @@ def test_scene_continuity_manager():
             "color_scheme": "cool blue and green tones",
             "lighting": "warm historical"
         },
-        "educational_content": {
+        "informative_content": {
             "key_concepts": ["the company ingredients"],
             "specific_facts": ["Contains ingredient leaves"]
         }

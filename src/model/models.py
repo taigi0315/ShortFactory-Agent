@@ -35,7 +35,7 @@ class ImageStyle(str, Enum):
     SINGLE_CHARACTER = "single_character"
     CHARACTER_WITH_BACKGROUND = "character_with_background"
     
-    # Educational styles
+    # Informative styles
     INFOGRAPHIC = "infographic"
     DIAGRAM_EXPLANATION = "diagram_explanation"
     BEFORE_AFTER_COMPARISON = "before_after_comparison"
@@ -69,7 +69,7 @@ class VoiceTone(str, Enum):
     SURPRISED = "surprised"
     CONFIDENT = "confident"
     
-    # Educational tones
+    # Informative tones
     INFORMATIVE = "informative"
     ENTHUSIASTIC = "enthusiastic"
     IMPRESSED = "impressed"
@@ -189,7 +189,7 @@ class StoryScript(BaseModel):
     title: str
     main_character_description: str = Field(description="Consistent character description for all scenes")
     character_cosplay_instructions: str = Field(description="Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a music industry idol')")
-    overall_style: str = Field(description="Overall video style: 'educational', 'entertaining', 'documentary'")
+    overall_style: str = Field(description="Overall video style: 'informative', 'entertaining', 'documentary'")
     overall_story: str = Field(description="The specific, focused story developed from the subject")
     story_summary: str = Field(description="Brief summary of the overall narrative and key points")
     scene_plan: List[ScenePlan] = Field(description="Plan for all scenes in order")
@@ -202,7 +202,7 @@ class VideoScript(BaseModel):
     title: str
     main_character_description: str = Field(description="Consistent character description for all scenes")
     character_cosplay_instructions: str = Field(description="Instructions for how to cosplay the main character (e.g., 'cosplay like Elon Musk', 'dress as a music industry idol')")
-    overall_style: str = Field(description="Overall video style: 'educational', 'entertaining', 'documentary'")
+    overall_style: str = Field(description="Overall video style: 'informative', 'entertaining', 'documentary'")
     overall_story: str = Field(description="The specific, focused story developed from the subject")
     story_summary: str = Field(description="Brief summary of the overall narrative and key points")
     
@@ -297,7 +297,7 @@ class ScriptValidationResult(ValidationResult):
     fun_score: float
     interest_score: float
     uniqueness_score: float
-    educational_score: float
+    informative_score: float
     coherence_score: float
 
 class SceneValidationResult(ValidationResult):
@@ -305,7 +305,7 @@ class SceneValidationResult(ValidationResult):
     scene_number: int
     scene_quality_score: float
     visual_potential_score: float
-    educational_density_score: float
+    informative_density_score: float
     character_utilization_score: float
     connection_score: float
 

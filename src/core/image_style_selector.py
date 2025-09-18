@@ -18,7 +18,7 @@ class StyleSelectionCriteria:
     """Criteria for style selection"""
     scene_type: SceneType
     content_type: str
-    educational_goal: str
+    informative_goal: str
     engagement_level: int  # 1-10
     visual_complexity: int  # 1-10
     target_audience: str
@@ -130,7 +130,7 @@ class ImageStyleSelector:
         Select optimal image style based on scene content analysis
         
         Args:
-            scene_data: Scene data including type, content, and educational elements
+            scene_data: Scene data including type, content, and informative elements
             previous_styles: List of previously used styles to avoid repetition
             target_audience: Target audience for the content
             
@@ -186,7 +186,7 @@ class ImageStyleSelector:
         """Analyze scene content to determine content type and characteristics"""
         analysis = {
             "content_types": [],
-            "educational_elements": [],
+            "informative_elements": [],
             "engagement_factors": [],
             "visual_complexity": 5,  # Default
             "data_density": 0,
@@ -199,10 +199,10 @@ class ImageStyleSelector:
             if any(pattern in dialogue for pattern in patterns):
                 analysis["content_types"].append(content_type)
         
-        # Analyze educational content
-        educational_content = scene_data.get("educational_content", {})
-        for category, items in educational_content.items():
-            analysis["educational_elements"].extend(items)
+        # Analyze informative content
+        informative_content = scene_data.get("informative_content", {})
+        for category, items in informative_content.items():
+            analysis["informative_elements"].extend(items)
             if category == "statistics":
                 analysis["data_density"] += len(items)
         
@@ -296,8 +296,8 @@ class ImageStyleSelector:
             # Visual complexity matching
             score += self._get_complexity_matching_bonus(style, content_analysis)
             
-            # Educational effectiveness bonus
-            score += self._get_educational_effectiveness_bonus(style, scene_data)
+            # Informative effectiveness bonus
+            score += self._get_informative_effectiveness_bonus(style, scene_data)
             
             scored_styles.append((style, score))
         
@@ -373,17 +373,17 @@ class ImageStyleSelector:
         
         return 0.0
     
-    def _get_educational_effectiveness_bonus(self, style: ImageStyle, scene_data: Dict[str, Any]) -> float:
-        """Get bonus score for educational effectiveness"""
-        educational_content = scene_data.get("educational_content", {})
+    def _get_informative_effectiveness_bonus(self, style: ImageStyle, scene_data: Dict[str, Any]) -> float:
+        """Get bonus score for informative effectiveness"""
+        informative_content = scene_data.get("informative_content", {})
         
-        if not educational_content:
+        if not informative_content:
             return 0.0
         
         # Styles that are particularly good for education
-        educational_styles = [ImageStyle.INFOGRAPHIC, ImageStyle.DIAGRAM_EXPLANATION, ImageStyle.STEP_BY_STEP_VISUAL]
+        informative_styles = [ImageStyle.INFOGRAPHIC, ImageStyle.DIAGRAM_EXPLANATION, ImageStyle.STEP_BY_STEP_VISUAL]
         
-        if style in educational_styles:
+        if style in informative_styles:
             return 0.2
         
         return 0.0
@@ -404,7 +404,7 @@ class ImageStyleSelector:
         
         # Specific style reasoning
         if selected_style == ImageStyle.INFOGRAPHIC:
-            reasoning_parts.append("Infographic style chosen for data visualization and educational content")
+            reasoning_parts.append("Infographic style chosen for data visualization and informative content")
         elif selected_style == ImageStyle.STEP_BY_STEP_VISUAL:
             reasoning_parts.append("Step-by-step style chosen for process demonstration")
         elif selected_style == ImageStyle.DIAGRAM_EXPLANATION:
@@ -421,42 +421,42 @@ class ImageStyleSelector:
         characteristics = {
             ImageStyle.INFOGRAPHIC: {
                 "visual_complexity": "high",
-                "educational_effectiveness": "high",
+                "informative_effectiveness": "high",
                 "engagement_level": "medium",
                 "best_for": ["data", "statistics", "comparisons"],
                 "layout": "grid-based with clear hierarchy"
             },
             ImageStyle.CHARACTER_WITH_BACKGROUND: {
                 "visual_complexity": "medium",
-                "educational_effectiveness": "medium",
+                "informative_effectiveness": "medium",
                 "engagement_level": "high",
                 "best_for": ["explanations", "introductions", "conclusions"],
                 "layout": "character-focused with supporting background"
             },
             ImageStyle.DIAGRAM_EXPLANATION: {
                 "visual_complexity": "high",
-                "educational_effectiveness": "high",
+                "informative_effectiveness": "high",
                 "engagement_level": "medium",
                 "best_for": ["technical concepts", "processes", "systems"],
                 "layout": "structured diagram with labels and arrows"
             },
             ImageStyle.STEP_BY_STEP_VISUAL: {
                 "visual_complexity": "medium",
-                "educational_effectiveness": "high",
+                "informative_effectiveness": "high",
                 "engagement_level": "medium",
                 "best_for": ["tutorials", "procedures", "workflows"],
                 "layout": "sequential steps with clear progression"
             },
             ImageStyle.COMIC_PANEL: {
                 "visual_complexity": "low",
-                "educational_effectiveness": "medium",
+                "informative_effectiveness": "medium",
                 "engagement_level": "high",
                 "best_for": ["stories", "narratives", "scenarios"],
                 "layout": "panel-based with speech bubbles"
             },
             ImageStyle.CINEMATIC: {
                 "visual_complexity": "high",
-                "educational_effectiveness": "medium",
+                "informative_effectiveness": "medium",
                 "engagement_level": "high",
                 "best_for": ["dramatic moments", "hooks", "conclusions"],
                 "layout": "cinematic composition with depth and atmosphere"
@@ -465,7 +465,7 @@ class ImageStyleSelector:
         
         return characteristics.get(style, {
             "visual_complexity": "medium",
-            "educational_effectiveness": "medium",
+            "informative_effectiveness": "medium",
             "engagement_level": "medium",
             "best_for": ["general content"],
             "layout": "standard composition"
@@ -480,7 +480,7 @@ def test_image_style_selector():
     test_scene = {
         "scene_type": "hook",
         "dialogue": "Did you know that 90% of people don't know this shocking statistic about the company?",
-        "educational_content": {
+        "informative_content": {
             "statistics": ["90% of people", "shocking statistic"],
             "key_concepts": ["the company", "statistics"]
         },

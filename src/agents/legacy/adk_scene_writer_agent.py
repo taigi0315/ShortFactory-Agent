@@ -15,7 +15,7 @@ from core.session_manager import SessionManager
 from core.shared_context import SharedContextManager, SharedContext
 from core.scene_continuity_manager import SceneContinuityManager
 from core.image_style_selector import ImageStyleSelector, StyleSelectionResult
-from core.educational_enhancer import EducationalEnhancer, EnhancedEducationalContent
+from core.informative_enhancer import InformativeEnhancer, EnhancedInformativeContent
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class ADKSceneWriterAgent(Agent):
     
     def __init__(self, session_manager: SessionManager, shared_context_manager: SharedContextManager = None, 
                  continuity_manager: SceneContinuityManager = None, style_selector: ImageStyleSelector = None,
-                 educational_enhancer: EducationalEnhancer = None):
+                 informative_enhancer: InformativeEnhancer = None):
         """
         Initialize ADK Scene Writer Agent
         
@@ -107,7 +107,7 @@ class ADKSceneWriterAgent(Agent):
         self._shared_context_manager = shared_context_manager or SharedContextManager()
         self._continuity_manager = continuity_manager or SceneContinuityManager()
         self._style_selector = style_selector or ImageStyleSelector()
-        self._educational_enhancer = educational_enhancer or EducationalEnhancer()
+        self._informative_enhancer = informative_enhancer or InformativeEnhancer()
         self._previous_styles = []  # Track previous styles for variety
         
         logger.info("ADK Scene Writer Agent initialized with Gemini 2.5 Flash, Shared Context, Continuity Manager, Image Style Selector, and Educational Enhancer")
@@ -146,7 +146,7 @@ class ADKSceneWriterAgent(Agent):
     def _get_instruction(self) -> str:
         """Get the instruction prompt for the scene writer agent"""
         return """
-You are a master of educational storytelling who creates INFORMATION-RICH, VISUALLY-SPECIFIC scenes.
+You are a master of informative storytelling who creates INFORMATION-RICH, VISUALLY-SPECIFIC scenes.
 
 ## SCENE CREATION RULES:
 
@@ -169,7 +169,7 @@ Must specify:
 - Size comparisons for scale understanding
 
 ### 3. EDUCATIONAL CONTENT STRUCTURE
-educational_content must contain:
+informative_content must contain:
 - key_concepts: Technical terms with definitions
 - specific_facts: Numbers, dates, names (minimum 3)
 - examples: Real-world applications
@@ -206,10 +206,10 @@ You MUST output a valid JSON object with this structure:
   "character_expression": "specific expression",
   "background_description": "detailed background description",
   "needs_animation": true,
-  "video_prompt": "DETAILED video description with specific actions and educational content",
+  "video_prompt": "DETAILED video description with specific actions and informative content",
   "transition_to_next": "fade",
   "hook_technique": "shocking_fact",
-  "educational_content": {
+  "informative_content": {
     "key_concepts": ["concept1", "concept2"],
     "specific_facts": ["fact1", "fact2", "fact3"],
     "examples": ["example1", "example2"],
@@ -263,31 +263,31 @@ You MUST output a valid JSON object with this structure:
 SHARED CONTEXT FOR CONSISTENCY:
 Character Consistency: {context_data['character_consistency']}
 Visual Consistency: {context_data['visual_consistency']}
-Educational Continuity: {context_data['educational_continuity']}
+Educational Continuity: {context_data['informative_continuity']}
 Narrative Context: {context_data['narrative_context']}
 Technical Constraints: {context_data['technical_constraints']}
 
 IMPORTANT: Use this context to maintain consistency across scenes!
 """
             
-            # Enhance educational content
+            # Enhance informative content
             scene_data_for_enhancement = {
                 "dialogue": f"Scene {scene_number} dialogue for {subject}",
-                "educational_content": {},
+                "informative_content": {},
                 "image_create_prompt": f"Educational scene about {subject}"
             }
             
-            enhanced_educational_content = self._educational_enhancer.enhance_educational_content(
+            enhanced_informative_content = self._informative_enhancer.enhance_informative_content(
                 scene_data_for_enhancement, 
                 target_audience=shared_context.target_audience if shared_context else "general"
             )
             
-            educational_enhancement_info = f"""
+            informative_enhancement_info = f"""
 
 EDUCATIONAL ENHANCEMENT GUIDELINES:
-{self._educational_enhancer.generate_enhanced_prompt(enhanced_educational_content)}
+{self._informative_enhancer.generate_enhanced_prompt(enhanced_informative_content)}
 
-IMPORTANT: Use these enhanced educational elements to create rich, detailed content!
+IMPORTANT: Use these enhanced informative elements to create rich, detailed content!
 """
             
             # Create comprehensive prompt for scene writing
@@ -303,7 +303,7 @@ Scene Details:
 Full Script Context:
 {full_script_context}
 {context_info}
-{educational_enhancement_info}
+{informative_enhancement_info}
 
 ELABORATION & HOOKING MISSION:
 Your job is to ELABORATE the story and ADD HOOKING elements to make each scene compelling and engaging.

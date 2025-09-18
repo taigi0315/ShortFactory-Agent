@@ -31,7 +31,7 @@ class FocusPatternTemplate:
     template: str
     engagement_score: int  # 1-10
     specificity_score: int  # 1-10
-    educational_value: int  # 1-10
+    informative_value: int  # 1-10
     target_keywords: List[str]
 
 @dataclass
@@ -62,7 +62,7 @@ class StoryFocusEngine:
                 template="The untold story of how {subject} was accidentally discovered by {person} in {year}",
                 engagement_score=9,
                 specificity_score=8,
-                educational_value=8,
+                informative_value=8,
                 target_keywords=["discovered", "invented", "created", "founded", "started"]
             ),
             FocusPattern.TURNING_POINT: FocusPatternTemplate(
@@ -70,7 +70,7 @@ class StoryFocusEngine:
                 template="The {timeframe} that changed {subject} forever and why it almost failed",
                 engagement_score=8,
                 specificity_score=7,
-                educational_value=7,
+                informative_value=7,
                 target_keywords=["changed", "turning point", "breakthrough", "revolution", "transformation"]
             ),
             FocusPattern.SPECIFIC_INNOVATION: FocusPatternTemplate(
@@ -78,7 +78,7 @@ class StoryFocusEngine:
                 template="The one {innovation_type} that made {subject} possible and how it works",
                 engagement_score=7,
                 specificity_score=9,
-                educational_value=9,
+                informative_value=9,
                 target_keywords=["innovation", "technology", "method", "technique", "breakthrough"]
             ),
             FocusPattern.BEHIND_SCENES: FocusPatternTemplate(
@@ -86,7 +86,7 @@ class StoryFocusEngine:
                 template="What really happens inside {subject} that nobody talks about",
                 engagement_score=9,
                 specificity_score=6,
-                educational_value=6,
+                informative_value=6,
                 target_keywords=["behind", "inside", "secret", "hidden", "unknown"]
             ),
             FocusPattern.MISCONCEPTION: FocusPatternTemplate(
@@ -94,7 +94,7 @@ class StoryFocusEngine:
                 template="Why everything you know about {subject} is wrong and the real truth",
                 engagement_score=10,
                 specificity_score=7,
-                educational_value=8,
+                informative_value=8,
                 target_keywords=["wrong", "myth", "misconception", "truth", "reality"]
             ),
             FocusPattern.SPECIFIC_PERSON: FocusPatternTemplate(
@@ -102,7 +102,7 @@ class StoryFocusEngine:
                 template="The unknown genius who actually created {subject} and their incredible story",
                 engagement_score=8,
                 specificity_score=8,
-                educational_value=7,
+                informative_value=7,
                 target_keywords=["person", "genius", "creator", "inventor", "founder"]
             ),
             FocusPattern.SPECIFIC_EVENT: FocusPatternTemplate(
@@ -110,7 +110,7 @@ class StoryFocusEngine:
                 template="The day {subject} almost failed completely and how it was saved",
                 engagement_score=9,
                 specificity_score=8,
-                educational_value=6,
+                informative_value=6,
                 target_keywords=["failed", "crisis", "disaster", "saved", "recovery"]
             ),
             FocusPattern.SECRET_REVEAL: FocusPatternTemplate(
@@ -118,7 +118,7 @@ class StoryFocusEngine:
                 template="The secret {aspect} of {subject} that {company/person} doesn't want you to know",
                 engagement_score=10,
                 specificity_score=6,
-                educational_value=7,
+                informative_value=7,
                 target_keywords=["secret", "hidden", "confidential", "classified", "revealed"]
             ),
             FocusPattern.CONTROVERSY: FocusPatternTemplate(
@@ -126,7 +126,7 @@ class StoryFocusEngine:
                 template="The controversial {aspect} of {subject} that divided {community/industry}",
                 engagement_score=9,
                 specificity_score=7,
-                educational_value=8,
+                informative_value=8,
                 target_keywords=["controversial", "debate", "divided", "conflict", "disagreement"]
             ),
             FocusPattern.UNEXPECTED_CONNECTION: FocusPatternTemplate(
@@ -134,7 +134,7 @@ class StoryFocusEngine:
                 template="How {subject} is secretly connected to {unexpected_thing} and why it matters",
                 engagement_score=8,
                 specificity_score=7,
-                educational_value=7,
+                informative_value=7,
                 target_keywords=["connected", "linked", "related", "influence", "impact"]
             )
         }
@@ -297,11 +297,11 @@ class StoryFocusEngine:
             # Add base scores
             score += template.engagement_score
             score += template.specificity_score
-            score += template.educational_value
+            score += template.informative_value
             
             # Adjust for target audience
             if target_audience == "beginner":
-                score += template.educational_value  # Prioritize educational value
+                score += template.informative_value  # Prioritize informative value
             elif target_audience == "expert":
                 score += template.specificity_score  # Prioritize specificity
             

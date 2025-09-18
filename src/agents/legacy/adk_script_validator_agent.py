@@ -2,7 +2,7 @@
 ADK Script Validator Agent
 
 This agent validates story-level quality before scene generation.
-It checks for fun factor, interest level, uniqueness, educational value, and narrative coherence.
+It checks for fun factor, interest level, uniqueness, informative value, and narrative coherence.
 """
 
 import os
@@ -46,17 +46,17 @@ class ScriptValidationTool:
             fun_score = self._assess_fun_factor(story_script)
             interest_score = self._assess_interest_level(story_script)
             uniqueness_score = self._assess_uniqueness(story_script)
-            educational_score = self._assess_educational_value(story_script)
+            informative_score = self._assess_informative_value(story_script)
             coherence_score = self._assess_narrative_coherence(story_script)
             
             # Calculate overall score
             overall_score = (fun_score + interest_score + uniqueness_score + 
-                           educational_score + coherence_score) / 5.0
+                           informative_score + coherence_score) / 5.0
             
             # Generate issues and feedback
             issues = self._generate_validation_issues(
                 story_script, fun_score, interest_score, uniqueness_score, 
-                educational_score, coherence_score
+                informative_score, coherence_score
             )
             
             # Determine status
@@ -76,7 +76,7 @@ class ScriptValidationTool:
                 fun_score=fun_score,
                 interest_score=interest_score,
                 uniqueness_score=uniqueness_score,
-                educational_score=educational_score,
+                informative_score=informative_score,
                 coherence_score=coherence_score,
                 issues=issues,
                 feedback=feedback,
@@ -95,7 +95,7 @@ class ScriptValidationTool:
                 fun_score=0.8,
                 interest_score=0.8,
                 uniqueness_score=0.8,
-                educational_score=0.8,
+                informative_score=0.8,
                 coherence_score=0.8,
                 issues=[],
                 feedback="Validation completed with default scores"
@@ -186,34 +186,34 @@ class ScriptValidationTool:
         
         return min(1.0, score)
     
-    def _assess_educational_value(self, story_script: StoryScript) -> float:
-        """Assess the educational value of the story"""
+    def _assess_informative_value(self, story_script: StoryScript) -> float:
+        """Assess the informative value of the story"""
         score = 0.5  # Base score
         
         story_text = f"{story_script.overall_story} {story_script.story_summary}"
         story_lower = story_text.lower()
         
-        # Educational indicators
-        educational_indicators = [
+        # Informative indicators
+        informative_indicators = [
             "learn", "understand", "explain", "teach", "discover",
             "science", "history", "technology", "innovation", "process",
             "how it works", "why it matters", "impact", "influence"
         ]
         
-        for indicator in educational_indicators:
+        for indicator in informative_indicators:
             if indicator in story_lower:
                 score += 0.05
         
-        # Check for scene plan educational content
+        # Check for scene plan informative content
         if story_script.scene_plan:
-            educational_scenes = 0
+            informative_scenes = 0
             for scene in story_script.scene_plan:
                 if any(keyword in scene.scene_purpose.lower() for keyword in 
                       ["explain", "teach", "demonstrate", "show", "reveal"]):
-                    educational_scenes += 1
+                    informative_scenes += 1
             
-            if educational_scenes > 0:
-                score += (educational_scenes / len(story_script.scene_plan)) * 0.3
+            if informative_scenes > 0:
+                score += (informative_scenes / len(story_script.scene_plan)) * 0.3
         
         return min(1.0, score)
     
@@ -240,7 +240,7 @@ class ScriptValidationTool:
     
     def _generate_validation_issues(self, story_script: StoryScript, 
                                   fun_score: float, interest_score: float, 
-                                  uniqueness_score: float, educational_score: float, 
+                                  uniqueness_score: float, informative_score: float, 
                                   coherence_score: float) -> List[ValidationIssue]:
         """Generate validation issues based on scores"""
         issues = []
@@ -269,12 +269,12 @@ class ScriptValidationTool:
                 suggestion="Focus on specific, uncommon aspects or unique perspectives"
             ))
         
-        if educational_score < 0.6:
+        if informative_score < 0.6:
             issues.append(ValidationIssue(
                 severity=ValidationSeverity.HIGH,
-                category="educational_value",
-                description="Story lacks sufficient educational content",
-                suggestion="Add more learning objectives, explanations, or educational elements"
+                category="informative_value",
+                description="Story lacks sufficient informative content",
+                suggestion="Add more learning objectives, explanations, or informative elements"
             ))
         
         if coherence_score < 0.6:
@@ -312,7 +312,7 @@ class ScriptValidationTool:
         for issue in issues:
             instructions += f"**{issue.category.replace('_', ' ').title()}**: {issue.suggestion}\n"
         
-        instructions += "\nFocus on making the story more engaging, educational, and unique."
+        instructions += "\nFocus on making the story more engaging, informative, and unique."
         return instructions
 
 class ADKScriptValidatorAgent(Agent):
@@ -382,7 +382,7 @@ You are a STRICT Script Validator Agent responsible for rejecting mediocre conte
 - Verify resolution/revelation
 - Check for logical flow
 
-### 4. EDUCATIONAL VALUE (Fail if not memorable):
+### 4. INFORMATIVE VALUE (Fail if not memorable):
 - Would viewer remember 5 facts after watching?
 - Is there a clear learning outcome?
 - Are concepts explained through examples?
@@ -397,7 +397,7 @@ You are a STRICT Script Validator Agent responsible for rejecting mediocre conte
 - Broad overviews without specific details
 - Lack of concrete data points
 - No clear narrative tension
-- Insufficient educational density
+- Insufficient informative density
 
 ## Output Format:
 Return a JSON object with:
@@ -406,7 +406,7 @@ Return a JSON object with:
 - fun_score: float
 - interest_score: float
 - uniqueness_score: float
-- educational_score: float
+- informative_score: float
 - coherence_score: float
 - issues: array of validation issues
 - feedback: string with overall feedback
@@ -449,7 +449,7 @@ Be merciless in rejecting generic content. Demand specific, memorable facts.
                 fun_score=0.8,
                 interest_score=0.8,
                 uniqueness_score=0.8,
-                educational_score=0.8,
+                informative_score=0.8,
                 coherence_score=0.8,
                 issues=[],
                 feedback="Validation completed with default scores"
@@ -468,7 +468,7 @@ async def test_script_validator():
             title="Test Story",
             main_character_description="Test character",
             character_cosplay_instructions="Test cosplay",
-            overall_style="educational",
+            overall_style="informative",
             overall_story="This is a test story about something interesting",
             story_summary="A comprehensive test story",
             scene_plan=[

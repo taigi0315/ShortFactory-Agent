@@ -34,7 +34,7 @@ class ImageGenerationTool(BaseTool):
     def __init__(self, session_manager: SessionManager):
         super().__init__(
             name="generate_image",
-            description="Generate images using Google Flash 2.5 with Huh character"
+            description="Generate images using Google Flash 2.5 with Glowbie character"
         )
         self.session_manager = session_manager
         self.api_key = os.getenv('GEMINI_API_KEY') or os.getenv('GOOGLE_API_KEY')
@@ -43,26 +43,26 @@ class ImageGenerationTool(BaseTool):
         self.image_ratio = os.getenv('IMAGE_RATIO', 'vertical')
         self.number_of_images_to_video = int(os.getenv('NUMBER_OF_VIDEO_SCENE', '5'))
         
-        # Load Huh character image
+        # Load Glowbie character image
         self.huh_image_path = Path("src/assets/huh.png")
         self.huh_image_data = self._load_huh_character()
         
         if self.huh_image_data:
-            logger.info("Huh character loaded successfully")
+            logger.info("Glowbie character loaded successfully")
         else:
-            logger.error("Failed to load Huh character image")
+            logger.error("Failed to load Glowbie character image")
     
     def _load_huh_character(self) -> Optional[bytes]:
-        """Load Huh character image"""
+        """Load Glowbie character image"""
         try:
             if self.huh_image_path.exists():
                 with open(self.huh_image_path, 'rb') as f:
                     return f.read()
             else:
-                logger.error(f"Huh character image not found at {self.huh_image_path}")
+                logger.error(f"Glowbie character image not found at {self.huh_image_path}")
                 return None
         except Exception as e:
-            logger.error(f"Error loading Huh character: {str(e)}")
+            logger.error(f"Error loading Glowbie character: {str(e)}")
             return None
     
     async def run(self, session_id: str, scene_number: int, scene_prompt: str, cosplay_instructions: str = None) -> Dict[str, Any]:
@@ -81,7 +81,7 @@ class ImageGenerationTool(BaseTool):
         try:
             logger.info(f"Generating image for scene {scene_number}")
             
-            # Create cosplayed Huh character if needed
+            # Create cosplayed Glowbie character if needed
             cosplayed_huh_image = self.huh_image_data
             if cosplay_instructions and self.huh_image_data:
                 cosplayed_huh_image = await self._create_cosplayed_huh(cosplay_instructions)
@@ -91,8 +91,8 @@ class ImageGenerationTool(BaseTool):
                 image_data = await self._generate_scene_with_huh(cosplayed_huh_image, scene_prompt)
             else:
                 # Raise error instead of using mock
-                logger.error("No cosplayed Huh image available")
-                raise ValueError("No cosplayed Huh image available for scene generation")
+                logger.error("No cosplayed Glowbie image available")
+                raise ValueError("No cosplayed Glowbie image available for scene generation")
             
             # Save image to session
             image_path = self.session_manager.save_image(
@@ -121,7 +121,7 @@ class ImageGenerationTool(BaseTool):
             }
     
     async def _create_cosplayed_huh(self, cosplay_instructions: str) -> bytes:
-        """Create cosplayed Huh character using Gemini 2.5 Flash Image"""
+        """Create cosplayed Glowbie character using Gemini 2.5 Flash Image"""
         try:
             logger.info(f"Cosplay instructions: {cosplay_instructions}")
             
@@ -130,7 +130,7 @@ class ImageGenerationTool(BaseTool):
             from PIL import Image
             from io import BytesIO
             
-            # Convert Huh image to PIL Image object
+            # Convert Glowbie image to PIL Image object
             huh_image_pil = Image.open(BytesIO(self.huh_image_data))
             
             # Create cosplay prompt
@@ -169,24 +169,24 @@ class ImageGenerationTool(BaseTool):
                 if hasattr(parts, '__iter__'):
                     for part in parts:
                         if hasattr(part, 'inline_data') and part.inline_data:
-                            logger.info("✅ Cosplayed Huh generated successfully with Gemini 2.5 Flash Image")
+                            logger.info("✅ Cosplayed Glowbie generated successfully with Gemini 2.5 Flash Image")
                             return part.inline_data.data
                 else:
                     # Single part
                     if hasattr(parts, 'inline_data') and parts.inline_data:
-                        logger.info("✅ Cosplayed Huh generated successfully with Gemini 2.5 Flash Image")
+                        logger.info("✅ Cosplayed Glowbie generated successfully with Gemini 2.5 Flash Image")
                         return parts.inline_data.data
             
-            logger.warning("No image data found in cosplay response, using original Huh")
+            logger.warning("No image data found in cosplay response, using original Glowbie")
             return self.huh_image_data
             
         except Exception as e:
-            logger.error(f"Error creating cosplayed Huh: {str(e)}")
-            logger.info("Using original Huh character")
+            logger.error(f"Error creating cosplayed Glowbie: {str(e)}")
+            logger.info("Using original Glowbie character")
             return self.huh_image_data
     
     async def _generate_scene_with_huh(self, cosplayed_huh_image: bytes, scene_prompt: str) -> bytes:
-        """Generate scene image with Huh character using Gemini 2.5 Flash Image"""
+        """Generate scene image with Glowbie character using Gemini 2.5 Flash Image"""
         try:
             logger.info(f"Scene prompt: {scene_prompt[:100]}...")
             
@@ -195,7 +195,7 @@ class ImageGenerationTool(BaseTool):
             from PIL import Image
             from io import BytesIO
             
-            # Convert cosplayed Huh image to PIL Image object
+            # Convert cosplayed Glowbie image to PIL Image object
             cosplayed_huh_pil = Image.open(BytesIO(cosplayed_huh_image))
             
             # Create client and generate image
@@ -230,8 +230,8 @@ class ImageGenerationTool(BaseTool):
             raise ValueError("No image data found in scene response")
             
         except Exception as e:
-            logger.error(f"Error generating scene with Huh: {str(e)}")
-            raise ValueError(f"Error generating scene with Huh: {str(e)}")
+            logger.error(f"Error generating scene with Glowbie: {str(e)}")
+            raise ValueError(f"Error generating scene with Glowbie: {str(e)}")
     
     async def generate_unified_scene(self, scene: Scene, cosplay_desc: str) -> bytes:
         """
@@ -241,10 +241,10 @@ class ImageGenerationTool(BaseTool):
         try:
             logger.info(f"Generating unified scene for scene {scene.scene_number}")
             
-            # Create unified prompt that includes both character and educational content
+            # Create unified prompt that includes both character and informative content
             unified_prompt = self._create_unified_prompt(scene, cosplay_desc)
             
-            # Use the cosplayed Huh image as reference
+            # Use the cosplayed Glowbie image as reference
             cosplayed_huh_pil = Image.open(BytesIO(self.huh_image_data))
             
             # Generate scene in one pass
@@ -282,13 +282,13 @@ class ImageGenerationTool(BaseTool):
             raise ValueError(f"Error generating unified scene: {str(e)}")
     
     def _create_unified_prompt(self, scene: Scene, cosplay_desc: str) -> str:
-        """Create unified prompt that combines character and educational content"""
+        """Create unified prompt that combines character and informative content"""
         
-        # Extract educational elements for enhanced prompt
-        educational_elements = self._extract_educational_elements(scene)
+        # Extract informative elements for enhanced prompt
+        informative_elements = self._extract_informative_elements(scene)
         
         unified_prompt = f"""
-        Create an educational scene with these elements:
+        Create an informative scene with these elements:
         
         CHARACTER (10-15% of image area):
         - A cute, blob-like cartoon character dressed as {cosplay_desc}
@@ -297,58 +297,58 @@ class ImageGenerationTool(BaseTool):
         - Keep character small and as a guide/presenter
         - Include speech bubble: "{scene.dialogue[:60]}..."
         
-        EDUCATIONAL CONTENT (PRIMARY FOCUS - 85% of image):
+        INFORMATIVE CONTENT (PRIMARY FOCUS - 85% of image):
         {scene.image_create_prompt}
         
-        ENHANCED EDUCATIONAL ELEMENTS:
-        {educational_elements}
+        ENHANCED INFORMATIVE ELEMENTS:
+        {informative_elements}
         
         COMPOSITION REQUIREMENTS:
         - Image ratio: {self.image_ratio} ({'9:16' if self.image_ratio == 'vertical' else '16:9'})
-        - Educational elements dominate the frame
-        - Character acts as a guide pointing to educational content
-        - Clear visual hierarchy with educational content as primary focus
-        - Professional, clean layout suitable for educational content
+        - Informative elements dominate the frame
+        - Character acts as a guide pointing to informative content
+        - Clear visual hierarchy with informative content as primary focus
+        - Professional, clean layout suitable for informative content
         
         STYLE: {scene.image_style} approach
         - Maintain consistent visual style
         - Ensure high contrast for readability
-        - Use appropriate colors for educational content
+        - Use appropriate colors for informative content
         - Include visual elements that support learning objectives
         
         TECHNICAL SPECIFICATIONS:
         - High resolution and quality
         - Clear, readable text if any
-        - Professional educational design
+        - Professional informative design
         - Suitable for video production
         """
         
         return unified_prompt
     
-    def _extract_educational_elements(self, scene: Scene) -> str:
-        """Extract and format educational elements for enhanced prompt"""
-        educational_content = scene.educational_content or {}
+    def _extract_informative_elements(self, scene: Scene) -> str:
+        """Extract and format informative elements for enhanced prompt"""
+        informative_content = scene.informative_content or {}
         
         elements = []
         
         # Add key concepts
-        if educational_content.get("key_concepts"):
-            concepts = ", ".join(educational_content["key_concepts"])
+        if informative_content.get("key_concepts"):
+            concepts = ", ".join(informative_content["key_concepts"])
             elements.append(f"Key concepts to highlight: {concepts}")
         
         # Add specific facts
-        if educational_content.get("specific_facts"):
-            facts = "; ".join(educational_content["specific_facts"])
+        if informative_content.get("specific_facts"):
+            facts = "; ".join(informative_content["specific_facts"])
             elements.append(f"Specific facts to include: {facts}")
         
         # Add examples
-        if educational_content.get("examples"):
-            examples = "; ".join(educational_content["examples"])
+        if informative_content.get("examples"):
+            examples = "; ".join(informative_content["examples"])
             elements.append(f"Examples to demonstrate: {examples}")
         
         # Add statistics
-        if educational_content.get("statistics"):
-            stats = "; ".join(educational_content["statistics"])
+        if informative_content.get("statistics"):
+            stats = "; ".join(informative_content["statistics"])
             elements.append(f"Statistics to display: {stats}")
         
         # Add visual elements
@@ -364,7 +364,7 @@ class ImageGenerationTool(BaseTool):
             if visual_elements.get("lighting"):
                 elements.append(f"Lighting: {visual_elements['lighting']}")
         
-        return "\n".join(elements) if elements else "Focus on clear, educational visual presentation"
+        return "\n".join(elements) if elements else "Focus on clear, informative visual presentation"
     
     async def _generate_mock_images_for_session(self, session_id: str, script: VideoScript) -> Dict[str, Any]:
         """
@@ -387,7 +387,7 @@ class ImageGenerationTool(BaseTool):
                 "failed_images": [],
                 "generation_time": 0,
                 "model_used": "Mock Images (Cost-Saving Mode)",
-                "character": "Huh",
+                "character": "Glowbie",
                 "cosplay_instructions": script.character_cosplay_instructions
             }
             
@@ -426,7 +426,7 @@ class ImageGenerationTool(BaseTool):
                         "scene_type": scene.scene_type,
                         "character_pose": scene.character_pose,
                         "background_description": scene.background_description,
-                        "character": "Huh (mock)",
+                        "character": "Glowbie (mock)",
                         "cosplay_applied": False,
                         "mock_source": str(mock_image_file)
                     })
@@ -457,7 +457,7 @@ class ImageGenerationTool(BaseTool):
                 "failed_images": [],
                 "generation_time": 0,
                 "model_used": "Mock Images (Error)",
-                "character": "Huh",
+                "character": "Glowbie",
                 "error": str(e)
             }
     
@@ -508,7 +508,7 @@ class ADKImageGenerateAgent(Agent):
         # Initialize ADK Agent
         super().__init__(
             name="image_generator",
-            description="Generates images using Gemini 2.5 with Huh character",
+            description="Generates images using Gemini 2.5 with Glowbie character",
                 model="gemini-2.5-flash-image-preview",
             instruction=self._get_instruction(),
             tools=[image_tool],
@@ -528,31 +528,31 @@ class ADKImageGenerateAgent(Agent):
     def _get_instruction(self) -> str:
         """Get the instruction prompt for the agent"""
         return """
-You are a professional image generation agent specializing in creating educational images with a character from given image.
+You are a professional image generation agent specializing in creating informative images with a character from given image.
 
 ## Your Role:
 - Generate images for video scenes using the character from given image
 - Apply cosplay transformations to the character based on the topic
-- Create educational, engaging visuals with focus on information delivery
+- Create informative, engaging visuals with focus on information delivery
 - Maintain character consistency across all images
 
 ## Available Tools:
 - generate_image: Generate images for scenes with character from given image
 
 ## Guidelines:
-- PRIMARY FOCUS: Educational content and information delivery
-- SECONDARY FOCUS: Character from given image (not "Huh" - use "character from given image")
+- PRIMARY FOCUS: Informative content and information delivery
+- SECONDARY FOCUS: Character from given image (not "Glowbie" - use "character from given image")
 - Always use the character from given image in images
 - Apply cosplay instructions when provided
-- Create educational, meaningful visuals that teach the topic
+- Create informative, meaningful visuals that teach the topic
 - Maintain high quality and professional appearance
 - Keep character's original design and personality
 - Add speech bubbles or text boxes when appropriate
-- Focus on educational content, not just decorative images
+- Focus on informative content, not just decorative images
 
 ## Image Requirements:
 - Character should be small in the image (not dominating)
-- Background should be educational and informative
+- Background should be informative and informative
 - High quality, professional result
 - Proper aspect ratio (vertical or horizontal)
 - Character consistency maintained
@@ -584,14 +584,14 @@ You are a professional image generation agent specializing in creating education
                 "generated_images": [],
                 "failed_images": [],
                 "generation_time": 0,
-                "model_used": "Google Flash 2.5 (Nano Banana) - Huh Character",
-                "character": "Huh",
+                "model_used": "Google Flash 2.5 (Nano Banana) - Glowbie Character",
+                "character": "Glowbie",
                 "cosplay_instructions": script.character_cosplay_instructions
             }
             
             start_time = time.time()
             
-            # Generate cosplayed Huh character first
+            # Generate cosplayed Glowbie character first
             cosplayed_huh_image = None
             if script.character_cosplay_instructions:
                 cosplayed_huh_image = await self._image_tool._create_cosplayed_huh(
@@ -619,7 +619,7 @@ You are a professional image generation agent specializing in creating education
                             "scene_type": scene.scene_type,
                             "character_pose": scene.character_pose,
                             "background_description": scene.background_description,
-                            "character": "Huh (cosplayed)" if result["cosplay_applied"] else "Huh",
+                            "character": "Glowbie (cosplayed)" if result["cosplay_applied"] else "Glowbie",
                             "cosplay_applied": result["cosplay_applied"]
                         })
                         logger.info(f"✅ ADK image generated for scene {scene.scene_number}: {result['image_path']}")
@@ -665,7 +665,7 @@ Scene {scene.scene_number}: {scene.scene_type}
 Dialogue: {scene.dialogue}
 Character Pose: {scene.character_pose or 'natural pose'}
 Character Expression: {scene.character_expression or 'neutral'}
-Background: {scene.background_description or 'educational setting'}
+Background: {scene.background_description or 'informative setting'}
 Image Style: {scene.image_style}
 """
         
@@ -681,16 +681,16 @@ Image Style: {scene.image_style}
 {scene.image_create_prompt}
 
 CRITICAL REQUIREMENTS:
-- Character (Huh) should be SMALL in the image (not dominating the frame)
-- Focus on educational content and meaningful visuals
+- Character (Glowbie) should be SMALL in the image (not dominating the frame)
+- Focus on informative content and meaningful visuals
 - Character should be doing something relevant to the scene
-- Background should be educational and informative
+- Background should be informative and informative
 - High quality, professional result
 - Image ratio: {self._image_tool.image_ratio} ({'9:16 vertical format for mobile/social media' if self._image_tool.image_ratio == 'vertical' else '16:9 horizontal format for desktop/widescreen'})
 - Character consistency maintained
-- KEEP HUH'S ORIGINAL IMAGE STYLE - don't change Huh's appearance or design
+- KEEP HUH'S ORIGINAL IMAGE STYLE - don't change Glowbie's appearance or design
 - Add speech bubbles or text boxes with dialogue
-- Maintain Huh's cute, blob-like cartoon character design
+- Maintain Glowbie's cute, blob-like cartoon character design
 """
         
         return comprehensive_prompt.strip()
@@ -699,8 +699,8 @@ CRITICAL REQUIREMENTS:
         """Get style-specific instructions based on image style and scene type"""
         
         style_instructions = {
-            "single_character": "Focus on educational content with character from given image as small guide",
-            "character_with_background": "Show educational background elements with character from given image as guide",
+            "single_character": "Focus on informative content with character from given image as small guide",
+            "character_with_background": "Show informative background elements with character from given image as guide",
             "infographic": "Create comprehensive informative visual with character from given image explaining data",
             "diagram_explanation": "Show character from given image pointing to or explaining a detailed diagram",
             "before_after_comparison": "Show character from given image with before/after visual comparison",
@@ -710,10 +710,10 @@ CRITICAL REQUIREMENTS:
             "speech_bubble": "Include prominent speech bubbles with character from given image",
             "cinematic": "Create cinematic composition with character from given image",
             "close_up_reaction": "Show close-up of character from given image's facial expression",
-            "wide_establishing_shot": "Show wide shot with character from given image in educational setting"
+            "wide_establishing_shot": "Show wide shot with character from given image in informative setting"
         }
         
-        return style_instructions.get(image_style, "Create educational visual with character from given image")
+        return style_instructions.get(image_style, "Create informative visual with character from given image")
 
 # Test function
 async def test_adk_image_generate():
@@ -731,9 +731,9 @@ async def test_adk_image_generate():
         
         test_script = VideoScript(
             title="Test ADK Video",
-            main_character_description="Huh - a cute, blob-like cartoon character",
+            main_character_description="Glowbie - a cute, blob-like cartoon character",
             character_cosplay_instructions="cosplay like a music industry idol",
-            overall_style="educational",
+            overall_style="informative",
             scenes=[
                 Scene(
                     scene_number=1,

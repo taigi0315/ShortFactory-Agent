@@ -11,7 +11,7 @@ from pathlib import Path
 from google.adk import Agent
 import google.genai as genai
 from core.shared_context import SharedContextManager
-from core.educational_enhancer import EducationalEnhancer
+from core.informative_enhancer import InformativeEnhancer
 from core.image_style_selector import ImageStyleSelector
 from core.json_parser import RobustJSONParser, JSONParsingError, parse_scene_package
 from core.cost_optimizer import CostOptimizer, validate_and_optimize_prompt, validate_response_quality
@@ -57,7 +57,7 @@ class SceneScriptWriterAgent(Agent):
         
         # Store dependencies
         self._shared_context_manager = shared_context_manager or SharedContextManager()
-        self._educational_enhancer = EducationalEnhancer()
+        self._informative_enhancer = InformativeEnhancer()
         self._style_selector = ImageStyleSelector()
         
         logger.info("Scene Script Writer Agent initialized with new architecture")
@@ -105,7 +105,7 @@ Your output must follow the ScenePackage.json schema exactly.
 Key principles:
 - ELABORATE on the basic scene content with rich details
 - ADD HOOKING elements to maintain viewer engagement
-- Use educational metaphors and concrete examples
+- Use informative metaphors and concrete examples
 - Ensure visual consistency with character and style
 - Create compelling, detailed image prompts
 - Maintain narrative flow and continuity
@@ -134,18 +134,18 @@ Key principles:
             
             logger.info(f"Expanding scene {scene_number} of type {scene_type}")
             
-            # Enhance educational content
+            # Enhance informative content
             try:
-                enhanced_content = self._educational_enhancer.enhance_educational_content(
+                enhanced_content = self._informative_enhancer.enhance_informative_content(
                     scene_data={'beats': scene_data.get('beats', [])},
                     target_audience=global_context.get('target_audience', 'general')
                 )
-                logger.info(f"Educational content enhanced successfully")
+                logger.info(f"Informative content enhanced successfully")
             except Exception as e:
-                logger.warning(f"Educational enhancement failed: {str(e)}, proceeding without enhancement")
+                logger.warning(f"Informative enhancement failed: {str(e)}, proceeding without enhancement")
                 # Create a simple fallback
                 enhanced_content = type('obj', (object,), {
-                    'educational_density': 0.5,
+                    'informative_density': 0.5,
                     'complexity_score': 0.5,
                     'key_concepts': ['general concepts']
                 })()
@@ -226,10 +226,10 @@ Previous scenes have established:
 Maintain visual and narrative consistency.
 """
         
-        # Educational enhancement info
+        # Informative enhancement info
         enhancement_info = f"""
-EDUCATIONAL ENHANCEMENT:
-Density score: {enhanced_content.educational_density:.2f}
+INFORMATIVE ENHANCEMENT:
+Density score: {enhanced_content.informative_density:.2f}
 Complexity score: {enhanced_content.complexity_score:.2f}
 Key concepts: {', '.join(enhanced_content.key_concepts[:3]) if enhanced_content.key_concepts else 'N/A'}
 """
@@ -328,11 +328,15 @@ OPTIONAL FIELDS (use empty arrays if not needed):
 ✓ sfx_cues (array with cue, at_ms, duration_ms)
 ✓ on_screen_text (array with text, at_ms, duration_ms, style, position)
 
-VISUAL REQUIREMENTS - FAST-PACED SHORT VIDEO:
+VISUAL REQUIREMENTS - FAST-PACED SHORT VIDEO WITH GLOWBIE CHARACTER:
 - Create 3-6 visual frames per scene for RAPID visual progression
 - Create NEW IMAGES when switching topics/concepts within the scene
 - Each image should represent 3-5 seconds of content maximum
-- Create compelling image_prompts (minimum 40 characters)
+- ALWAYS INCLUDE GLOWBIE CHARACTER: A cute, blob-like cartoon character cosplayed for the topic
+- GLOWBIE COSPLAY: Apply cosplay_instructions from global context to dress Glowbie appropriately
+- CHARACTER PLACEMENT: Glowbie should be 15-20% of image, positioned as a guide/presenter
+- INFORMATIVE FOCUS: 80-85% of image should be informative content/visualization
+- Create compelling image_prompts (minimum 40 characters) with Glowbie included
 - Include negative_prompts to avoid unwanted elements
 - Specify shot_types: wide, medium, close, macro, extreme_wide, extreme_close
 - Add camera_motion, character_pose, expression, background, lighting
@@ -348,7 +352,7 @@ TTS REQUIREMENTS:
   - stability: 0.2-0.6 (lower for more expressive, varied voice)
   - similarity_boost: 0.8-1.0 (higher for better voice consistency)  
   - style: 0.7-1.0 (higher for more emotional expression and mood)
-  - speed: 1.4-1.6 (40-60% faster for rapid information delivery)
+  - speed: 1.2-1.4 (20-40% faster for balanced information delivery)
   - loudness: 0.1-0.4 (moderate levels for clear audio)
 
 OUTPUT FORMAT:
@@ -385,13 +389,13 @@ EXAMPLE OUTPUT STRUCTURE:
       "camera_motion": "slow push-in",
       "character_pose": "pointing",
       "expression": "curious",
-      "background": "educational setting",
+      "background": "informative setting",
       "foreground_props": "relevant props",
       "lighting": "soft key lighting",
       "color_mood": "warm and engaging",
-      "image_prompt": "Detailed 40+ character prompt for image generation...",
+      "image_prompt": "Detailed 40+ character prompt featuring Glowbie character cosplayed for the topic, positioned as informative guide alongside main content...",
       "negative_prompt": "low quality, blurry, distorted",
-      "model_hints": ["illustration", "educational"],
+      "model_hints": ["illustration", "informative"],
       "aspect_ratio": "16:9",
       "seed": 123456,
       "guidance_scale": 7.5
@@ -428,7 +432,7 @@ EXAMPLE OUTPUT STRUCTURE:
 }}
 
 Remember: You are creating production-ready content. Every field should be meaningful and detailed.
-Make this scene {scene_number} truly compelling and engaging while maintaining educational value.
+Make this scene {scene_number} truly compelling and engaging while maintaining informative value.
 INCLUDE ALL REQUIRED FIELDS: scene_number, narration_script, visuals, tts, timing, continuity.
 
 IMPORTANT: Create 3-6 visual frames per scene for better engagement (target 5-7 seconds per image). 

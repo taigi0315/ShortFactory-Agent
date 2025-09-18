@@ -46,7 +46,7 @@ class VisualElement:
     position: Optional[str] = None
 
 @dataclass
-class EducationalFact:
+class InformativeFact:
     """Facts/statistics used to avoid repetition"""
     fact: str
     scene_number: int
@@ -76,7 +76,7 @@ class SharedContext:
     
     # Optional fields with defaults
     established_visual_elements: List[VisualElement] = field(default_factory=list)
-    established_facts: List[EducationalFact] = field(default_factory=list)
+    established_facts: List[InformativeFact] = field(default_factory=list)
     learning_objectives: List[str] = field(default_factory=list)
     complexity_progression: List[int] = field(default_factory=list)
     previous_scene_summary: Optional[str] = None
@@ -87,10 +87,10 @@ class SharedContext:
         self.established_visual_elements.append(element)
         logger.debug(f"Added visual element: {element.element_type} in scene {element.scene_number}")
     
-    def add_educational_fact(self, fact: EducationalFact) -> None:
-        """Add an educational fact to avoid repetition"""
+    def add_informative_fact(self, fact: InformativeFact) -> None:
+        """Add an informative fact to avoid repetition"""
         self.established_facts.append(fact)
-        logger.debug(f"Added educational fact: {fact.category} in scene {fact.scene_number}")
+        logger.debug(f"Added informative fact: {fact.category} in scene {fact.scene_number}")
     
     def update_character_state(self, emotion: str, pose: str, knowledge_level: str = None, energy_level: int = None) -> None:
         """Update character state for consistency"""
@@ -123,8 +123,8 @@ class SharedContext:
             }
         }
     
-    def get_educational_continuity_guidelines(self) -> Dict[str, Any]:
-        """Get educational continuity guidelines for scene generation"""
+    def get_informative_continuity_guidelines(self) -> Dict[str, Any]:
+        """Get informative continuity guidelines for scene generation"""
         return {
             "learning_objectives": self.learning_objectives,
             "complexity_progression": self.complexity_progression,
@@ -158,7 +158,7 @@ class SharedContext:
                 "established_traits": list(self.character_state.established_traits)
             },
             "visual_consistency": self.get_visual_consistency_guidelines(),
-            "educational_continuity": self.get_educational_continuity_guidelines(),
+            "informative_continuity": self.get_informative_continuity_guidelines(),
             "narrative_context": {
                 "momentum": self.narrative_momentum.value,
                 "arc_position": self.story_arc_position,
@@ -239,17 +239,17 @@ class SharedContextManager:
             )
             self.context.add_visual_element(visual_element)
         
-        # Add educational facts
-        if "educational_content" in scene_data:
-            for category, facts in scene_data["educational_content"].items():
+        # Add informative facts
+        if "informative_content" in scene_data:
+            for category, facts in scene_data["informative_content"].items():
                 for fact in facts:
-                    educational_fact = EducationalFact(
+                    informative_fact = InformativeFact(
                         fact=fact,
                         scene_number=scene_number,
                         category=category,
                         complexity_level=3  # Default complexity
                     )
-                    self.context.add_educational_fact(educational_fact)
+                    self.context.add_informative_fact(informative_fact)
         
         # Update narrative momentum
         self.context.update_narrative_momentum(scene_number, self.context.scene_count)

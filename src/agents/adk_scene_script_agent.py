@@ -138,7 +138,7 @@ You MUST respond with a valid JSON object that exactly matches the provided Scen
 - Include technical specifications for image generation
 - Specify lighting, composition, and style details
 - Ensure prompts are 40+ characters minimum
-- Consider educational visualization needs
+- Consider informative visualization needs
 
 ## TIMING CONSIDERATIONS
 - Plan realistic narration pacing (150-180 words per minute)
@@ -257,7 +257,7 @@ Respond ONLY with valid JSON matching the ScenePackage schema."""
 
 ## GLOBAL STORY CONTEXT
 **Title**: {global_context.get('title', 'Untitled')}
-**Overall Style**: {global_context.get('overall_style', 'Educational')}
+**Overall Style**: {global_context.get('overall_style', 'Informative')}
 **Story Summary**: {global_context.get('story_summary', 'No summary provided')}
 **Target Audience**: {global_context.get('target_audience', 'General')}
 
@@ -265,11 +265,11 @@ Respond ONLY with valid JSON matching the ScenePackage schema."""
 
 ## SPECIFIC REQUIREMENTS FOR THIS SCENE
 - Transform the story beats into engaging, conversational narration
-- Create 3-6 visual frames that support the educational content
+- Create 3-6 visual frames that support the informative content
 - Specify precise timing for all narration elements
 - Include appropriate TTS settings for the scene type
 - Ensure visual continuity with previous scenes
-- Add educational depth while maintaining engagement
+- Add informative depth while maintaining engagement
 
 {self._create_instruction()}"""
 
@@ -349,7 +349,7 @@ async def test_adk_scene_script_agent():
     
     global_context = {
         "title": "The Surprising Science Behind Why We Procrastinate",
-        "overall_style": "educational and engaging",
+        "overall_style": "informative and engaging",
         "story_summary": "An exploration of the psychological and neurological factors that drive procrastination behavior.",
         "target_audience": "general"
     }

@@ -1,6 +1,6 @@
 """
-Educational Depth Enhancement
-Enhances educational prompts with specific elements, data points, and visual metaphors
+Informative Depth Enhancement
+Enhances informative prompts with specific elements, data points, and visual metaphors
 """
 
 from typing import Dict, List, Any, Optional, Tuple
@@ -11,8 +11,8 @@ import re
 
 logger = logging.getLogger(__name__)
 
-class EducationalElementType(Enum):
-    """Types of educational elements"""
+class InformativeElementType(Enum):
+    """Types of informative elements"""
     DATA_POINT = "data_point"
     KEY_CONCEPT = "key_concept"
     VISUAL_METAPHOR = "visual_metaphor"
@@ -21,9 +21,9 @@ class EducationalElementType(Enum):
     ASSESSMENT_CRITERIA = "assessment_criteria"
 
 @dataclass
-class EducationalElement:
-    """Represents an educational element"""
-    element_type: EducationalElementType
+class InformativeElement:
+    """Represents an informative element"""
+    element_type: InformativeElementType
     content: str
     importance_level: int  # 1-5 scale
     visual_complexity: int  # 1-5 scale
@@ -31,10 +31,10 @@ class EducationalElement:
     learning_objective: str
 
 @dataclass
-class EnhancedEducationalContent:
-    """Enhanced educational content with depth and specificity"""
+class EnhancedInformativeContent:
+    """Enhanced informative content with depth and specificity"""
     original_content: str
-    enhanced_elements: List[EducationalElement]
+    enhanced_elements: List[InformativeElement]
     data_points: List[str]
     key_concepts: List[str]
     visual_metaphors: List[str]
@@ -42,17 +42,17 @@ class EnhancedEducationalContent:
     learning_objectives: List[str]
     assessment_criteria: List[str]
     complexity_score: float  # 0.0 to 1.0
-    educational_density: float  # 0.0 to 1.0
+    informative_density: float  # 0.0 to 1.0
 
-class EducationalEnhancer:
-    """Enhances educational content with depth and specificity"""
+class InformativeEnhancer:
+    """Enhances informative content with depth and specificity"""
     
     def __init__(self):
         self.data_extraction_patterns = self._initialize_data_patterns()
         self.concept_extraction_patterns = self._initialize_concept_patterns()
         self.metaphor_templates = self._initialize_metaphor_templates()
         self.hierarchy_templates = self._initialize_hierarchy_templates()
-        logger.info("EducationalEnhancer initialized")
+        logger.info("InformativeEnhancer initialized")
     
     def _initialize_data_patterns(self) -> Dict[str, List[str]]:
         """Initialize patterns for extracting data points"""
@@ -127,23 +127,23 @@ class EducationalEnhancer:
             }
         }
     
-    def enhance_educational_content(self, scene_data: Dict[str, Any], target_audience: str = "general") -> EnhancedEducationalContent:
+    def enhance_informative_content(self, scene_data: Dict[str, Any], target_audience: str = "general") -> EnhancedInformativeContent:
         """
-        Enhance educational content with depth and specificity
+        Enhance informative content with depth and specificity
         
         Args:
-            scene_data: Scene data containing educational content
+            scene_data: Scene data containing informative content
             target_audience: Target audience for the content
             
         Returns:
-            EnhancedEducationalContent with enhanced elements
+            EnhancedInformativeContent with enhanced elements
         """
-        logger.info(f"Enhancing educational content for audience: {target_audience}")
+        logger.info(f"Enhancing informative content for audience: {target_audience}")
         
         # Extract original content
         original_content = self._extract_original_content(scene_data)
         
-        # Extract and enhance different types of educational elements
+        # Extract and enhance different types of informative elements
         data_points = self._extract_data_points(original_content)
         key_concepts = self._extract_key_concepts(original_content)
         visual_metaphors = self._generate_visual_metaphors(original_content, key_concepts)
@@ -160,9 +160,9 @@ class EducationalEnhancer:
         
         # Calculate complexity and density scores
         complexity_score = self._calculate_complexity_score(enhanced_elements, target_audience)
-        educational_density = self._calculate_educational_density(enhanced_elements)
+        informative_density = self._calculate_informative_density(enhanced_elements)
         
-        result = EnhancedEducationalContent(
+        result = EnhancedInformativeContent(
             original_content=original_content,
             enhanced_elements=enhanced_elements,
             data_points=data_points,
@@ -172,10 +172,10 @@ class EducationalEnhancer:
             learning_objectives=learning_objectives,
             assessment_criteria=assessment_criteria,
             complexity_score=complexity_score,
-            educational_density=educational_density
+            informative_density=informative_density
         )
         
-        logger.info(f"Educational content enhanced: {len(enhanced_elements)} elements, density: {educational_density:.2f}")
+        logger.info(f"Informative content enhanced: {len(enhanced_elements)} elements, density: {informative_density:.2f}")
         return result
     
     def _extract_original_content(self, scene_data: Dict[str, Any]) -> str:
@@ -186,9 +186,9 @@ class EducationalEnhancer:
         if scene_data.get("dialogue"):
             content_parts.append(scene_data["dialogue"])
         
-        # Add educational content
-        educational_content = scene_data.get("educational_content", {})
-        for category, items in educational_content.items():
+        # Add informative content
+        informative_content = scene_data.get("informative_content", {})
+        for category, items in informative_content.items():
             if isinstance(items, list):
                 content_parts.extend(items)
             else:
@@ -436,14 +436,14 @@ class EducationalEnhancer:
     def _create_enhanced_elements(self, data_points: List[str], key_concepts: List[str], 
                                 visual_metaphors: List[str], information_hierarchy: Dict[str, List[str]],
                                 learning_objectives: List[str], assessment_criteria: List[str],
-                                target_audience: str) -> List[EducationalElement]:
-        """Create enhanced educational elements"""
+                                target_audience: str) -> List[InformativeElement]:
+        """Create enhanced informative elements"""
         elements = []
         
         # Add data points
         for data_point in data_points:
-            elements.append(EducationalElement(
-                element_type=EducationalElementType.DATA_POINT,
+            elements.append(InformativeElement(
+                element_type=InformativeElementType.DATA_POINT,
                 content=data_point,
                 importance_level=4,
                 visual_complexity=2,
@@ -453,8 +453,8 @@ class EducationalEnhancer:
         
         # Add key concepts
         for concept in key_concepts:
-            elements.append(EducationalElement(
-                element_type=EducationalElementType.KEY_CONCEPT,
+            elements.append(InformativeElement(
+                element_type=InformativeElementType.KEY_CONCEPT,
                 content=concept,
                 importance_level=5,
                 visual_complexity=3,
@@ -464,8 +464,8 @@ class EducationalEnhancer:
         
         # Add visual metaphors
         for metaphor in visual_metaphors:
-            elements.append(EducationalElement(
-                element_type=EducationalElementType.VISUAL_METAPHOR,
+            elements.append(InformativeElement(
+                element_type=InformativeElementType.VISUAL_METAPHOR,
                 content=metaphor,
                 importance_level=3,
                 visual_complexity=4,
@@ -476,8 +476,8 @@ class EducationalEnhancer:
         # Add information hierarchy
         for level, items in information_hierarchy.items():
             for item in items:
-                elements.append(EducationalElement(
-                    element_type=EducationalElementType.INFORMATION_HIERARCHY,
+                elements.append(InformativeElement(
+                    element_type=InformativeElementType.INFORMATION_HIERARCHY,
                     content=f"{level}: {item}",
                     importance_level=4 if level == "primary" else 3 if level == "secondary" else 2,
                     visual_complexity=3,
@@ -487,8 +487,8 @@ class EducationalEnhancer:
         
         # Add learning objectives
         for objective in learning_objectives:
-            elements.append(EducationalElement(
-                element_type=EducationalElementType.LEARNING_OBJECTIVE,
+            elements.append(InformativeElement(
+                element_type=InformativeElementType.LEARNING_OBJECTIVE,
                 content=objective,
                 importance_level=5,
                 visual_complexity=2,
@@ -498,8 +498,8 @@ class EducationalEnhancer:
         
         # Add assessment criteria
         for criterion in assessment_criteria:
-            elements.append(EducationalElement(
-                element_type=EducationalElementType.ASSESSMENT_CRITERIA,
+            elements.append(InformativeElement(
+                element_type=InformativeElementType.ASSESSMENT_CRITERIA,
                 content=criterion,
                 importance_level=4,
                 visual_complexity=2,
@@ -509,7 +509,7 @@ class EducationalEnhancer:
         
         return elements
     
-    def _calculate_complexity_score(self, elements: List[EducationalElement], target_audience: str) -> float:
+    def _calculate_complexity_score(self, elements: List[InformativeElement], target_audience: str) -> float:
         """Calculate complexity score based on elements and audience"""
         if not elements:
             return 0.0
@@ -532,8 +532,8 @@ class EducationalEnhancer:
         # Normalize to 0.0-1.0 scale
         return min(1.0, adjusted_complexity / 5.0)
     
-    def _calculate_educational_density(self, elements: List[EducationalElement]) -> float:
-        """Calculate educational density score"""
+    def _calculate_informative_density(self, elements: List[InformativeElement]) -> float:
+        """Calculate informative density score"""
         if not elements:
             return 0.0
         
@@ -544,7 +544,7 @@ class EducationalEnhancer:
             element_counts[element_type] = element_counts.get(element_type, 0) + 1
         
         # Calculate density based on variety and quantity
-        variety_score = len(element_counts) / len(EducationalElementType)
+        variety_score = len(element_counts) / len(InformativeElementType)
         quantity_score = min(1.0, len(elements) / 20)  # Normalize to 20 elements max
         
         # Combine scores
@@ -552,8 +552,8 @@ class EducationalEnhancer:
         
         return density_score
     
-    def generate_enhanced_prompt(self, enhanced_content: EnhancedEducationalContent) -> str:
-        """Generate enhanced prompt with educational depth"""
+    def generate_enhanced_prompt(self, enhanced_content: EnhancedInformativeContent) -> str:
+        """Generate enhanced prompt with informative depth"""
         
         prompt_parts = []
         
@@ -598,40 +598,40 @@ class EducationalEnhancer:
         
         # Add complexity and density information
         prompt_parts.append(f"\nCOMPLEXITY SCORE: {enhanced_content.complexity_score:.2f}")
-        prompt_parts.append(f"EDUCATIONAL DENSITY: {enhanced_content.educational_density:.2f}")
+        prompt_parts.append(f"EDUCATIONAL DENSITY: {enhanced_content.informative_density:.2f}")
         
         return "\n".join(prompt_parts)
 
 # Test function
-def test_educational_enhancer():
-    """Test the EducationalEnhancer"""
-    enhancer = EducationalEnhancer()
+def test_informative_enhancer():
+    """Test the InformativeEnhancer"""
+    enhancer = InformativeEnhancer()
     
     # Test scene data
     test_scene = {
         "dialogue": "the company was created in 1886 by Dr. John Pemberton and now sells 1.9 billion servings daily worldwide.",
-        "educational_content": {
+        "informative_content": {
             "key_concepts": ["the company origin", "Global marketing"],
             "specific_facts": ["Created in 1886", "1.9 billion servings daily"],
             "statistics": ["1886 creation date", "1.9 billion daily servings"]
         },
-        "image_create_prompt": "Educational scene about the company's history and global reach"
+        "image_create_prompt": "Informative scene about the company's history and global reach"
     }
     
-    # Enhance educational content
-    enhanced = enhancer.enhance_educational_content(test_scene, "general")
+    # Enhance informative content
+    enhanced = enhancer.enhance_informative_content(test_scene, "general")
     
-    print(f"Enhanced educational content:")
+    print(f"Enhanced informative content:")
     print(f"Data points: {enhanced.data_points}")
     print(f"Key concepts: {enhanced.key_concepts}")
     print(f"Visual metaphors: {enhanced.visual_metaphors}")
     print(f"Learning objectives: {enhanced.learning_objectives}")
     print(f"Complexity score: {enhanced.complexity_score:.2f}")
-    print(f"Educational density: {enhanced.educational_density:.2f}")
+    print(f"Informative density: {enhanced.informative_density:.2f}")
     
     # Generate enhanced prompt
     enhanced_prompt = enhancer.generate_enhanced_prompt(enhanced)
     print(f"\nEnhanced prompt:\n{enhanced_prompt}")
 
 if __name__ == "__main__":
-    test_educational_enhancer()
+    test_informative_enhancer()

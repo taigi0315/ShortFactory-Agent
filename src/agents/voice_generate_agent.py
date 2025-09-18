@@ -377,9 +377,9 @@ class VoiceGenerateAgent:
     def _convert_to_lemonfox_settings(self, elevenlabs_settings: Dict[str, Any]) -> Dict[str, Any]:
         """Convert ElevenLabs settings to LemonFox settings with enhanced mood and slower pace"""
         try:
-            # Get original speed and apply 20% increase for faster delivery  
+            # Get original speed and apply 10% increase for optimal delivery  
             original_speed = elevenlabs_settings.get('speed', 1.0)
-            adjusted_speed = original_speed * 1.2  # 20% faster for quick information delivery
+            adjusted_speed = original_speed * 1.1  # 10% faster for balanced pacing
             
             # Validate speed range (LemonFox: 0.5 - 4.0)
             adjusted_speed = max(0.5, min(4.0, float(adjusted_speed)))
@@ -411,11 +411,11 @@ class VoiceGenerateAgent:
                 'language': 'en-us',
                 'voice': selected_voice,
                 'mood_enhancement': '35% more expressive',
-                'pace_adjustment': '20% faster for quick delivery'
+                'pace_adjustment': '10% faster for balanced delivery'
             }
             
             logger.info(f"🎭 Enhanced LemonFox settings: {lemonfox_settings}")
-            logger.info(f"🚀 Speed increased: {original_speed:.2f} → {adjusted_speed:.2f} (20% faster)")
+            logger.info(f"🚀 Speed optimized: {original_speed:.2f} → {adjusted_speed:.2f} (10% faster for balanced pacing)")
             logger.info(f"🎨 Voice optimized for mood: {selected_voice}")
             return lemonfox_settings
             

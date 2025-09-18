@@ -115,7 +115,7 @@ Focus on creating a compelling, well-structured narrative framework that other a
                                  topic: str, 
                                  session_id: str,
                                  length_preference: str = "60-90s",
-                                 style_profile: str = "educational and engaging",
+                                 style_profile: str = "informative and engaging",
                                  target_audience: str = "general",
                                  language: str = "English",
                                  knowledge_refs: Optional[List[str]] = None,
@@ -248,7 +248,7 @@ LANGUAGE: {language}
 
 MISSION:
 Create a compelling story structure with high-level beats and scene planning.
-Focus on narrative flow, educational value, and engagement.
+Focus on narrative flow, informative value, and engagement.
 Generate content in {language} language.
 
 OUTPUT REQUIREMENTS:
@@ -410,8 +410,8 @@ Output ONLY valid JSON following the FullScript.json schema.
                     FullScript,
                     context_name="full_script",
                     title=f"Generated Content: {topic}",
-                    overall_style="educational",
-                    story_summary=f"A brief educational video about {topic}."
+                    overall_style="informative",
+                    story_summary=f"A brief informative video about {topic}."
                 )
                 fallback_dict = fallback_model.model_dump()
                 return fallback_dict
