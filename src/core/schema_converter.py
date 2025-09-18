@@ -42,8 +42,11 @@ class PydanticToADKSchema:
                 "required": pydantic_schema.get("required", [])
             }
             
-            # ADK에서 지원하지 않는 필드들 제거
-            adk_schema = PydanticToADKSchema._clean_schema_for_adk(adk_schema)
+            # ADK에서 지원하지 않는 필드들 제거 ($defs 전달)
+            adk_schema = PydanticToADKSchema._clean_schema_for_adk(
+                adk_schema, 
+                pydantic_schema.get("$defs", {})
+            )
             
             logger.debug(f"✅ {model_class.__name__} → ADK 스키마 변환 완료")
             return adk_schema
@@ -59,17 +62,20 @@ class PydanticToADKSchema:
             }
     
     @staticmethod
-    def _clean_schema_for_adk(schema: Dict[str, Any]) -> Dict[str, Any]:
+    def _clean_schema_for_adk(schema: Dict[str, Any], defs: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         ADK에서 지원하지 않는 JSON 스키마 필드들 제거
         
         Args:
             schema: 원본 JSON 스키마
+            defs: $defs 정의들
             
         Returns:
             Dict: ADK 호환 스키마
         """
         cleaned = schema.copy()
+        if defs is None:
+            defs = {}
         
         # ADK에서 지원하지 않는 필드들 제거
         unsupported_fields = [
@@ -84,14 +90,16 @@ class PydanticToADKSchema:
         
         # properties 내부도 재귀적으로 정리
         if "properties" in cleaned:
-            cleaned["properties"] = PydanticToADKSchema._clean_properties(cleaned["properties"])
+            cleaned["properties"] = PydanticToADKSchema._clean_properties(cleaned["properties"], defs)
         
         return cleaned
     
     @staticmethod
-    def _clean_properties(properties: Dict[str, Any]) -> Dict[str, Any]:
+    def _clean_properties(properties: Dict[str, Any], defs: Dict[str, Any] = None) -> Dict[str, Any]:
         """properties 필드들을 ADK 호환으로 정리"""
         cleaned_props = {}
+        if defs is None:
+            defs = {}
         
         for prop_name, prop_schema in properties.items():
             if isinstance(prop_schema, dict):
@@ -103,12 +111,24 @@ class PydanticToADKSchema:
                     if field in cleaned_prop:
                         del cleaned_prop[field]
                 
-                # $ref 필드가 있으면 string으로 처리 (Enum 대신)
+                # $ref 필드 처리 - 실제 정의를 resolve
                 if "$ref" in prop_schema:
-                    cleaned_prop["type"] = "string"
-                    # 기본값이 있으면 유지
-                    if "default" in prop_schema:
-                        cleaned_prop["default"] = prop_schema["default"]
+                    ref_path = prop_schema["$ref"]
+                    # #/$defs/TTSSettings → TTSSettings
+                    if ref_path.startswith("#/$defs/"):
+                        def_name = ref_path.replace("#/$defs/", "")
+                        if def_name in defs:
+                            # 실제 정의로 교체
+                            ref_definition = defs[def_name]
+                            cleaned_prop.update(ref_definition)
+                            # 기본값이 원본에 있으면 유지
+                            if "default" in prop_schema:
+                                cleaned_prop["default"] = prop_schema["default"]
+                        else:
+                            # 정의를 찾을 수 없으면 string으로 fallback
+                            cleaned_prop["type"] = "string"
+                    else:
+                        cleaned_prop["type"] = "string"
                 
                 # enum 처리 (ADK 호환)
                 if "enum" in cleaned_prop:
@@ -133,8 +153,29 @@ class PydanticToADKSchema:
                 # 중첩된 객체 처리
                 if cleaned_prop.get("type") == "object" and "properties" in cleaned_prop:
                     cleaned_prop["properties"] = PydanticToADKSchema._clean_properties(
-                        cleaned_prop["properties"]
+                        cleaned_prop["properties"], defs
                     )
+                
+                # 배열 items 처리
+                if cleaned_prop.get("type") == "array" and "items" in cleaned_prop:
+                    items_schema = cleaned_prop["items"]
+                    if isinstance(items_schema, dict):
+                        # items에 $ref가 있으면 resolve
+                        if "$ref" in items_schema:
+                            ref_path = items_schema["$ref"]
+                            if ref_path.startswith("#/$defs/"):
+                                def_name = ref_path.replace("#/$defs/", "")
+                                if def_name in defs:
+                                    cleaned_prop["items"] = defs[def_name].copy()
+                                else:
+                                    cleaned_prop["items"] = {"type": "string"}
+                        # items가 object이고 properties가 있으면 재귀 처리
+                        elif items_schema.get("type") == "object" and "properties" in items_schema:
+                            items_copy = items_schema.copy()
+                            items_copy["properties"] = PydanticToADKSchema._clean_properties(
+                                items_schema["properties"], defs
+                            )
+                            cleaned_prop["items"] = items_copy
                 
                 cleaned_props[prop_name] = cleaned_prop
         

@@ -1,191 +1,170 @@
 """
-Enhanced ADK Full Script Agent
-Uses Pydantic-based schemas for type safety and automatic ADK schema generation
+Full Script Writer Agent - Simple LlmAgent Pattern
+Direct Pydantic input/output with clean instruction-based approach
 """
 
-import json
 import logging
-from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 import google.genai as genai
 from google.genai import types
 
 from model.input_models import FullScriptInput
 from model.output_models import FullScriptOutput
-from core.schema_converter import PydanticToADKSchema
 
 logger = logging.getLogger(__name__)
 
 
 class FullScriptWriterAgent:
     """
-    ADK-based Full Script Writer Agent
-    Uses Pydantic models for type-safe input/output and automatic ADK schema generation
+    Simple Full Script Writer Agent using direct Pydantic models
+    Clean instruction-based approach without complex schema conversion
     """
     
     def __init__(self):
-        """Initialize ADK Full Script Agent"""
-        
-        # Generate ADK schemas from Pydantic models
-        self.input_schema = PydanticToADKSchema.convert_model_to_schema(FullScriptInput)
-        self.output_schema = PydanticToADKSchema.convert_model_to_schema(FullScriptOutput)
-        self.output_key = PydanticToADKSchema.get_output_key(FullScriptOutput)
-        
-        # Initialize ADK client
+        """Initialize Simple Full Script Writer Agent"""
         self.client = genai.Client()
         
-        logger.info("🚀 ADK Full Script Agent initialized with Pydantic schemas")
-        logger.info(f"📋 Input schema: {len(self.input_schema.get('properties', {}))} properties")
-        logger.info(f"📋 Output schema: {len(self.output_schema.get('properties', {}))} properties")
-        logger.info(f"🔑 Output key: {self.output_key}")
+        # Simple instruction - no complex schema conversion needed
+        self.instruction = """You are a Full Script Writer Agent that creates comprehensive video scripts.
+
+Given a topic and preferences, create a complete script structure with multiple scenes.
+
+REQUIREMENTS:
+- Create 3-7 scenes that tell a complete story
+- Each scene should have clear learning objectives and story beats
+- Include scene types: hook, explanation, example, conclusion
+- Consider the target audience and style preferences
+- Ensure logical flow between scenes
+
+OUTPUT FORMAT:
+Respond ONLY with valid JSON matching the FullScriptOutput schema.
+No additional text, explanations, or markdown formatting."""
+        
+        # Legacy compatibility properties for tests
+        self.input_schema = FullScriptInput.model_json_schema()
+        self.output_schema = FullScriptOutput.model_json_schema()
+        self.output_key = "full_script_output_result"
+        
+        logger.info("🚀 Simple Full Script Writer Agent initialized")
     
     async def generate_script(self, input_data: FullScriptInput) -> FullScriptOutput:
         """
-        Generate full script with type-safe input/output
+        Generate full script with simple direct approach
         
         Args:
             input_data: Type-safe input data
             
         Returns:
-            FullScriptOutput: Type-safe output data
+            FullScriptOutput: Type-safe output
         """
         try:
-            logger.info(f"🎬 Generating full script for topic: {input_data.topic}")
-            logger.info(f"📏 Length: {input_data.length_preference}")
-            logger.info(f"🎨 Style: {input_data.style_profile}")
+            logger.info(f"📝 Generating full script for topic: {input_data.topic}")
             
-            # Create instruction prompt
-            instruction = self._create_instruction(input_data)
+            # Create context prompt from input data
+            context_prompt = self._create_context_prompt(input_data)
             
-            # Prepare input for ADK
-            input_dict = input_data.model_dump()
-            
-            # Use ADK structured generation
+            # Use ADK structured generation with direct Pydantic schema
             response = await self.client.agenerate_content(
                 model="gemini-2.5-flash",
                 contents=[
                     types.Content(parts=[
-                        types.Part(text=json.dumps(input_dict))
+                        types.Part(text=context_prompt)
                     ])
                 ],
                 config=types.GenerateContentConfig(
-                    system_instruction=instruction,
-                    response_schema=self.output_schema,
-                    temperature=0.7,
-                    top_p=0.8,
+                    system_instruction=self.instruction,
+                    response_schema=FullScriptOutput.model_json_schema(),  # Direct Pydantic!
+                    temperature=0.8,
+                    top_p=0.9,
                     top_k=40,
                     max_output_tokens=8192
                 )
             )
             
-            # Extract and validate response
-            response_text = response.text
-            logger.info("✅ ADK Full Script generation successful")
+            # Parse and validate with Pydantic
+            result = FullScriptOutput.model_validate_json(response.text)
             
-            # Parse JSON response
-            try:
-                response_data = json.loads(response_text)
-                logger.info("✅ JSON parsing successful")
-            except json.JSONDecodeError as e:
-                logger.error(f"❌ JSON parsing failed: {e}")
-                raise ValueError(f"Invalid JSON response: {e}")
-            
-            # Validate with Pydantic model
-            try:
-                validated_output = FullScriptOutput.model_validate(response_data)
-                logger.info("✅ Pydantic validation successful")
-                return validated_output
-            except Exception as e:
-                logger.error(f"❌ Pydantic validation failed: {e}")
-                # Create fallback with minimal valid data
-                return self._create_fallback_output(input_data, str(e))
+            logger.info(f"✅ Full script generated: {len(result.scenes)} scenes")
+            return result
             
         except Exception as e:
-            logger.error(f"❌ Enhanced ADK Full Script generation failed: {e}")
-            return self._create_fallback_output(input_data, str(e))
+            logger.error(f"❌ Script generation failed: {e}")
+            return self._create_fallback_output(input_data)
     
-    def _create_instruction(self, input_data: FullScriptInput) -> str:
-        """Create instruction prompt for the agent"""
-        return f"""You are an expert story architect for educational video content.
+    def _create_context_prompt(self, input_data: FullScriptInput) -> str:
+        """Create context prompt from input data"""
+        return f"""
+TOPIC: {input_data.topic}
 
-Your mission is to transform the topic "{input_data.topic}" into a compelling story structure for a {input_data.length_preference} video.
+PREFERENCES:
+- Length: {input_data.length_preference}
+- Style: {input_data.style_profile}
+- Target Audience: {input_data.target_audience}
+- Language: {input_data.language}
 
-Target audience: {input_data.target_audience}
-Style: {input_data.style_profile}
-Language: {input_data.language}
+KNOWLEDGE REFERENCES:
+{chr(10).join(f"- {ref}" for ref in input_data.knowledge_refs) if input_data.knowledge_refs else "- None provided"}
 
-CORE RESPONSIBILITIES:
-1. Analyze the topic and create an engaging narrative framework
-2. Determine optimal scene count (3-8 scenes) based on topic complexity
-3. Define scene types, order, and narrative flow
-4. Set learning objectives for each scene
-5. Assign importance levels (1-5) and animation requirements
-6. Plan transitions between scenes
-
-OUTPUT REQUIREMENTS:
-- Respond with ONLY valid JSON matching the provided schema
-- Create 3-8 scenes with clear learning progression
-- Each scene should have specific learning objectives
-- Importance levels: 5 (critical), 4 (important), 3 (useful), 2 (nice-to-have), 1 (optional)
-- Scene types: hook, explanation, story, analysis, revelation, summary, example, comparison
-
-STORY PRINCIPLES:
-- Start with attention-grabbing hook
-- Build knowledge progressively
-- Include surprising facts or revelations
-- End with clear summary and takeaways
-- Maintain engagement throughout
-
-The response MUST be valid JSON only, no additional text or explanation."""
+Create a comprehensive script structure for this topic.
+"""
     
-    def _create_fallback_output(self, input_data: FullScriptInput, error_msg: str) -> FullScriptOutput:
+    def _create_fallback_output(self, input_data: FullScriptInput) -> FullScriptOutput:
         """Create fallback output when generation fails"""
-        logger.warning(f"⚠️ Creating fallback full script for topic: {input_data.topic}")
+        logger.warning("⚠️ Creating fallback full script output")
         
-        fallback_data = {
-            "title": f"Understanding {input_data.topic}",
-            "logline": f"An educational exploration of {input_data.topic}",
-            "overall_style": input_data.style_profile,
-            "main_character": "Glowbie",
-            "cosplay_instructions": "Educational presenter outfit appropriate for the topic",
-            "story_summary": f"This video explores {input_data.topic} in an engaging and educational manner. Content generation encountered an issue: {error_msg}",
-            "scenes": [
+        return FullScriptOutput(
+            title=f"Script for {input_data.topic}",
+            description="Fallback script generated due to processing error",
+            overall_style=input_data.style_profile,
+            story_summary=f"Educational content about {input_data.topic}",
+            total_estimated_duration_ms=300000,  # 5 minutes
+            scenes=[
                 {
                     "scene_number": 1,
                     "scene_type": "hook",
-                    "beats": [f"Introduce {input_data.topic} with surprising fact"],
-                    "learning_objectives": ["Capture viewer attention"],
-                    "needs_animation": True,
-                    "transition_to_next": "fade",
+                    "title": f"Introduction to {input_data.topic}",
+                    "description": f"Opening scene introducing {input_data.topic}",
+                    "beats": [f"Introduce {input_data.topic}", "Capture viewer attention"],
+                    "learning_objectives": [f"Understand what {input_data.topic} is about"],
+                    "estimated_duration_ms": 60000,
+                    "needs_animation": False,
                     "scene_importance": 5
                 },
                 {
                     "scene_number": 2,
-                    "scene_type": "explanation", 
-                    "beats": [f"Explain the basics of {input_data.topic}"],
-                    "learning_objectives": ["Understand fundamentals"],
+                    "scene_type": "explanation",
+                    "title": f"Understanding {input_data.topic}",
+                    "description": f"Main explanation of {input_data.topic}",
+                    "beats": [f"Explain key concepts of {input_data.topic}"],
+                    "learning_objectives": [f"Learn core principles of {input_data.topic}"],
+                    "estimated_duration_ms": 180000,
                     "needs_animation": True,
-                    "transition_to_next": "fade",
-                    "scene_importance": 4
+                    "scene_importance": 5,
+                    "transition_to_next": "smooth"
                 },
                 {
                     "scene_number": 3,
                     "scene_type": "summary",
-                    "beats": [f"Summarize key points about {input_data.topic}"],
-                    "learning_objectives": ["Retain key information"],
+                    "title": "Summary and Next Steps",
+                    "description": f"Wrap up the {input_data.topic} discussion",
+                    "beats": ["Summarize key points", "Suggest next steps"],
+                    "learning_objectives": ["Consolidate learning"],
+                    "estimated_duration_ms": 60000,
                     "needs_animation": False,
-                    "transition_to_next": "fade",
-                    "scene_importance": 3
+                    "scene_importance": 4,
+                    "transition_to_next": "fade"
                 }
             ]
-        }
-        
-        return FullScriptOutput.model_validate(fallback_data)
+        )
     
-    def get_schemas(self) -> Dict[str, Dict[str, Any]]:
-        """Get the ADK schemas for this agent"""
+    def get_schemas(self) -> Dict[str, Any]:
+        """Get the schemas for this agent (legacy compatibility)"""
         return {
             "input_schema": self.input_schema,
             "output_schema": self.output_schema,
             "output_key": self.output_key
         }
+    
+    def _create_instruction(self, input_data: FullScriptInput) -> str:
+        """Create instruction (legacy compatibility)"""
+        return self.instruction
