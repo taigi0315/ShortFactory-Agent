@@ -101,7 +101,7 @@ class VisualFrame(BaseModel):
     """Visual frame specification"""
     frame_id: str = Field(
         pattern=r"^[0-9]+[A-Z]$",
-        description="Frame identifier (예: '1A', '2B')"
+        description="Frame identifier (e.g., '1A', '2B')"
     )
     
     shot_type: Literal["wide", "medium", "close", "macro", "extreme_wide", "extreme_close"] = Field(
@@ -213,11 +213,11 @@ class ScenePackageOutput(BaseModel):
 class ImageAssetOutput(BaseModel):
     """
     Image Create Agent 출력 스키마
-    생성된 이미지 에셋 정보
+    Generated image asset information
     """
     frame_id: str = Field(description="Frame identifier")
-    image_uri: str = Field(description="이미지 파일 경로")
-    thumbnail_uri: Optional[str] = Field(default=None, description="썸네일 경로")
+    image_uri: str = Field(description="Image file path")
+    thumbnail_uri: Optional[str] = Field(default=None, description="Thumbnail path")
     
     generation_metadata: Dict[str, Any] = Field(
         description="생성 메타데이터",
