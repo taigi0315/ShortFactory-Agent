@@ -313,7 +313,7 @@ RESPONSE: Array of ImageAsset objects. Do not invent frames.
       "foreground_props": "tiny hunting horn on desk, magnifying glass",
       "lighting": "soft key, chalk dust motes",
       "color_mood": "warm browns and forest greens",
-      "image_prompt": "cute blob‑like mascot named Huh dressed as a 17th‑century German forester, tiny hunting horn, magnifying glass; chalkboard drawing of a dachshund silhouette with long body and short legs; cozy educational set; soft cinematic lighting; whimsical, heartwarming artstyle; clean linework; high detail",
+      "image_prompt": "cute blob‑like mascot named Glowbie dressed as a 17th‑century German forester, tiny hunting horn, magnifying glass; chalkboard drawing of a dachshund silhouette with long body and short legs; cozy educational set; soft cinematic lighting; whimsical, heartwarming artstyle; clean linework; high detail",
       "negative_prompt": "realistic gore, text artifacts, watermark, extra limbs",
       "model_hints": ["illustration", "studio‑quality", "consistent character"],
       "aspect_ratio": "16:9",

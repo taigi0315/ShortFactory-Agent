@@ -26,8 +26,8 @@ async def test_validation_simple():
         print("\n📖 Testing GOOD story...")
         good_story = StoryScript(
             title="The 3 AM Meeting: How Elon Musk Saved Tesla",
-            main_character_description="Huh - a cute, blob-like cartoon character",
-            character_cosplay_instructions="Dress Huh as Elon Musk",
+            main_character_description="Glowbie - a cute, blob-like cartoon character",
+            character_cosplay_instructions="Dress Glowbie as Elon Musk",
             overall_style="educational",
             overall_story="The specific moment when Elon Musk made a 3 AM phone call to Larry Page in 2008, securing $50 million investment that saved Tesla from bankruptcy",
             story_summary="A detailed account of the critical 3 AM meeting where Elon Musk secured funding to save Tesla",
@@ -49,8 +49,8 @@ async def test_validation_simple():
         print("\n📖 Testing BAD story...")
         bad_story = StoryScript(
             title="Understanding Tesla",
-            main_character_description="Huh - a cute, blob-like cartoon character",
-            character_cosplay_instructions="Dress Huh as a car expert",
+            main_character_description="Glowbie - a cute, blob-like cartoon character",
+            character_cosplay_instructions="Dress Glowbie as a car expert",
             overall_style="educational",
             overall_story="Let me explain what Tesla is and how it works. It's fascinating how electric cars have changed the world.",
             story_summary="A comprehensive overview of Tesla and electric vehicles",

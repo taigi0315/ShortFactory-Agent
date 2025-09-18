@@ -252,6 +252,10 @@ ELABORATION & HOOKING MISSION:
 Your job is to ELABORATE the story beats and ADD HOOKING elements to make this scene compelling.
 Generate all content in {language} language.
 
+DIALOGUE FLOW & CONTINUITY MISSION:
+Create smooth, natural dialogue that flows seamlessly within the scene and connects logically to other scenes.
+Ensure each line of dialogue builds naturally from the previous line and leads smoothly to the next.
+
 ELABORATION REQUIREMENTS:
 - EXPAND on the basic beats with rich details, interesting facts, and compelling narratives
 - ADD depth with specific examples, case studies, and real-world applications
@@ -265,6 +269,24 @@ HOOKING REQUIREMENTS:
 - INCLUDE emotional hooks, curiosity gaps, and engaging narrative elements
 - CREATE moments that make viewers want to keep watching
 - ADD suspense, intrigue, or compelling questions throughout the scene
+
+DIALOGUE CONTINUITY REQUIREMENTS:
+- REFERENCE previous scene content when appropriate (use continuity context)
+- CREATE smooth transitions between dialogue lines within the scene
+- USE connecting phrases like "Now that we've seen...", "Building on that...", "This leads us to..."
+- MAINTAIN consistent narrative voice and perspective throughout
+- ENSURE each dialogue line logically follows from the previous one
+- AVOID sudden topic jumps or disconnected statements
+- CREATE bridges between concepts using transitional language
+- ESTABLISH clear cause-and-effect relationships in dialogue flow
+
+TTS-FRIENDLY WRITING REQUIREMENTS:
+- WRITE OUT all numbers as words (e.g., "5" → "five", "1920s" → "nineteen twenties")
+- AVOID numerical symbols that TTS might mispronounce
+- USE "zeros and ones" instead of "0s and 1s"
+- WRITE "fifty percent" instead of "50%"
+- CONVERT years properly: "2024" → "twenty twenty four"
+- SPELL OUT technical abbreviations when first mentioned
 
 TECHNICAL REQUIREMENTS:
 - Follow ScenePackage.json schema exactly
@@ -394,16 +416,30 @@ Multiple images per dialogue segment are encouraged for dynamic storytelling.
                     
                     # Method 3: Direct model call
                     client = genai.Client()
+                    # Load ScenePackage schema for structured output
+                    schema_path = Path("schemas/ScenePackage.json")
+                    scene_schema = None
+                    if schema_path.exists():
+                        with open(schema_path, 'r') as f:
+                            scene_schema = json.load(f)
+                    
+                    config = {
+                        "temperature": 0.8,
+                        "top_p": 0.9,
+                        "top_k": 40,
+                        "max_output_tokens": 8192,
+                        "response_mime_type": "application/json"
+                    }
+                    
+                    # Add schema if available
+                    if scene_schema:
+                        config["response_schema"] = scene_schema
+                        logger.info("🎯 Using JSON schema for structured output")
+                    
                     response = client.models.generate_content(
                         model="gemini-2.5-flash",
                         contents=[prompt],
-                        config={
-                            "temperature": 0.8,
-                            "top_p": 0.9,
-                            "top_k": 40,
-                            "max_output_tokens": 8192,
-                            "response_mime_type": "application/json"
-                        }
+                        config=config
                     )
                     logger.info("Successfully used direct model call")
             
@@ -422,7 +458,7 @@ Multiple images per dialogue segment are encouraged for dynamic storytelling.
             raise ValueError(f"ADK API call failed for scene script: {str(e)}")
     
     def _parse_response_safely(self, response_text: str, scene_number: int) -> Dict[str, Any]:
-        """Parse AI response safely and validate"""
+        """Parse AI response safely with JSON repair and validation"""
         try:
             # Find JSON in response
             start_idx = response_text.find('{')
@@ -436,8 +472,27 @@ Multiple images per dialogue segment are encouraged for dynamic storytelling.
             clean_json = response_text[start_idx:end_idx]
             logger.info(f"Extracted scene {scene_number} JSON: {clean_json[:200]}...")
             
-            # Parse JSON
-            scene_package = json.loads(clean_json)
+            # Try multiple JSON parsing strategies
+            scene_package = None
+            
+            # Strategy 1: Direct parsing
+            try:
+                scene_package = json.loads(clean_json)
+                logger.info(f"✅ Direct JSON parsing successful for scene {scene_number}")
+            except json.JSONDecodeError as e:
+                logger.warning(f"Direct parsing failed: {e}")
+                
+                # Strategy 2: JSON repair
+                try:
+                    repaired_json = self._repair_json(clean_json, scene_number)
+                    scene_package = json.loads(repaired_json)
+                    logger.info(f"✅ Repaired JSON parsing successful for scene {scene_number}")
+                except Exception as repair_error:
+                    logger.error(f"JSON repair also failed: {repair_error}")
+                    raise e  # Raise original error
+            
+            if scene_package is None:
+                raise ValueError("Failed to parse JSON with all strategies")
             
             # Basic validation
             required_fields = ['scene_number', 'narration_script', 'visuals', 'tts', 'timing', 'continuity']
@@ -457,6 +512,33 @@ Multiple images per dialogue segment are encouraged for dynamic storytelling.
         except Exception as e:
             logger.error(f"Unexpected error in scene {scene_number} JSON parsing: {e}")
             raise ValueError(f"Unexpected error in scene {scene_number} JSON parsing: {e}")
+    
+    def _repair_json(self, json_str: str, scene_number: int) -> str:
+        """Attempt to repair common JSON syntax errors"""
+        logger.info(f"🔧 Attempting JSON repair for scene {scene_number}")
+        
+        # Common fixes
+        repaired = json_str
+        
+        # Fix 1: Remove trailing commas
+        import re
+        repaired = re.sub(r',(\s*[}\]])', r'\1', repaired)
+        
+        # Fix 2: Add missing commas between objects/arrays
+        repaired = re.sub(r'}\s*{', '},{', repaired)
+        repaired = re.sub(r']\s*\[', '],[', repaired)
+        
+        # Fix 3: Fix common quote issues
+        repaired = re.sub(r'([^\\])"([^"]*)"([^:])', r'\1"\2"\3', repaired)
+        
+        # Fix 4: Ensure proper string escaping
+        repaired = repaired.replace('\n', '\\n').replace('\t', '\\t')
+        
+        # Fix 5: Remove any control characters
+        repaired = ''.join(char for char in repaired if ord(char) >= 32 or char in '\n\t')
+        
+        logger.info(f"🔧 JSON repair completed for scene {scene_number}")
+        return repaired
     
     def _run_safety_checks(self, scene_package: Dict[str, Any]) -> List[str]:
         """Run safety checks on the scene package"""

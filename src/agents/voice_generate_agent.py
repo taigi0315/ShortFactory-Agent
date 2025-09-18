@@ -57,6 +57,7 @@ class VoiceGenerateAgent:
     def clean_text_for_tts(self, text: str) -> str:
         """
         Clean text for TTS by removing special characters that ElevenLabs might read aloud
+        and converting numbers to words for proper pronunciation
         
         Args:
             text: Raw text from dialogue
@@ -80,6 +81,9 @@ class VoiceGenerateAgent:
         text = re.sub(r'[#@$%^&*+=<>{}|\\]', '', text)  # Remove special symbols
         text = re.sub(r'["""''`]', '"', text)           # Normalize quotes
         
+        # Convert numbers to words for proper TTS pronunciation
+        text = self._convert_numbers_to_words(text)
+        
         # Clean up multiple spaces and line breaks
         text = re.sub(r'\s+', ' ', text)                # Multiple spaces -> single space
         text = re.sub(r'\n+', '. ', text)               # Line breaks -> periods
@@ -92,6 +96,109 @@ class VoiceGenerateAgent:
             text += '.'
         
         return text
+    
+    def _convert_numbers_to_words(self, text: str) -> str:
+        """
+        Convert numbers to words for proper TTS pronunciation
+        
+        Args:
+            text: Input text with numbers
+            
+        Returns:
+            Text with numbers converted to words
+        """
+        # Dictionary for basic number conversions
+        number_words = {
+            '0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four',
+            '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine',
+            '10': 'ten', '11': 'eleven', '12': 'twelve', '13': 'thirteen', '14': 'fourteen',
+            '15': 'fifteen', '16': 'sixteen', '17': 'seventeen', '18': 'eighteen', '19': 'nineteen',
+            '20': 'twenty', '30': 'thirty', '40': 'forty', '50': 'fifty',
+            '60': 'sixty', '70': 'seventy', '80': 'eighty', '90': 'ninety',
+            '100': 'one hundred', '1000': 'one thousand'
+        }
+        
+        # Handle common problematic patterns first
+        
+        # Fix "0s and 1s" -> "zeros and ones"
+        text = re.sub(r'\b0s\b', 'zeros', text, flags=re.IGNORECASE)
+        text = re.sub(r'\b1s\b', 'ones', text, flags=re.IGNORECASE)
+        
+        # Handle decades like "1920s" -> "nineteen twenties"
+        def convert_decade(match):
+            century = match.group(1)
+            decade_digit = int(match.group(2)[0])  # First digit of decade (e.g., '2' from '20')
+            
+            if century == "19":
+                century_word = "nineteen"
+            elif century == "20":
+                century_word = "twenty"
+            else:
+                return match.group(0)  # Fallback
+            
+            # Convert decade digit to word + "ties"
+            decade_words = ["", "tens", "twenties", "thirties", "forties", "fifties", 
+                          "sixties", "seventies", "eighties", "nineties"]
+            
+            if decade_digit < len(decade_words):
+                return f"{century_word} {decade_words[decade_digit]}"
+            else:
+                return match.group(0)  # Fallback
+        
+        text = re.sub(r'\b(19|20)(\d{2})s\b', convert_decade, text)
+        
+        # Handle years like "1969" -> "nineteen sixty nine"
+        text = re.sub(r'\b(19)(\d{2})\b', lambda m: f"nineteen {self._convert_two_digit_to_words(m.group(2))}", text)
+        text = re.sub(r'\b(20)(\d{2})\b', lambda m: f"twenty {self._convert_two_digit_to_words(m.group(2))}", text)
+        
+        # Handle percentages like "50%" -> "fifty percent"
+        text = re.sub(r'\b(\d+)%', lambda m: f"{self._number_to_word(int(m.group(1)))} percent", text)
+        
+        # Handle simple numbers (1-100)
+        def replace_number(match):
+            num = match.group(0)
+            try:
+                num_int = int(num)
+                if num_int <= 100:
+                    return self._number_to_word(num_int)
+                else:
+                    # For larger numbers, keep as is for now
+                    return num
+            except ValueError:
+                return num
+        
+        # Replace standalone numbers (not part of other patterns)
+        text = re.sub(r'\b\d+\b', replace_number, text)
+        
+        return text
+    
+    def _convert_two_digit_to_words(self, two_digit_str: str) -> str:
+        """Convert two-digit string to words (e.g., '20' -> 'twenty')"""
+        try:
+            num = int(two_digit_str)
+            return self._number_to_word(num)
+        except ValueError:
+            return two_digit_str
+    
+    def _number_to_word(self, num: int) -> str:
+        """Convert a number (0-100) to its word representation"""
+        if num == 0:
+            return "zero"
+        elif num <= 19:
+            ones = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+                   "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+                   "seventeen", "eighteen", "nineteen"]
+            return ones[num]
+        elif num <= 99:
+            tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+            if num % 10 == 0:
+                return tens[num // 10]
+            else:
+                return f"{tens[num // 10]} {self._number_to_word(num % 10)}"
+        elif num == 100:
+            return "one hundred"
+        else:
+            return str(num)  # Fallback for numbers > 100
     
     def _save_voice_metadata(self, session_id: str, scene_number: int, voice_data: Dict[str, Any]):
         """Save voice generation metadata to session directory"""

@@ -47,7 +47,7 @@ class ADKScriptWriterAgent(Agent):
         # Initialize ADK Agent
         super().__init__(
             name="script_writer",
-            description="Generates video scripts using Gemini 2.5 with Huh character",
+            description="Generates video scripts using Gemini 2.5 with Glowbie character",
             model="gemini-1.5-pro",
             instruction=self._get_instruction(),
             generate_content_config={
@@ -147,7 +147,7 @@ The character should:
 ## Output Format:
 Return a JSON object with:
 - title: Engaging, specific title
-- main_character_description: Huh character description
+- main_character_description: Glowbie character description
 - character_cosplay_instructions: Specific cosplay for this story
 - overall_style: Engaging style description
 - overall_story: The compelling story being told
@@ -236,8 +236,8 @@ Output ONLY this JSON (no other text):
 
 {{
   "title": "The Story of {subject}",
-  "main_character_description": "Huh - a cute, blob-like cartoon character",
-  "character_cosplay_instructions": "Dress Huh as an expert or character related to {subject}",
+  "main_character_description": "Glowbie - a cute, blob-like cartoon character",
+  "character_cosplay_instructions": "Dress Glowbie as an expert or character related to {subject}",
   "overall_style": "engaging",
   "overall_story": "A detailed, compelling story about {subject} that explores its depth, significance, and fascinating aspects",
   "story_summary": "A brief summary of the rich story about {subject}",

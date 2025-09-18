@@ -252,10 +252,24 @@ hook, explanation, story, analysis, revelation, summary, credits, example, contr
 
 CREATIVE GUIDELINES:
 - Start with a strong hook
-- Build logical narrative progression
+- Build logical narrative progression with smooth transitions
+- Each scene should flow naturally into the next
 - Include surprising or counterintuitive elements
 - End with memorable takeaways
 - Consider visual storytelling opportunities
+
+NARRATIVE FLOW REQUIREMENTS:
+- Each scene's beats should logically connect to the next scene
+- Avoid abrupt topic changes or disconnected content
+- Create smooth transitions between concepts and ideas
+- Ensure each scene builds upon previous knowledge
+- Maintain consistent tone and pacing throughout
+
+TTS-FRIENDLY CONTENT GUIDELINES:
+- Plan content that avoids complex numerical expressions
+- Focus on concepts that can be expressed in natural language
+- Consider how technical terms will sound when spoken aloud
+- Ensure story beats can be narrated smoothly without awkward number pronunciations
 
 OUTPUT FORMAT: JSON only, following FullScript.json schema
 
@@ -310,16 +324,30 @@ Output ONLY valid JSON following the FullScript.json schema.
                     
                     # Method 3: Direct model call
                     client = genai.Client()
+                    # Load FullScript schema for structured output
+                    schema_path = Path("schemas/FullScript.json")
+                    script_schema = None
+                    if schema_path.exists():
+                        with open(schema_path, 'r') as f:
+                            script_schema = json.load(f)
+                    
+                    config = {
+                        "temperature": 0.7,
+                        "top_p": 0.8,
+                        "top_k": 40,
+                        "max_output_tokens": 8192,
+                        "response_mime_type": "application/json"
+                    }
+                    
+                    # Add schema if available
+                    if script_schema:
+                        config["response_schema"] = script_schema
+                        logger.info("🎯 Using JSON schema for structured output")
+                    
                     response = client.models.generate_content(
                         model="gemini-2.5-flash",
                         contents=[prompt],
-                        config={
-                            "temperature": 0.7,
-                            "top_p": 0.8,
-                            "top_k": 40,
-                            "max_output_tokens": 8192,
-                            "response_mime_type": "application/json"
-                        }
+                        config=config
                     )
                     logger.info("Successfully used direct model call")
             

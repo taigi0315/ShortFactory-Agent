@@ -196,6 +196,64 @@ class VideoMakerAgent:
         
         return durations
     
+    def _create_silent_video_segments(self, session_path: str) -> List[SceneVideoSegment]:
+        """Create video segments with default timing when no voice files exist"""
+        session_path = Path(session_path)
+        images_dir = session_path / "images"
+        
+        if not images_dir.exists():
+            return []
+        
+        # Group images by scene number
+        scene_images = {}
+        for img_path in images_dir.glob("*.png"):
+            # Extract scene number from filename (1a.png -> 1)
+            scene_num = int(img_path.stem[0])
+            if scene_num not in scene_images:
+                scene_images[scene_num] = []
+            scene_images[scene_num].append(str(img_path))
+        
+        segments = []
+        
+        for scene_num in sorted(scene_images.keys()):
+            images = sorted(scene_images[scene_num])
+            
+            # Default timing: 6 seconds per image
+            default_duration_per_image = 6.0
+            total_scene_duration = len(images) * default_duration_per_image
+            
+            # Calculate image timings
+            durations = [default_duration_per_image] * len(images)
+            
+            image_timings = []
+            current_time = 0.0
+            
+            for i, (img_path, duration) in enumerate(zip(images, durations)):
+                timing = ImageTiming(
+                    image_path=img_path,
+                    start_time=current_time,
+                    duration=duration,
+                    scene_number=scene_num,
+                    frame_id=f"{scene_num}{chr(ord('a') + i)}"
+                )
+                image_timings.append(timing)
+                current_time += duration
+            
+            segment = SceneVideoSegment(
+                scene_number=scene_num,
+                voice_file="",  # No voice file
+                voice_duration=total_scene_duration,
+                images=images,
+                image_timings=image_timings
+            )
+            
+            segments.append(segment)
+            
+            logger.info(f"Silent scene {scene_num}: {len(images)} images, "
+                       f"{total_scene_duration:.2f}s default timing")
+        
+        return segments
+    
     def analyze_session_content(self, session_path: str) -> List[SceneVideoSegment]:
         """
         Analyze session content and create video segments
@@ -218,6 +276,11 @@ class VideoMakerAgent:
         # Get all voice files and sort by scene number
         voice_files = list(voices_dir.glob("scene_*_voice.mp3"))
         voice_files.sort(key=lambda x: int(x.stem.split('_')[1]))
+        
+        # If no voice files, create silent video with default timing
+        if not voice_files:
+            logger.warning("No voice files found, creating silent video with default timing")
+            return self._create_silent_video_segments(session_path)
         
         segments = []
         
@@ -336,16 +399,26 @@ class VideoMakerAgent:
             if result.returncode != 0:
                 raise RuntimeError(f"FFmpeg concat failed: {result.stderr}")
         
-        # Add audio to the video
-        cmd = [
-            'ffmpeg', '-y',
-            '-i', str(video_only_path),  # Video input
-            '-i', segment.voice_file,    # Audio input
-            '-c:v', 'copy',              # Copy video codec
-            '-c:a', 'aac',               # Audio codec
-            '-shortest',                 # End when shortest stream ends
-            output_path
-        ]
+        # Add audio to the video (if voice file exists)
+        if segment.voice_file and os.path.exists(segment.voice_file):
+            cmd = [
+                'ffmpeg', '-y',
+                '-i', str(video_only_path),  # Video input
+                '-i', segment.voice_file,    # Audio input
+                '-c:v', 'copy',              # Copy video codec
+                '-c:a', 'aac',               # Audio codec
+                '-shortest',                 # End when shortest stream ends
+                output_path
+            ]
+        else:
+            # No audio - just copy video
+            cmd = [
+                'ffmpeg', '-y',
+                '-i', str(video_only_path),  # Video input
+                '-c:v', 'copy',              # Copy video codec
+                output_path
+            ]
+            logger.info(f"Creating silent video for scene {segment.scene_number}")
         
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:

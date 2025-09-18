@@ -219,6 +219,10 @@ class OrchestratorAgent:
             
             logger.info(f"✅ Generated {len(scene_packages)} scene packages")
             
+            # Validate dialogue flow and continuity
+            logger.info("🔍 Validating dialogue flow and continuity...")
+            self._validate_dialogue_continuity(scene_packages)
+            
             # Save scene packages
             for package in scene_packages:
                 scene_num = package.get("scene_number", 1)
@@ -440,3 +444,93 @@ class OrchestratorAgent:
         except Exception as e:
             logger.error(f"Error getting session status: {str(e)}")
             return {"status": "error", "session_id": session_id, "error": str(e)}
+    
+    def _validate_dialogue_continuity(self, scene_packages: List[Dict[str, Any]]):
+        """Validate dialogue flow and continuity across scenes"""
+        try:
+            logger.info("🔍 Checking dialogue continuity across scenes...")
+            
+            # Extract all dialogue lines in order
+            all_dialogue = []
+            scene_boundaries = []
+            
+            for package in scene_packages:
+                scene_num = package.get("scene_number", 0)
+                narration = package.get("narration_script", [])
+                
+                scene_start = len(all_dialogue)
+                
+                for item in narration:
+                    if isinstance(item, dict) and 'line' in item:
+                        line = item['line'].strip()
+                        if line:
+                            all_dialogue.append({
+                                'scene': scene_num,
+                                'line': line,
+                                'index': len(all_dialogue)
+                            })
+                
+                scene_boundaries.append({
+                    'scene': scene_num,
+                    'start': scene_start,
+                    'end': len(all_dialogue) - 1,
+                    'line_count': len(all_dialogue) - scene_start
+                })
+            
+            logger.info(f"📊 Total dialogue lines: {len(all_dialogue)} across {len(scene_boundaries)} scenes")
+            
+            # Check for continuity issues
+            issues = []
+            
+            # Check scene transitions
+            for i in range(len(scene_boundaries) - 1):
+                current_scene = scene_boundaries[i]
+                next_scene = scene_boundaries[i + 1]
+                
+                if current_scene['end'] >= 0 and next_scene['start'] < len(all_dialogue):
+                    last_line = all_dialogue[current_scene['end']]['line']
+                    first_line = all_dialogue[next_scene['start']]['line']
+                    
+                    # Simple heuristic checks
+                    if len(last_line) < 20 or len(first_line) < 20:
+                        issues.append(f"Scene {current_scene['scene']} → {next_scene['scene']}: Very short dialogue lines")
+                    
+                    # Check for abrupt topic changes (basic keyword analysis)
+                    last_words = set(last_line.lower().split()[-5:])  # Last 5 words
+                    first_words = set(first_line.lower().split()[:5])  # First 5 words
+                    
+                    if not last_words.intersection(first_words):
+                        # No common words - might be abrupt transition
+                        logger.info(f"⚠️ Potential transition issue between scenes {current_scene['scene']} and {next_scene['scene']}")
+            
+            # Check within-scene flow
+            for boundary in scene_boundaries:
+                scene_lines = all_dialogue[boundary['start']:boundary['end']+1]
+                
+                if len(scene_lines) > 1:
+                    for j in range(len(scene_lines) - 1):
+                        current_line = scene_lines[j]['line']
+                        next_line = scene_lines[j + 1]['line']
+                        
+                        # Check for very different sentence structures (basic check)
+                        if abs(len(current_line) - len(next_line)) > 100:
+                            logger.info(f"⚠️ Dialogue length variation in scene {boundary['scene']}: {len(current_line)} vs {len(next_line)} chars")
+            
+            if issues:
+                logger.warning(f"⚠️ Found {len(issues)} potential continuity issues:")
+                for issue in issues:
+                    logger.warning(f"   {issue}")
+            else:
+                logger.info("✅ Dialogue continuity looks good")
+                
+            # Log dialogue preview for manual review
+            logger.info("📋 Dialogue flow preview:")
+            for i, item in enumerate(all_dialogue[:10]):  # First 10 lines
+                logger.info(f"   Scene {item['scene']}: {item['line'][:80]}...")
+            
+            if len(all_dialogue) > 10:
+                logger.info(f"   ... and {len(all_dialogue) - 10} more lines")
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Dialogue continuity validation failed: {e}")
+            # Don't fail the whole process for this
