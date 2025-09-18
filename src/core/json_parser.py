@@ -137,15 +137,32 @@ class RobustJSONParser:
             repaired = '[' * (close_brackets - open_brackets) + repaired
             logger.debug(f"🔧 Added {close_brackets - open_brackets} opening brackets")
         
-        # Fix 6: Handle truncated JSON
+        # Fix 6: Handle truncated JSON more aggressively
         repaired = repaired.strip()
+        
+        # Remove incomplete final line if it exists
+        lines = repaired.split('\n')
+        if lines and not lines[-1].strip().endswith((',', '}', ']', '"')):
+            # Last line looks incomplete, remove it
+            repaired = '\n'.join(lines[:-1])
+            logger.debug("🔧 Removed incomplete final line")
+        
+        # Balance braces and brackets
         if not repaired.endswith('}') and not repaired.endswith(']'):
-            if repaired.rfind('{') > repaired.rfind('}'):
-                repaired += '}'
-                logger.debug("🔧 Added closing brace for truncated JSON")
-            if repaired.rfind('[') > repaired.rfind(']'):
-                repaired += ']'
-                logger.debug("🔧 Added closing bracket for truncated JSON")
+            open_braces = repaired.count('{')
+            close_braces = repaired.count('}')
+            open_brackets = repaired.count('[')
+            close_brackets = repaired.count(']')
+            
+            # Add missing closing braces
+            if open_braces > close_braces:
+                repaired += '}' * (open_braces - close_braces)
+                logger.debug(f"🔧 Added {open_braces - close_braces} closing braces for truncated JSON")
+                
+            # Add missing closing brackets  
+            if open_brackets > close_brackets:
+                repaired += ']' * (open_brackets - close_brackets)
+                logger.debug(f"🔧 Added {open_brackets - close_brackets} closing brackets for truncated JSON")
         
         # Fix 7: Remove control characters except newlines and tabs
         repaired = ''.join(char for char in repaired if ord(char) >= 32 or char in '\n\t\r')

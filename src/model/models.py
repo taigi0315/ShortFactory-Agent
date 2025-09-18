@@ -388,16 +388,20 @@ class TTSSettings(BaseModel):
 
 class SFXCue(BaseModel):
     """Sound effect cue"""
-    cue: str = Field(description="Sound effect description")
-    at_ms: int = Field(ge=0, description="When to play the sound effect")
-    duration_ms: int = Field(ge=0, description="Duration of the sound effect")
+    cue: str = Field(description="Sound effect description", alias="name")
+    at_ms: int = Field(ge=0, description="When to play the sound effect", default=0)
+    duration_ms: int = Field(ge=0, description="Duration of the sound effect", default=1000)
+    
+    class Config:
+        populate_by_name = True  # Allow both 'cue' and 'name' (Pydantic v2)
 
 class OnScreenText(BaseModel):
     """On-screen text element"""
     text: str = Field(description="Text to display")
-    at_ms: int = Field(ge=0, description="When to show the text")
-    duration_ms: int = Field(ge=0, description="How long to show the text")
-    style: Optional[str] = Field(default=None, description="Text styling")
+    at_ms: int = Field(ge=0, description="When to show the text", default=0)
+    duration_ms: int = Field(ge=0, description="How long to show the text", default=3000)
+    style: str = Field(description="Text style", default="normal")
+    position: str = Field(description="Text position", default="center")
 
 class Timing(BaseModel):
     """Timing information for the scene"""

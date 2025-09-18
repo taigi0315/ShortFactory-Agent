@@ -315,11 +315,16 @@ TECHNICAL REQUIREMENTS:
 
 REQUIRED FIELDS CHECKLIST:
 ✓ scene_number (integer)
-✓ narration_script (array with line, at_ms)
+✓ narration_script (array with line, at_ms, pause_ms)
 ✓ visuals (array with frame_id, shot_type, image_prompt, aspect_ratio)
 ✓ tts (object with engine, voice, elevenlabs_settings)
 ✓ timing (object with total_ms)
 ✓ continuity (object with in_from, out_to, callback_tags)
+
+OPTIONAL FIELDS (use empty arrays if not needed):
+✓ dialogue (array, can be empty: [])
+✓ sfx_cues (array with cue, at_ms, duration_ms)
+✓ on_screen_text (array with text, at_ms, duration_ms, style, position)
 
 VISUAL REQUIREMENTS:
 - Create 1-2 key visual frames per scene (not more than 2)
@@ -351,6 +356,15 @@ CRITICAL JSON REQUIREMENTS:
 - ALL OBJECTS MUST END WITH CLOSING BRACES
 - NO TRAILING COMMAS
 - NO INCOMPLETE LINES OR TRUNCATED OUTPUT
+
+SFX CUES FORMAT (IMPORTANT):
+- Use "cue" field (NOT "name", "sfx_name", or "effect")
+- Required fields: cue, at_ms, duration_ms
+- Example: {{"cue": "whoosh_sound", "at_ms": 1000, "duration_ms": 500}}
+
+ON-SCREEN TEXT FORMAT:
+- Required fields: text, at_ms, duration_ms, style, position
+- Use simple values: style="normal", position="center"
 
 EXAMPLE OUTPUT STRUCTURE:
 {{
@@ -391,8 +405,13 @@ EXAMPLE OUTPUT STRUCTURE:
       "loudness": 0.25
     }}
   }},
-  "sfx_cues": [],
-  "on_screen_text": [],
+  "sfx_cues": [
+    {{"cue": "transition_whoosh", "at_ms": 500, "duration_ms": 800}},
+    {{"cue": "emphasis_chime", "at_ms": 3000, "duration_ms": 300}}
+  ],
+  "on_screen_text": [
+    {{"text": "Key Point", "at_ms": 2000, "duration_ms": 3000, "style": "normal", "position": "center"}}
+  ],
   "timing": {{
     "total_ms": 5000
   }},
