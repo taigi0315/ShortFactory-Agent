@@ -4,12 +4,17 @@ Uses the efficient ADK-based agent system with structured schemas.
 """
 
 import os
+import sys
 import asyncio
 import logging
 import json
 from typing import Optional, List
 from pathlib import Path
 from dotenv import load_dotenv
+
+# Add src to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+
 from agents.adk_orchestrator_agent import ADKOrchestratorAgent
 from core.session_manager import SessionManager
 
@@ -189,7 +194,17 @@ if __name__ == "__main__":
     import argparse
     
     def parse_arguments():
-        parser = argparse.ArgumentParser(description='New Architecture Multi-Agent Video Generator')
+        parser = argparse.ArgumentParser(
+            description='ShortFactory - Simple Pydantic-based Video Generator',
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog="""
+Examples:
+  python main.py "Why are cats so curious?"
+  python main.py "Blockchain Technology" --cost
+  python main.py "Climate Change" --length "2-3min" --style "serious"
+  python main.py --test --cost
+            """
+        )
         parser.add_argument('topic', nargs='?', help='Video topic (e.g., "Why are dachshunds short?")')
         parser.add_argument('--length', default='60-90s', help='Video length preference (default: 60-90s)')
         parser.add_argument('--style', default='educational and engaging', help='Style profile (default: educational and engaging)')
@@ -218,6 +233,12 @@ if __name__ == "__main__":
             cost_saving_mode=args.cost
         ))
     else:
+        # Validate topic
+        if not args.topic:
+            print("❌ Error: Topic is required (or use --test for test mode)")
+            print("Usage: python main.py \"Your Topic Here\"")
+            sys.exit(1)
+        
         # Normal mode
         asyncio.run(main_shortfactory(
             topic=args.topic,
