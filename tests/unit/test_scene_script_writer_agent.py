@@ -14,8 +14,8 @@ from unittest.mock import patch, MagicMock, AsyncMock
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from agents.scene_script_writer_agent import SceneScriptWriterAgent
-from schemas.input_models import SceneExpansionInput
-from schemas.output_models import ScenePackageOutput, NarrationLine, VisualFrame, TTSSettings
+from model.input_models import SceneExpansionInput
+from model.output_models import ScenePackageOutput, NarrationLine, VisualFrame, TTSSettings
 
 
 class TestSceneScriptWriterAgent:

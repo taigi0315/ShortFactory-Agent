@@ -14,8 +14,8 @@ from unittest.mock import patch, MagicMock, AsyncMock
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from agents.full_script_writer_agent import FullScriptWriterAgent
-from schemas.input_models import FullScriptInput, LengthPreference, Language
-from schemas.output_models import FullScriptOutput
+from model.input_models import FullScriptInput, LengthPreference, Language
+from model.output_models import FullScriptOutput
 
 
 class TestFullScriptWriterAgent:

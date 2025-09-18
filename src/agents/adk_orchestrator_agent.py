@@ -1,4 +1,4 @@
-"""
+""""
 ADK-based Orchestrator Agent
 Implements proper ADK patterns and manages the complete video production pipeline
 """

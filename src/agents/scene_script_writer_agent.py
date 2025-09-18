@@ -10,8 +10,8 @@ from typing import Dict, Any, Optional, List
 import google.genai as genai
 from google.genai import types
 
-from schemas.input_models import SceneExpansionInput
-from schemas.output_models import ScenePackageOutput, NarrationLine, VisualFrame, TTSSettings, TimingInfo
+from model.input_models import SceneExpansionInput
+from model.output_models import ScenePackageOutput, NarrationLine, VisualFrame, TTSSettings, TimingInfo
 from core.schema_converter import PydanticToADKSchema
 
 logger = logging.getLogger(__name__)

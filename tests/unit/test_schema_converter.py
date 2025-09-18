@@ -12,8 +12,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from core.schema_converter import PydanticToADKSchema, ADKSchemaValidator
-from schemas.input_models import FullScriptInput, SceneExpansionInput, ImageGenerationInput
-from schemas.output_models import FullScriptOutput, ScenePackageOutput, ImageAssetOutput
+from model.input_models import FullScriptInput, SceneExpansionInput, ImageGenerationInput
+from model.output_models import FullScriptOutput, ScenePackageOutput, ImageAssetOutput
 
 
 class TestPydanticToADKSchema:

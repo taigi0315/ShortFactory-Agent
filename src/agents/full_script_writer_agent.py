@@ -10,8 +10,8 @@ from typing import Dict, Any, Optional
 import google.genai as genai
 from google.genai import types
 
-from schemas.input_models import FullScriptInput
-from schemas.output_models import FullScriptOutput
+from model.input_models import FullScriptInput
+from model.output_models import FullScriptOutput
 from core.schema_converter import PydanticToADKSchema
 
 logger = logging.getLogger(__name__)
