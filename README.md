@@ -16,7 +16,7 @@ echo "LEMONFOX_API_KEY=your-lemonfox-key" >> .env
 echo "LEMONFOX_VOICE=sarah" >> .env
 echo "STABILITY_API_KEY=your-stability-ai-key-for-real-images" >> .env
 
-# Legacy ElevenLabs support (optional, more expensive)
+# Optional: ElevenLabs API (more expensive than LemonFox)
 # echo "ELEVENLABS_API_KEY=your-elevenlabs-key" >> .env
 # echo "ELEVENLABS_VOICE_ID=your-voice-id" >> .env
 
@@ -171,11 +171,11 @@ python run_shortfactory.py "Your Topic"
 - **Image Generation**: <1 second (cost-saving) / ~60 seconds (AI)
 - **Total**: ~5-6 minutes for complete video package
 
-## 🔄 Migration Guide
+## 🔄 Usage Guide
 
-### From Legacy System:
-- **Old**: `python run_adk.py "Topic" --cost`
-- **New**: `python run_shortfactory.py "Topic" --cost`
+### Current System:
+- **Primary**: `python run_shortfactory.py "Topic" --cost`
+- **Alternative**: `python run_adk_system.py "Topic" --cost` (ADK-based)
 
 ### Key Improvements:
 - 🎯 **Separation of Concerns**: Each agent has a clear, specific role
