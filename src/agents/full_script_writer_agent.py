@@ -10,10 +10,12 @@ from typing import Dict, Any, Optional, List
 from pathlib import Path
 from google.adk import Agent
 import google.genai as genai
-from model.models import SceneType
+from model.models import SceneType, FullScript
 from core.shared_context import SharedContextManager
 from core.story_validator import StoryValidator
 from core.story_focus_engine import StoryFocusEngine
+from core.json_parser import RobustJSONParser, JSONParsingError, parse_full_script
+from core.cost_optimizer import CostOptimizer, validate_and_optimize_prompt, validate_response_quality
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -159,13 +161,23 @@ Focus on creating a compelling, well-structured narrative framework that other a
                     knowledge_refs=knowledge_refs
                 )
                 
+                # Validate and optimize prompt before sending
+                is_valid, optimized_prompt, validation_message = validate_and_optimize_prompt(
+                    prompt, "full_script"
+                )
+                
+                if not is_valid:
+                    logger.error(f"❌ Prompt validation failed for full script: {validation_message}")
+                    raise ValueError(f"Invalid prompt for full script: {validation_message}")
+                
                 # Log the prompt
                 logger.info(f"FSW PROMPT BEING SENT TO AI:")
-                logger.info(f"Length: {len(prompt)}")
-                logger.info(f"Content: {prompt}")
+                logger.info(f"Length: {len(optimized_prompt)} (optimized from {len(prompt)})")
+                logger.info(f"Validation: {validation_message}")
+                logger.info(f"Content: {optimized_prompt}")
                 
                 # Generate response using ADK
-                response = await self._simulate_adk_response(prompt)
+                response = await self._simulate_adk_response(optimized_prompt)
                 
                 if response:
                     # Save prompt and response
@@ -175,8 +187,8 @@ Focus on creating a compelling, well-structured narrative framework that other a
                     logger.info(f"AI Response length: {len(response)}")
                     logger.info(f"AI Response preview: {response[:200]}...")
                     
-                    # Parse and validate response
-                    script_data = self._parse_response_safely(response, topic)
+                    # Parse and validate response using robust JSON parser
+                    script_data = self._parse_response_with_pydantic(response, topic)
                     
                     # Validate with story validator
                     validation_result = self._story_validator.validate_story(
@@ -332,17 +344,19 @@ Output ONLY valid JSON following the FullScript.json schema.
                             script_schema = json.load(f)
                     
                     config = {
-                        "temperature": 0.7,
+                        "temperature": 0.6,  # Lower temperature for more consistent JSON
                         "top_p": 0.8,
-                        "top_k": 40,
+                        "top_k": 30,
                         "max_output_tokens": 8192,
                         "response_mime_type": "application/json"
                     }
                     
-                    # Add schema if available
-                    if script_schema:
-                        config["response_schema"] = script_schema
-                        logger.info("🎯 Using JSON schema for structured output")
+                    # Add schema if available - but disable for now due to issues
+                    # if script_schema:
+                    #     config["response_schema"] = script_schema
+                    #     logger.info("🎯 Using JSON schema for structured output")
+                    
+                    logger.info("🎯 Using standard JSON output (schema disabled for stability)")
                     
                     response = client.models.generate_content(
                         model="gemini-2.5-flash",
@@ -365,7 +379,49 @@ Output ONLY valid JSON following the FullScript.json schema.
             logger.error(f"ADK API call failed: {str(e)}")
             raise ValueError(f"ADK API call failed: {str(e)}")
     
-    def _parse_response_safely(self, response_text: str, topic: str) -> Dict[str, Any]:
+    def _parse_response_with_pydantic(self, response_text: str, topic: str) -> Dict[str, Any]:
+        """Parse AI response using robust JSON parser with Pydantic validation"""
+        try:
+            # Use the robust JSON parser with Pydantic validation
+            full_script_model = parse_full_script(response_text)
+            
+            # Convert Pydantic model back to dict for compatibility
+            script_data = full_script_model.model_dump()
+            
+            # Validate topic match
+            title = script_data.get('title', '').lower()
+            if topic.lower() not in title and not any(word in title for word in topic.lower().split()):
+                logger.warning(f"Generated content doesn't match topic: {topic}")
+                logger.warning(f"Generated title: {script_data.get('title', 'No title')}")
+                # Don't raise error, just warn - let it continue
+            
+            logger.info(f"✅ Full script parsed and validated successfully with Pydantic")
+            return script_data
+            
+        except JSONParsingError as e:
+            logger.error(f"❌ JSON parsing failed for full script: {e}")
+            logger.error(f"Raw response preview: {response_text[:500]}...")
+            
+            # Try to create fallback data
+            try:
+                logger.warning(f"⚠️ Creating fallback data for full script")
+                fallback_model = RobustJSONParser.create_fallback_data(
+                    FullScript,
+                    context_name="full_script",
+                    title=f"Generated Content: {topic}",
+                    overall_style="educational",
+                    story_summary=f"A brief educational video about {topic}."
+                )
+                fallback_dict = fallback_model.model_dump()
+                return fallback_dict
+            except Exception as fallback_error:
+                logger.error(f"❌ Even fallback creation failed for full script: {fallback_error}")
+                raise ValueError(f"Complete parsing failure for full script: {e}")
+        except Exception as e:
+            logger.error(f"❌ Unexpected error parsing full script: {e}")
+            raise ValueError(f"Unexpected parsing error for full script: {e}")
+    
+    def _parse_response_safely_legacy(self, response_text: str, topic: str) -> Dict[str, Any]:
         """Parse AI response safely and validate against topic"""
         try:
             # Find JSON in response

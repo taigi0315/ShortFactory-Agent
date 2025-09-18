@@ -13,6 +13,9 @@ import google.genai as genai
 from core.shared_context import SharedContextManager
 from core.educational_enhancer import EducationalEnhancer
 from core.image_style_selector import ImageStyleSelector
+from core.json_parser import RobustJSONParser, JSONParsingError, parse_scene_package
+from core.cost_optimizer import CostOptimizer, validate_and_optimize_prompt, validate_response_quality
+from model.models import ScenePackage
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -155,22 +158,33 @@ Key principles:
                 previous_scenes=previous_scenes
             )
             
+            # Validate and optimize prompt before sending
+            is_valid, optimized_prompt, validation_message = validate_and_optimize_prompt(
+                prompt, f"scene_{scene_number}"
+            )
+            
+            if not is_valid:
+                logger.error(f"❌ Prompt validation failed for scene {scene_number}: {validation_message}")
+                raise ValueError(f"Invalid prompt for scene {scene_number}: {validation_message}")
+            
             # Log the prompt
             logger.info(f"SSW PROMPT for scene {scene_number}:")
-            logger.info(f"Length: {len(prompt)}")
+            logger.info(f"Length: {len(optimized_prompt)} (optimized from {len(prompt)})")
+            logger.info(f"Validation: {validation_message}")
             
             # Generate response using ADK
-            response = await self._simulate_adk_response(prompt)
+            response = await self._simulate_adk_response(optimized_prompt)
             
             if response:
                 # Save prompt and response
                 self._save_prompt_and_response(session_id, scene_number, prompt, response)
                 
-                # Parse and validate response
-                scene_package = self._parse_response_safely(response, scene_number)
+                # Parse and validate response using robust JSON parser
+                scene_package = self._parse_response_with_pydantic(response, scene_number)
                 
                 # Add safety checks
-                scene_package['safety_checks'] = self._run_safety_checks(scene_package)
+                safety_checks = self._run_safety_checks(scene_package)
+                scene_package['safety_checks'] = safety_checks
                 
                 logger.info(f"Scene {scene_number} package generated successfully")
                 return scene_package
@@ -187,8 +201,8 @@ Key principles:
         
         scene_number = scene_data.get('scene_number', 1)
         scene_type = scene_data.get('scene_type', 'explanation')
-        beats = scene_data.get('beats', [])
-        learning_objectives = scene_data.get('learning_objectives', [])
+        beats = scene_data.get('beats') or []
+        learning_objectives = scene_data.get('learning_objectives') or []
         needs_animation = scene_data.get('needs_animation', False)
         transition = scene_data.get('transition_to_next', 'fade')
         importance = scene_data.get('scene_importance', 3)
@@ -331,6 +345,13 @@ TTS REQUIREMENTS:
 OUTPUT FORMAT:
 Generate ONLY valid JSON following ScenePackage.json schema.
 
+CRITICAL JSON REQUIREMENTS:
+- OUTPUT MUST BE COMPLETE, VALID JSON
+- ALL STRINGS MUST BE PROPERLY CLOSED WITH QUOTES  
+- ALL OBJECTS MUST END WITH CLOSING BRACES
+- NO TRAILING COMMAS
+- NO INCOMPLETE LINES OR TRUNCATED OUTPUT
+
 EXAMPLE OUTPUT STRUCTURE:
 {{
   "scene_number": {scene_number},
@@ -392,72 +413,136 @@ Each frame should represent a different moment or angle in the dialogue/narratio
 Multiple images per dialogue segment are encouraged for dynamic storytelling.
 """
     
-    async def _simulate_adk_response(self, prompt: str) -> str:
-        """Use actual ADK API to generate response"""
-        try:
-            logger.info("Using actual ADK API for scene script generation")
-            
-            # Try different methods to call the ADK agent
-            response = None
-            
-            # Method 1: Try run() method
+    async def _simulate_adk_response(self, prompt: str, max_retries: int = 3) -> str:
+        """Use actual ADK API to generate response with retry mechanism"""
+        import asyncio
+        
+        for attempt in range(max_retries):
             try:
-                response = await self.run(prompt)
-                logger.info("Successfully used run() method")
-            except AttributeError:
-                logger.info("run() method not available, trying generate_content()")
+                logger.info(f"Using actual ADK API for scene script generation (attempt {attempt + 1}/{max_retries})")
                 
-                # Method 2: Try generate_content() method
+                # Try different methods to call the ADK agent
+                response = None
+                
+                # Method 1: Try run() method
                 try:
-                    response = await self.generate_content(prompt)
-                    logger.info("Successfully used generate_content() method")
+                    response = await self.run(prompt)
+                    logger.info("Successfully used run() method")
                 except AttributeError:
-                    logger.info("generate_content() method not available, trying direct model call")
+                    logger.info("run() method not available, trying generate_content()")
                     
-                    # Method 3: Direct model call
-                    client = genai.Client()
-                    # Load ScenePackage schema for structured output
-                    schema_path = Path("schemas/ScenePackage.json")
-                    scene_schema = None
-                    if schema_path.exists():
-                        with open(schema_path, 'r') as f:
-                            scene_schema = json.load(f)
-                    
-                    config = {
-                        "temperature": 0.8,
-                        "top_p": 0.9,
-                        "top_k": 40,
-                        "max_output_tokens": 8192,
-                        "response_mime_type": "application/json"
-                    }
-                    
-                    # Add schema if available
-                    if scene_schema:
-                        config["response_schema"] = scene_schema
-                        logger.info("🎯 Using JSON schema for structured output")
-                    
-                    response = client.models.generate_content(
-                        model="gemini-2.5-flash",
-                        contents=[prompt],
-                        config=config
-                    )
-                    logger.info("Successfully used direct model call")
-            
-            if response and hasattr(response, 'text') and response.text:
-                logger.info("Successfully received scene script response from ADK API")
-                return response.text
-            elif response and isinstance(response, str):
-                logger.info("Successfully received string scene script response from ADK API")
-                return response
-            else:
-                logger.error("No response text from ADK API")
-                raise ValueError("No response received from ADK API")
+                    # Method 2: Try generate_content() method
+                    try:
+                        response = await self.generate_content(prompt)
+                        logger.info("Successfully used generate_content() method")
+                    except AttributeError:
+                        logger.info("generate_content() method not available, trying direct model call")
+                        
+                        # Method 3: Direct model call
+                        client = genai.Client()
+                        # Load ScenePackage schema for structured output
+                        schema_path = Path("schemas/ScenePackage.json")
+                        scene_schema = None
+                        if schema_path.exists():
+                            with open(schema_path, 'r') as f:
+                                scene_schema = json.load(f)
+                        
+                        config = {
+                            "temperature": 0.7,  # Lower temperature for more consistent JSON
+                            "top_p": 0.8,
+                            "top_k": 30,
+                            "max_output_tokens": 8192,
+                            "response_mime_type": "application/json"
+                        }
+                        
+                        # Add schema if available - but disable for now due to issues
+                        # if scene_schema:
+                        #     config["response_schema"] = scene_schema
+                        #     logger.info("🎯 Using JSON schema for structured output")
+                        
+                        logger.info("🎯 Using standard JSON output (schema disabled for stability)")
+                        
+                        response = client.models.generate_content(
+                            model="gemini-2.5-flash",
+                            contents=[prompt],
+                            config=config
+                        )
+                        logger.info("Successfully used direct model call")
                 
-        except Exception as e:
-            logger.error(f"ADK API call failed for scene script: {str(e)}")
-            raise ValueError(f"ADK API call failed for scene script: {str(e)}")
+                # Extract and validate response
+                response_text = None
+                if response and hasattr(response, 'text') and response.text:
+                    response_text = response.text.strip()
+                elif response and isinstance(response, str):
+                    response_text = response.strip()
+                else:
+                    raise ValueError("No response received from ADK API")
+                
+                # Validate response quality before expensive parsing
+                is_valid_response, validation_reason = validate_response_quality(
+                    response_text, f"scene_{attempt + 1}"
+                )
+                
+                if not is_valid_response:
+                    raise ValueError(f"Response validation failed: {validation_reason}")
+                
+                logger.info("Successfully received and validated scene script response from ADK API")
+                return response_text
+                    
+            except Exception as e:
+                logger.error(f"ADK API call failed for scene script (attempt {attempt + 1}): {str(e)}")
+                
+                if attempt < max_retries - 1:
+                    # Use intelligent retry logic
+                    should_retry = CostOptimizer.should_retry_request(str(e), attempt + 1, max_retries)
+                    if should_retry:
+                        wait_time = CostOptimizer.get_optimal_retry_delay(attempt + 1)
+                        logger.info(f"Retrying in {wait_time:.1f} seconds...")
+                        await asyncio.sleep(wait_time)
+                    else:
+                        logger.error("Error is non-retryable, stopping attempts")
+                        raise ValueError(f"Non-retryable error for scene script: {str(e)}")
+                else:
+                    logger.error("All API retry attempts failed")
+                    raise ValueError(f"ADK API call failed for scene script after {max_retries} attempts: {str(e)}")
+        
+        raise ValueError(f"Unexpected error: reached end of retry loop")
     
-    def _parse_response_safely(self, response_text: str, scene_number: int) -> Dict[str, Any]:
+    def _parse_response_with_pydantic(self, response_text: str, scene_number: int) -> Dict[str, Any]:
+        """Parse AI response using robust JSON parser with Pydantic validation"""
+        try:
+            # Use the robust JSON parser with Pydantic validation
+            scene_package_model = parse_scene_package(response_text, scene_number)
+            
+            # Convert Pydantic model back to dict for compatibility
+            scene_package_dict = scene_package_model.model_dump()
+            
+            logger.info(f"✅ Scene {scene_number} parsed and validated successfully with Pydantic")
+            return scene_package_dict
+            
+        except JSONParsingError as e:
+            logger.error(f"❌ JSON parsing failed for scene {scene_number}: {e}")
+            logger.error(f"Raw response preview: {response_text[:500]}...")
+            
+            # Try to create fallback data
+            try:
+                logger.warning(f"⚠️ Creating fallback data for scene {scene_number}")
+                fallback_model = RobustJSONParser.create_fallback_data(
+                    ScenePackage,
+                    context_name=f"scene_{scene_number}",
+                    scene_number=scene_number
+                )
+                fallback_dict = fallback_model.model_dump()
+                fallback_dict['safety_checks'] = ['parsing_failed_fallback_used']
+                return fallback_dict
+            except Exception as fallback_error:
+                logger.error(f"❌ Even fallback creation failed for scene {scene_number}: {fallback_error}")
+                raise ValueError(f"Complete parsing failure for scene {scene_number}: {e}")
+        except Exception as e:
+            logger.error(f"❌ Unexpected error parsing scene {scene_number}: {e}")
+            raise ValueError(f"Unexpected parsing error for scene {scene_number}: {e}")
+    
+    def _parse_response_safely_legacy(self, response_text: str, scene_number: int) -> Dict[str, Any]:
         """Parse AI response safely with JSON repair and validation"""
         try:
             # Find JSON in response
@@ -520,24 +605,85 @@ Multiple images per dialogue segment are encouraged for dynamic storytelling.
         # Common fixes
         repaired = json_str
         
-        # Fix 1: Remove trailing commas
+        # Fix 1: Remove trailing commas (most common issue)
         import re
         repaired = re.sub(r',(\s*[}\]])', r'\1', repaired)
         
-        # Fix 2: Add missing commas between objects/arrays
+        # Fix 2: Fix missing commas after closing braces/brackets
+        repaired = re.sub(r'}(\s*)(["\w])', r'},\1\2', repaired)
+        repaired = re.sub(r'](\s*)(["\w])', r'],\1\2', repaired)
+        
+        # Fix 3: Fix missing commas between array elements
         repaired = re.sub(r'}\s*{', '},{', repaired)
         repaired = re.sub(r']\s*\[', '],[', repaired)
         
-        # Fix 3: Fix common quote issues
-        repaired = re.sub(r'([^\\])"([^"]*)"([^:])', r'\1"\2"\3', repaired)
+        # Fix 4: Fix unescaped quotes in strings
+        # This is tricky - try to fix obvious cases
+        lines = repaired.split('\n')
+        fixed_lines = []
+        for line in lines:
+            # Fix quotes in the middle of strings
+            if ':' in line and '"' in line:
+                # Try to fix unescaped quotes
+                line = re.sub(r'([^\\])(".*?[^\\])(".*?")', r'\1\2\\"\3', line)
+            fixed_lines.append(line)
+        repaired = '\n'.join(fixed_lines)
         
-        # Fix 4: Ensure proper string escaping
+        # Fix 5: Ensure proper string escaping for newlines and tabs
         repaired = repaired.replace('\n', '\\n').replace('\t', '\\t')
         
-        # Fix 5: Remove any control characters
+        # Fix 6: Remove any control characters except newlines and tabs
         repaired = ''.join(char for char in repaired if ord(char) >= 32 or char in '\n\t')
         
+        # Fix 7: Handle unterminated strings (common issue)
+        lines = repaired.split('\n')
+        fixed_lines = []
+        
+        for i, line in enumerate(lines):
+            # Check for unterminated string patterns like: "key": "value that never closes
+            if ':' in line and '"' in line:
+                # Count quotes in the line
+                quote_count = line.count('"')
+                # If odd number of quotes, likely unterminated string
+                if quote_count % 2 == 1:
+                    # Look for the pattern: "key": "unterminated_value
+                    match = re.search(r'"([^"]*)":\s*"([^"]*)$', line)
+                    if match:
+                        # Close the unterminated string
+                        line = line + '"'
+                        logger.info(f"🔧 Fixed unterminated string on line {i+1}")
+            
+            fixed_lines.append(line)
+        
+        repaired = '\n'.join(fixed_lines)
+        
+        # Fix 8: Try to balance braces and brackets
+        open_braces = repaired.count('{')
+        close_braces = repaired.count('}')
+        open_brackets = repaired.count('[')
+        close_brackets = repaired.count(']')
+        
+        if open_braces > close_braces:
+            repaired += '}' * (open_braces - close_braces)
+        elif close_braces > open_braces:
+            repaired = '{' * (close_braces - open_braces) + repaired
+            
+        if open_brackets > close_brackets:
+            repaired += ']' * (open_brackets - close_brackets)
+        elif close_brackets > open_brackets:
+            repaired = '[' * (close_brackets - open_brackets) + repaired
+        
+        # Fix 9: Handle truncated JSON (if ends abruptly)
+        repaired = repaired.strip()
+        if not repaired.endswith('}') and not repaired.endswith(']'):
+            # Try to find the last complete object/array and close it
+            if repaired.rfind('{') > repaired.rfind('}'):
+                repaired += '}'
+            if repaired.rfind('[') > repaired.rfind(']'):
+                repaired += ']'
+        
         logger.info(f"🔧 JSON repair completed for scene {scene_number}")
+        logger.debug(f"🔧 Repaired JSON preview: {repaired[:200]}...")
         return repaired
     
     def _run_safety_checks(self, scene_package: Dict[str, Any]) -> List[str]:

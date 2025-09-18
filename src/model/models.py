@@ -347,3 +347,113 @@ class WorkflowState(BaseModel):
     validation_history: List[ValidationResult] = []
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
+
+# New Architecture Pydantic Models
+
+class NarrationLine(BaseModel):
+    """Individual line in narration script"""
+    line: str = Field(min_length=1, description="Text to be spoken")
+    at_ms: int = Field(ge=0, description="Timestamp when this line starts")
+    pause_ms: Optional[int] = Field(default=0, ge=0, description="Pause duration after this line")
+
+class DialogueLine(BaseModel):
+    """Individual dialogue line"""
+    speaker: str = Field(description="Name of the speaker")
+    line: str = Field(description="Text spoken by the character")
+
+class Visual(BaseModel):
+    """Visual frame specification"""
+    frame_id: str = Field(pattern=r"^[0-9]+[A-Z]$", description="Frame identifier like '1A', '2B'")
+    shot_type: Literal["wide", "medium", "close", "macro", "extreme_wide", "extreme_close"]
+    camera_motion: Optional[str] = Field(default=None, description="Camera movement description")
+    character_pose: Optional[str] = Field(default=None, description="Character positioning")
+    expression: Optional[str] = Field(default=None, description="Character facial expression")
+    background: Optional[str] = Field(default=None, description="Background setting")
+    foreground_props: Optional[str] = Field(default=None, description="Props in foreground")
+    lighting: Optional[str] = Field(default=None, description="Lighting description")
+    color_mood: Optional[str] = Field(default=None, description="Color palette and mood")
+    image_prompt: str = Field(min_length=40, description="Detailed image generation prompt")
+    negative_prompt: Optional[str] = Field(default=None, description="Negative prompt")
+    model_hints: Optional[List[str]] = Field(default=None, description="Style keywords")
+    aspect_ratio: Literal["16:9", "9:16", "1:1", "4:5", "3:2", "2:3"]
+    seed: Optional[int] = Field(default=None, description="Random seed")
+    guidance_scale: Optional[float] = Field(default=7.5, ge=1.0, le=20.0, description="Guidance scale")
+
+class TTSSettings(BaseModel):
+    """Text-to-speech settings"""
+    engine: Literal["elevenlabs", "openai", "google", "azure"]
+    voice: str = Field(description="Voice identifier")
+    language: Optional[str] = Field(default="en-US", description="Language code")
+    elevenlabs_settings: Optional[Dict[str, float]] = Field(default=None, description="ElevenLabs specific settings")
+
+class SFXCue(BaseModel):
+    """Sound effect cue"""
+    cue: str = Field(description="Sound effect description")
+    at_ms: int = Field(ge=0, description="When to play the sound effect")
+    duration_ms: int = Field(ge=0, description="Duration of the sound effect")
+
+class OnScreenText(BaseModel):
+    """On-screen text element"""
+    text: str = Field(description="Text to display")
+    at_ms: int = Field(ge=0, description="When to show the text")
+    duration_ms: int = Field(ge=0, description="How long to show the text")
+    style: Optional[str] = Field(default=None, description="Text styling")
+
+class Timing(BaseModel):
+    """Timing information for the scene"""
+    total_ms: int = Field(ge=1000, description="Total duration of the scene in milliseconds")
+
+class Continuity(BaseModel):
+    """Continuity information for scene transitions"""
+    in_from: Optional[str] = Field(default=None, description="How this scene transitions in")
+    out_to: Optional[str] = Field(default=None, description="How this scene transitions out")
+    callback_tags: Optional[List[str]] = Field(default=None, description="Visual motifs")
+
+class ScenePackage(BaseModel):
+    """Production-ready scene package from Scene Script Writer"""
+    scene_number: int = Field(ge=1, description="Scene number")
+    narration_script: List[NarrationLine] = Field(description="Narration lines with timing")
+    dialogue: Optional[List[DialogueLine]] = Field(default=None, description="Dialogue lines")
+    visuals: List[Visual] = Field(min_items=1, description="Visual frames for the scene")
+    tts: TTSSettings = Field(description="Text-to-speech configuration")
+    sfx_cues: Optional[List[SFXCue]] = Field(default=None, description="Sound effect cues")
+    on_screen_text: Optional[List[OnScreenText]] = Field(default=None, description="On-screen text elements")
+    timing: Timing = Field(description="Scene timing information")
+    continuity: Optional[Continuity] = Field(default=None, description="Continuity information")
+    safety_checks: Optional[List[str]] = Field(default=None, description="Safety check results")
+
+class SceneBeat(BaseModel):
+    """Individual scene beat/point"""
+    scene_number: int = Field(ge=1)
+    scene_type: Literal["hook", "explanation", "story", "analysis", "revelation", "summary", "credits", "example", "controversy", "comparison", "timeline", "interview", "demonstration", "prediction", "debate", "journey", "transformation", "conflict", "resolution"]
+    beats: List[str] = Field(description="High-level story beats")
+    learning_objectives: Optional[List[str]] = Field(default=None, description="Learning objectives")
+    needs_animation: bool = Field(description="Whether animation is needed")
+    transition_to_next: Literal["cut", "fade", "wipe", "morph", "dissolve", "credits", "end"]
+    scene_importance: int = Field(ge=1, le=5, description="Importance level (1-5)")
+
+class FullScript(BaseModel):
+    """High-level story structure from Full Script Writer"""
+    title: str = Field(min_length=5, description="Video title")
+    logline: Optional[str] = Field(default=None, description="One-sentence summary")
+    overall_style: str = Field(description="Overall tone and style")
+    main_character: Optional[str] = Field(default=None, description="Main character description")
+    cosplay_instructions: Optional[str] = Field(default=None, description="Character cosplay instructions")
+    story_summary: str = Field(min_length=60, max_length=2000, description="Story summary")
+    scenes: List[SceneBeat] = Field(min_items=3, max_items=10, description="Scene beats")
+
+class ImageAsset(BaseModel):
+    """Generated image asset from Image Create Agent"""
+    frame_id: str = Field(pattern=r"^[0-9]+[A-Z]$", description="Frame identifier")
+    image_uri: str = Field(description="URI to generated image")
+    thumbnail_uri: Optional[str] = Field(default=None, description="Thumbnail URI")
+    prompt_used: str = Field(min_length=1, description="Final prompt used")
+    negative_prompt_used: Optional[str] = Field(default=None, description="Negative prompt used")
+    model: Literal["stable-diffusion-xl", "flux-1", "flux-1-pro", "midjourney", "dall-e-3", "gemini-imagen", "gemini-2.5-flash-image-preview", "mock"]
+    sampler: Optional[str] = Field(default=None, description="Sampling method")
+    cfg: Optional[float] = Field(default=None, ge=1.0, le=20.0, description="CFG scale")
+    steps: Optional[int] = Field(default=None, ge=1, le=150, description="Inference steps")
+    seed: Optional[int] = Field(default=None, description="Random seed")
+    safety_result: Optional[Literal["safe", "flagged", "blocked"]] = Field(default=None, description="Safety check result")
+    generation_time_ms: Optional[int] = Field(default=None, ge=0, description="Generation time")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="Additional metadata")
