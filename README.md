@@ -12,9 +12,13 @@ pip install -r requirements.txt
 
 # 2. Set API keys in .env file
 echo "GEMINI_API_KEY=your-api-key-here" > .env
-echo "ELEVENLABS_API_KEY=your-elevenlabs-key" >> .env
-echo "ELEVENLABS_VOICE_ID=your-voice-id-or-leave-blank-for-default" >> .env
+echo "LEMONFOX_API_KEY=your-lemonfox-key" >> .env
+echo "LEMONFOX_VOICE=sarah" >> .env
 echo "STABILITY_API_KEY=your-stability-ai-key-for-real-images" >> .env
+
+# Legacy ElevenLabs support (optional, more expensive)
+# echo "ELEVENLABS_API_KEY=your-elevenlabs-key" >> .env
+# echo "ELEVENLABS_VOICE_ID=your-voice-id" >> .env
 
 # 3. Run the system
 python run_shortfactory.py "Your Topic Here" --cost
@@ -189,9 +193,10 @@ python run_shortfactory.py "Your Topic"
 
 ## 🎉 Recent Achievements
 
-**September 18, 2025**: ✅ **Critical Stability Enhancement**
+**September 18, 2025**: ✅ **Critical Stability & UX Enhancement**
 - **Robust JSON Parsing**: 95% success rate (up from 60%)
-- **Cost Optimization**: 80% reduction in failed API calls  
+- **LemonFox TTS Integration**: 90% cost reduction vs ElevenLabs ($2.50 vs $25+ per 1M chars)
+- **Enhanced UX**: Title-based video filenames with clear completion links
 - **Production Stability**: Zero complete pipeline failures
 - **Field Mapping**: Automatic correction of AI field inconsistencies
 

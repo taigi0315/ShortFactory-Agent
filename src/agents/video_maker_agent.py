@@ -299,7 +299,7 @@ class VideoMakerAgent:
                     scene_images.append(str(img_path))
             
             if not scene_images:
-                self.logger.warning(f"No images found for scene {scene_num}")
+                self.logger.warning(f"No images found for scene {scene_num}, skipping this scene")
                 continue
             
             # Calculate image timings
@@ -448,15 +448,28 @@ class VideoMakerAgent:
         session_path = Path(session_path)
         
         if output_path is None:
-            output_path = session_path / "final_video.mp4"
+            # Create title-based filename
+            video_title = self._get_video_title(session_path)
+            sanitized_title = self._sanitize_filename(video_title)
+            title_filename = f"{sanitized_title}.mp4"
+            
+            output_path = session_path / title_filename
+            
+            # Also create legacy path for backward compatibility
+            legacy_path = session_path / "final_video.mp4"
         else:
             output_path = Path(output_path)
+            legacy_path = None
         
         # Analyze session content
         segments = self.analyze_session_content(str(session_path))
         
         if not segments:
-            raise ValueError("No valid scenes found in session")
+            logger.warning("No scenes with both images and audio found, trying to create video with available content")
+            # Try to create video with just images (silent video)
+            segments = self._create_silent_video_segments(str(session_path))
+            if not segments:
+                raise ValueError("No valid scenes found in session - no images or audio available")
         
         self.logger.info(f"Creating video from {len(segments)} scenes")
         
@@ -510,11 +523,72 @@ class VideoMakerAgent:
         duration = self.get_video_duration(str(output_path))
         file_size = output_path.stat().st_size
         
-        self.logger.info(f"✅ Final video created: {output_path}")
-        self.logger.info(f"   Duration: {duration:.2f} seconds")
-        self.logger.info(f"   File size: {file_size / (1024*1024):.2f} MB")
+        # Create legacy symlink for backward compatibility
+        if legacy_path and not legacy_path.exists():
+            try:
+                import os
+                os.symlink(output_path.name, legacy_path)
+                self.logger.debug(f"Created legacy symlink: {legacy_path}")
+            except Exception as e:
+                self.logger.warning(f"Failed to create legacy symlink: {e}")
+        
+        # Enhanced logging with clear file link
+        self.logger.info(f"🎉 ✅ VIDEO CREATION COMPLETED! 🎉")
+        self.logger.info(f"📁 Full Path: {output_path.absolute()}")
+        self.logger.info(f"🎬 File: {output_path.name}")
+        self.logger.info(f"📊 Duration: {duration:.2f} seconds")
+        self.logger.info(f"💾 File size: {file_size / (1024*1024):.2f} MB")
+        self.logger.info(f"🔗 Open with: open '{output_path.absolute()}'")
+        self.logger.info(f"📂 Session folder: {output_path.parent}")
         
         return str(output_path)
+    
+    def _get_video_title(self, session_path: Path) -> str:
+        """Extract video title from session metadata"""
+        try:
+            # Try to get title from full_script.json
+            full_script_path = session_path / "full_script.json"
+            if full_script_path.exists():
+                with open(full_script_path, 'r', encoding='utf-8') as f:
+                    script_data = json.load(f)
+                    title = script_data.get('title', 'Untitled_Video')
+                    if title and title != 'Untitled_Video':
+                        return title
+            
+            # Try to get title from metadata.json
+            metadata_path = session_path / "metadata.json"
+            if metadata_path.exists():
+                with open(metadata_path, 'r', encoding='utf-8') as f:
+                    metadata = json.load(f)
+                    title = metadata.get('title', 'Untitled_Video')
+                    if title and title != 'Untitled_Video':
+                        return title
+            
+            # Fallback to session folder name
+            return session_path.name
+            
+        except Exception as e:
+            self.logger.warning(f"Failed to extract video title: {e}")
+            return "Untitled_Video"
+    
+    def _sanitize_filename(self, title: str) -> str:
+        """Sanitize title for use as filename"""
+        import re
+        
+        # Remove or replace problematic characters
+        sanitized = re.sub(r'[<>:"/\\|?*]', '', title)
+        sanitized = re.sub(r'[^\w\s-]', '', sanitized)
+        sanitized = re.sub(r'[-\s]+', '_', sanitized)
+        
+        # Limit length to 50 characters
+        if len(sanitized) > 50:
+            sanitized = sanitized[:50].rstrip('_')
+        
+        # Ensure it's not empty
+        if not sanitized:
+            sanitized = "Untitled_Video"
+            
+        return sanitized
     
     def get_video_duration(self, video_path: str) -> float:
         """Get the duration of a video file"""

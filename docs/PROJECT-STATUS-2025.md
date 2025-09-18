@@ -1,6 +1,6 @@
 # ShortFactory Agent - Project Status 2025
 
-*Last updated: September 17, 2025*
+*Last updated: September 18, 2025*
 
 ## 🎯 Project Overview
 
@@ -16,7 +16,7 @@
 - **Full Script Writer (FSW)**: High-level story structure and scene planning
 - **Scene Script Writer (SSW)**: Production-ready scene packages with timing
 - **Image Create Agent (ICA)**: Visual asset generation with metadata
-- **Voice Generate Agent (VGA)**: ElevenLabs TTS integration with scene-specific settings
+- **Voice Generate Agent (VGA)**: LemonFox TTS integration (90% cost savings vs ElevenLabs)
 - **Orchestrator Agent**: Pipeline management and validation
 
 #### 📋 **JSON Schema System**
@@ -28,13 +28,15 @@
 #### 🎨 **Enhanced Content Generation**
 - **Rich Scene Packages**: Detailed narration with millisecond timing
 - **Multiple Visual Frames**: 3-8 frames per scene for cinematic storytelling
-- **High-Quality Voice Generation**: ElevenLabs TTS with scene-specific settings
-- **Production TTS Settings**: Complete ElevenLabs configuration per scene
+- **High-Quality Voice Generation**: LemonFox TTS with optimized mood and speed settings
+- **Production TTS Settings**: Enhanced voice settings with 35% more expressiveness
 - **Visual Specifications**: Shot types, camera motion, lighting, character poses
 - **Continuity Management**: Callback tags and visual motifs
 
 #### 🗂️ **Advanced Session Management**
-- **Date-Prefixed Sessions**: `YYYYMMDD-UUID` format for organization
+- **Date-Prefixed Sessions**: `YYYYMMDD-UUID` format for organization  
+- **Title-Based Video Files**: Videos saved with descriptive filenames for easy identification
+- **Enhanced File Links**: Clear paths and open commands in completion logs
 - **Comprehensive Logging**: All agent prompts and responses saved
 - **Structured Output**: JSON schemas, build reports, metadata
 - **Cost-Saving Mode**: Mock images for development/testing

@@ -206,7 +206,7 @@ class RobustJSONParser:
             for i, sfx in enumerate(data['sfx_cues']):
                 if isinstance(sfx, dict):
                     # Map various field names to cue
-                    cue_field_names = ['sfx_name', 'effect', 'sound_effect']
+                    cue_field_names = ['sfx_name', 'effect', 'sound_effect', 'cue_name']
                     for field_name in cue_field_names:
                         if field_name in sfx and 'cue' not in sfx:
                             sfx['cue'] = sfx.pop(field_name)
@@ -238,6 +238,18 @@ class RobustJSONParser:
         if 'on_screen_text' in data and isinstance(data['on_screen_text'], list):
             for i, text_item in enumerate(data['on_screen_text']):
                 if isinstance(text_item, dict):
+                    # Fix None values in required string fields
+                    string_fields = ['text', 'style', 'position']
+                    for field in string_fields:
+                        if field in text_item and text_item[field] is None:
+                            if field == 'text':
+                                text_item[field] = f"Text {i+1}"
+                            elif field == 'style':
+                                text_item[field] = "normal"
+                            elif field == 'position':
+                                text_item[field] = "center"
+                            logger.info(f"🔧 Fixed None value in on-screen text {i}.{field} -> '{text_item[field]}'")
+                    
                     # Map start_ms to at_ms
                     if 'start_ms' in text_item and 'at_ms' not in text_item:
                         text_item['at_ms'] = text_item.pop('start_ms')
@@ -267,15 +279,30 @@ class RobustJSONParser:
         # Process ImageAsset fields if they exist
         if 'seed' in data and data['seed'] is None:
             data['seed'] = 123456  # Default seed value
-            logger.debug("🔧 Added default seed value for ImageAsset")
+            logger.info("🔧 Fixed None seed value for ImageAsset -> 123456")
         
         if 'cfg' in data and data['cfg'] is None:
             data['cfg'] = 7.5  # Default CFG value
-            logger.debug("🔧 Added default cfg value for ImageAsset")
+            logger.info("🔧 Fixed None cfg value for ImageAsset -> 7.5")
         
         if 'steps' in data and data['steps'] is None:
             data['steps'] = 20  # Default steps value
-            logger.debug("🔧 Added default steps value for ImageAsset")
+            logger.info("🔧 Fixed None steps value for ImageAsset -> 20")
+        
+        # Fix None values in common string fields
+        common_string_fields = {
+            'title': 'Untitled',
+            'description': 'No description provided',
+            'character_name': 'Glowbie',
+            'shot_type': 'medium',
+            'camera_motion': 'static',
+            'lighting': 'natural'
+        }
+        
+        for field, default_value in common_string_fields.items():
+            if field in data and data[field] is None:
+                data[field] = default_value
+                logger.info(f"🔧 Fixed None {field} -> '{default_value}'")
         
         return data
     
