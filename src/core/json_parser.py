@@ -206,7 +206,7 @@ class RobustJSONParser:
             for i, sfx in enumerate(data['sfx_cues']):
                 if isinstance(sfx, dict):
                     # Map various field names to cue
-                    cue_field_names = ['sfx_name', 'effect', 'sound_effect', 'cue_name']
+                    cue_field_names = ['sfx_name', 'effect', 'sound_effect', 'cue_name', 'name']
                     for field_name in cue_field_names:
                         if field_name in sfx and 'cue' not in sfx:
                             sfx['cue'] = sfx.pop(field_name)
@@ -303,6 +303,22 @@ class RobustJSONParser:
             if field in data and data[field] is None:
                 data[field] = default_value
                 logger.info(f"🔧 Fixed None {field} -> '{default_value}'")
+        
+        # Fix None values in array fields (ScenePackage)
+        array_fields = {
+            'dialogue': [],
+            'sfx_cues': [],
+            'on_screen_text': [],
+            'narration_script': [],
+            'visuals': [],
+            'beats': [],
+            'learning_objectives': []
+        }
+        
+        for field, default_value in array_fields.items():
+            if field in data and data[field] is None:
+                data[field] = default_value
+                logger.info(f"🔧 Fixed None {field} -> {default_value} (empty array)")
         
         return data
     
