@@ -1,7 +1,7 @@
 """
-ADK 출력 스키마 모델들
-Pydantic 기반으로 각 에이전트의 출력 데이터 구조를 정의
-ADK output_schema로 자동 변환됨
+ADK Output Schema Models
+Pydantic-based output data structures for each agent
+Automatically converted to ADK output_schema
 """
 
 from pydantic import BaseModel, Field
@@ -10,7 +10,7 @@ from enum import Enum
 
 
 class SceneType(str, Enum):
-    """씬 타입 정의"""
+    """Scene type definitions"""
     HOOK = "hook"
     EXPLANATION = "explanation"
     STORY = "story"
@@ -22,7 +22,7 @@ class SceneType(str, Enum):
 
 
 class TransitionType(str, Enum):
-    """전환 타입 정의"""
+    """Transition type definitions"""
     FADE = "fade"
     CUT = "cut"
     DISSOLVE = "dissolve"
@@ -30,97 +30,97 @@ class TransitionType(str, Enum):
 
 
 class SceneBeat(BaseModel):
-    """씬 비트 데이터"""
-    scene_number: int = Field(ge=1, description="씬 번호")
-    scene_type: SceneType = Field(description="씬 타입")
-    beats: List[str] = Field(min_length=1, description="고수준 스토리 비트들")
-    learning_objectives: Optional[List[str]] = Field(default=None, description="학습 목표들")
-    needs_animation: bool = Field(description="애니메이션 필요 여부")
-    transition_to_next: TransitionType = Field(description="다음 씬으로의 전환")
-    scene_importance: int = Field(ge=1, le=5, description="씬 중요도 (1-5)")
+    """Scene beat data"""
+    scene_number: int = Field(ge=1, description="Scene number")
+    scene_type: SceneType = Field(description="Scene type")
+    beats: List[str] = Field(min_length=1, description="High-level story beats")
+    learning_objectives: Optional[List[str]] = Field(default=None, description="Learning objectives")
+    needs_animation: bool = Field(description="Whether animation is needed")
+    transition_to_next: TransitionType = Field(description="Transition to next scene")
+    scene_importance: int = Field(ge=1, le=5, description="Scene importance level (1-5)")
 
 
 class FullScriptOutput(BaseModel):
     """
-    Full Script Writer 출력 스키마
-    ADK output_schema로 강제되는 구조
+    Full Script Writer output schema
+    Structure enforced by ADK output_schema
     """
     title: str = Field(
         min_length=5, 
         max_length=100,
-        description="비디오 제목"
+        description="Video title"
     )
     
     logline: Optional[str] = Field(
         default=None,
         max_length=200,
-        description="한 줄 요약"
+        description="One-line summary"
     )
     
     overall_style: str = Field(
-        description="전체적인 톤과 스타일"
+        description="Overall tone and style"
     )
     
     main_character: Optional[str] = Field(
         default=None,
-        description="주인공 설명"
+        description="Main character description"
     )
     
     cosplay_instructions: Optional[str] = Field(
         default=None,
-        description="캐릭터 코스프레 지시사항"
+        description="Character cosplay instructions"
     )
     
     story_summary: str = Field(
         min_length=60,
         max_length=2000,
-        description="스토리 요약"
+        description="Story summary"
     )
     
     scenes: List[SceneBeat] = Field(
         min_length=3,
         max_length=10,
-        description="씬 비트들"
+        description="Scene beats"
     )
 
     class Config:
         json_schema_extra = {
             "title": "FullScriptOutput",
-            "description": "Full Script Writer Agent의 출력 데이터 구조 - ADK output_schema 준수"
+            "description": "Output data structure for Full Script Writer Agent - ADK output_schema compliant"
         }
 
 
 class NarrationLine(BaseModel):
-    """나레이션 라인"""
-    line: str = Field(min_length=1, description="나레이션 텍스트")
-    at_ms: int = Field(ge=0, description="시작 시간 (밀리초)")
-    pause_ms: int = Field(default=500, ge=0, description="이후 일시정지 (밀리초)")
+    """Narration line"""
+    line: str = Field(min_length=1, description="Narration text")
+    at_ms: int = Field(ge=0, description="Start time (milliseconds)")
+    pause_ms: int = Field(default=500, ge=0, description="Pause after line (milliseconds)")
 
 
 class VisualFrame(BaseModel):
-    """비주얼 프레임 사양"""
+    """Visual frame specification"""
     frame_id: str = Field(
         pattern=r"^[0-9]+[A-Z]$",
-        description="프레임 식별자 (예: '1A', '2B')"
+        description="Frame identifier (예: '1A', '2B')"
     )
     
     shot_type: Literal["wide", "medium", "close", "macro", "extreme_wide", "extreme_close"] = Field(
-        description="카메라 샷 타입"
+        description="Camera shot type"
     )
     
     image_prompt: str = Field(
         min_length=40,
-        description="이미지 생성을 위한 상세한 프롬프트"
+        description="Detailed prompt for image generation"
     )
     
     negative_prompt: Optional[str] = Field(
         default=None,
-        description="원하지 않는 요소들"
+        description="Unwanted elements"
     )
     
     aspect_ratio: Literal["16:9", "9:16", "1:1", "4:5", "3:2", "2:3"] = Field(
         default="16:9",
-        description="이미지 비율"
+        description="Image aspect ratio"
     )
     
     # 선택적 비주얼 요소들
@@ -215,7 +215,7 @@ class ImageAssetOutput(BaseModel):
     Image Create Agent 출력 스키마
     생성된 이미지 에셋 정보
     """
-    frame_id: str = Field(description="프레임 식별자")
+    frame_id: str = Field(description="Frame identifier")
     image_uri: str = Field(description="이미지 파일 경로")
     thumbnail_uri: Optional[str] = Field(default=None, description="썸네일 경로")
     

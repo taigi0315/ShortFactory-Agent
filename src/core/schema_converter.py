@@ -49,7 +49,7 @@ class PydanticToADKSchema:
             return adk_schema
             
         except Exception as e:
-            logger.error(f"❌ {model_class.__name__} 스키마 변환 실패: {e}")
+            logger.error(f"❌ {model_class.__name__} Schema conversion failed: {e}")
             # 기본 스키마 반환
             return {
                 "type": "object",
@@ -158,19 +158,19 @@ class PydanticToADKSchema:
         try:
             # Pydantic으로 직접 검증 (더 강력함)
             validated_model = model_class.model_validate(data)
-            logger.debug(f"✅ {context_name} 스키마 검증 성공")
+            logger.debug(f"✅ {context_name} Schema validation success")
             return validated_model
             
         except Exception as e:
-            logger.error(f"❌ {context_name} 스키마 검증 실패: {e}")
+            logger.error(f"❌ {context_name} Schema validation failed: {e}")
             
             # 기본값으로 모델 생성 시도
             try:
                 default_model = model_class()
-                logger.warning(f"⚠️ {context_name} 기본값 모델 사용")
+                logger.warning(f"⚠️ {context_name} Using default model")
                 return default_model
             except Exception as default_error:
-                logger.error(f"❌ {context_name} 기본값 모델 생성도 실패: {default_error}")
+                logger.error(f"❌ {context_name} Default model creation also failed: {default_error}")
                 raise
     
     @staticmethod
