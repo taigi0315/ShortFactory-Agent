@@ -546,10 +546,16 @@ class ImageCreateAgent:
                     # Save the generated image
                     image_data = part.inline_data.data
                     
-                    # Decode base64 image data
-                    import base64
-                    with open(target_path, "wb") as f:
-                        f.write(base64.b64decode(image_data))
+                    # Check if data is already bytes or needs base64 decoding
+                    if isinstance(image_data, bytes):
+                        # Data is already bytes, use directly
+                        with open(target_path, "wb") as f:
+                            f.write(image_data)
+                    else:
+                        # Data is base64 string, decode it
+                        import base64
+                        with open(target_path, "wb") as f:
+                            f.write(base64.b64decode(image_data))
                     
                     logger.info(f"🍌 Nano Banana image saved: {target_path}")
                     image_saved = True
