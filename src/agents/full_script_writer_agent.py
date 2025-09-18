@@ -116,7 +116,7 @@ Create a comprehensive script structure for this topic.
             title=f"Script for {input_data.topic}",
             description="Fallback script generated due to processing error",
             overall_style=input_data.style_profile,
-            story_summary=f"Educational content about {input_data.topic}",
+            story_summary=f"This is a comprehensive educational video about {input_data.topic}, designed to provide viewers with clear understanding and practical knowledge.",
             total_estimated_duration_ms=300000,  # 5 minutes
             scenes=[
                 {
@@ -128,7 +128,8 @@ Create a comprehensive script structure for this topic.
                     "learning_objectives": [f"Understand what {input_data.topic} is about"],
                     "estimated_duration_ms": 60000,
                     "needs_animation": False,
-                    "scene_importance": 5
+                    "scene_importance": 5,
+                    "transition_to_next": "fade"
                 },
                 {
                     "scene_number": 2,
@@ -140,7 +141,7 @@ Create a comprehensive script structure for this topic.
                     "estimated_duration_ms": 180000,
                     "needs_animation": True,
                     "scene_importance": 5,
-                    "transition_to_next": "smooth"
+                    "transition_to_next": "fade"
                 },
                 {
                     "scene_number": 3,

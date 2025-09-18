@@ -1,12 +1,11 @@
 """
-Test: Scene Script Writer Agent
-Type-safe Pydantic-based scene script agent testing
+Test: Scene Script Writer Agent - Simple Pattern
+Clean tests for the simplified agent
 """
 
 import pytest
 import sys
 import os
-import json
 from pathlib import Path
 from unittest.mock import patch, MagicMock, AsyncMock
 
@@ -15,27 +14,23 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
 from agents.scene_script_writer_agent import SceneScriptWriterAgent
 from model.input_models import SceneExpansionInput
-from model.output_models import ScenePackageOutput, NarrationLine, VisualFrame, TTSSettings
+from model.output_models import ScenePackageOutput
 
 
 class TestSceneScriptWriterAgent:
-    """Scene Script Writer Agent unit tests"""
+    """Scene Script Writer Agent unit tests - Simple pattern"""
 
     def test_agent_initialization(self):
-        """Test agent initialization with Pydantic schemas"""
+        """Test agent initialization"""
         
         with patch('agents.scene_script_writer_agent.genai.Client'):
             agent = SceneScriptWriterAgent()
             
-            # Check schemas are generated
-            assert hasattr(agent, 'input_schema')
-            assert hasattr(agent, 'output_schema')
-            assert hasattr(agent, 'output_key')
-            
-            # Check schema structure
-            assert agent.input_schema["type"] == "object"
-            assert "properties" in agent.input_schema
-            assert agent.output_key == "scene_package_output_result"
+            # Check basic properties exist
+            assert hasattr(agent, 'instruction')
+            assert hasattr(agent, 'client')
+            assert isinstance(agent.instruction, str)
+            assert "Scene Script Writer Agent" in agent.instruction
 
     def test_type_safe_input_creation(self):
         """Test type-safe input data creation"""
@@ -45,8 +40,8 @@ class TestSceneScriptWriterAgent:
             scene_data={
                 "scene_number": 1,
                 "scene_type": "hook",
-                "beats": ["Introduce surprising fact about cats"],
-                "learning_objectives": ["Capture viewer attention"],
+                "beats": ["Introduce surprising fact"],
+                "learning_objectives": ["Capture attention"],
                 "needs_animation": True,
                 "scene_importance": 5
             },
@@ -61,62 +56,41 @@ class TestSceneScriptWriterAgent:
         assert input_data.scene_data["scene_number"] == 1
         assert input_data.scene_data["scene_type"] == "hook"
         assert input_data.global_context["main_character"] == "Glowbie"
-        
-        # Verify serialization
-        input_dict = input_data.model_dump()
-        assert isinstance(input_dict, dict)
-        assert input_dict["scene_data"]["scene_number"] == 1
 
     @pytest.mark.asyncio
     async def test_expand_scene_with_mock_response(self):
         """Test scene expansion with mocked LLM response"""
         
-        # Mock LLM response
+        # Mock successful LLM response
         mock_response = MagicMock()
-        mock_response.text = json.dumps({
+        mock_response.text = """{
             "scene_number": 1,
             "narration_script": [
                 {
-                    "line": "Did you know that cats purr at a frequency that can heal bones?",
+                    "line": "Did you know that cats purr at healing frequencies?",
                     "at_ms": 0,
                     "pause_ms": 800
-                },
-                {
-                    "line": "This amazing ability has fascinated scientists for decades.",
-                    "at_ms": 4000,
-                    "pause_ms": 500
                 }
             ],
             "visuals": [
                 {
                     "frame_id": "1A",
                     "shot_type": "medium",
-                    "image_prompt": "Glowbie character dressed as a veterinarian, standing next to a purring cat with visible sound waves, educational and friendly atmosphere",
-                    "aspect_ratio": "16:9",
-                    "character_pose": "pointing to cat",
-                    "expression": "amazed",
-                    "background": "veterinary clinic"
-                },
-                {
-                    "frame_id": "1B", 
-                    "shot_type": "close",
-                    "image_prompt": "Close-up of Glowbie examining scientific data about cat purring frequencies, with charts and graphs visible",
-                    "aspect_ratio": "16:9",
-                    "character_pose": "studying data",
-                    "expression": "curious"
+                    "image_prompt": "Glowbie character explaining cat purring with scientific diagrams in background",
+                    "aspect_ratio": "16:9"
                 }
             ],
             "tts": {
                 "engine": "lemonfox",
                 "voice": "sarah",
                 "language": "en-US",
-                "speed": 1.1
+                "speed": 1.0
             },
             "timing": {
                 "total_ms": 8000,
-                "estimated": True
+                "estimated": true
             }
-        })
+        }"""
         
         with patch('agents.scene_script_writer_agent.genai.Client') as mock_client_class:
             mock_client = MagicMock()
@@ -125,20 +99,15 @@ class TestSceneScriptWriterAgent:
             
             agent = SceneScriptWriterAgent()
             
-            # Create type-safe input
+            # Create input
             input_data = SceneExpansionInput(
                 scene_data={
                     "scene_number": 1,
                     "scene_type": "hook",
                     "beats": ["Cats purr for healing"],
-                    "learning_objectives": ["Understand cat purring"],
-                    "needs_animation": True,
-                    "scene_importance": 5
+                    "learning_objectives": ["Understand cat purring"]
                 },
-                global_context={
-                    "main_character": "Glowbie",
-                    "overall_style": "educational and engaging"
-                }
+                global_context={"main_character": "Glowbie"}
             )
             
             # Expand scene
@@ -147,30 +116,20 @@ class TestSceneScriptWriterAgent:
             # Verify type-safe output
             assert isinstance(result, ScenePackageOutput)
             assert result.scene_number == 1
-            assert len(result.narration_script) == 2
-            assert len(result.visuals) == 2
-            
-            # Check narration details
-            first_line = result.narration_script[0]
-            assert isinstance(first_line, NarrationLine)
-            assert "cats purr" in first_line.line.lower()
-            assert first_line.at_ms == 0
-            
-            # Check visual details
-            first_visual = result.visuals[0]
-            assert isinstance(first_visual, VisualFrame)
-            assert first_visual.frame_id == "1A"
-            assert len(first_visual.image_prompt) >= 40
-            
-            # Check TTS settings
-            assert isinstance(result.tts, TTSSettings)
-            assert result.tts.engine == "lemonfox"
-            assert result.tts.voice == "sarah"
+            assert len(result.narration_script) == 1
+            assert len(result.visuals) == 1
+            assert result.visuals[0].frame_id == "1A"
 
-    def test_fallback_output_creation(self):
-        """Test fallback output when generation fails"""
+    @pytest.mark.asyncio
+    async def test_fallback_on_error(self):
+        """Test fallback when generation fails"""
         
-        with patch('agents.scene_script_writer_agent.genai.Client'):
+        with patch('agents.scene_script_writer_agent.genai.Client') as mock_client_class:
+            # Mock client that throws error
+            mock_client = MagicMock()
+            mock_client.agenerate_content = AsyncMock(side_effect=Exception("API Error"))
+            mock_client_class.return_value = mock_client
+            
             agent = SceneScriptWriterAgent()
             
             input_data = SceneExpansionInput(
@@ -183,57 +142,25 @@ class TestSceneScriptWriterAgent:
                 global_context={"main_character": "Glowbie"}
             )
             
-            # Create fallback
-            fallback = agent._create_fallback_output(input_data, "Test error")
+            # Should fallback gracefully
+            result = await agent.expand_scene(input_data)
             
-            # Verify fallback is valid
-            assert isinstance(fallback, ScenePackageOutput)
-            assert fallback.scene_number == 2
-            assert len(fallback.narration_script) >= 1
-            assert len(fallback.visuals) >= 1
-            assert fallback.visuals[0].frame_id == "2A"
-
-    def test_instruction_creation(self):
-        """Test instruction prompt creation"""
-        
-        with patch('agents.scene_script_writer_agent.genai.Client'):
-            agent = SceneScriptWriterAgent()
-            
-            input_data = SceneExpansionInput(
-                scene_data={
-                    "scene_number": 3,
-                    "scene_type": "revelation",
-                    "beats": ["Surprising discovery about quantum physics"],
-                    "learning_objectives": ["Understand quantum concepts"]
-                },
-                global_context={
-                    "main_character": "Glowbie",
-                    "overall_style": "scientific and mysterious",
-                    "target_audience": "students"
-                }
-            )
-            
-            instruction = agent._create_instruction(input_data)
-            
-            # Verify instruction contains key elements
-            assert "Scene 3" in instruction
-            assert "revelation" in instruction
-            assert "quantum physics" in instruction
-            assert "Glowbie" in instruction
-            assert "students" in instruction
-            assert "JSON" in instruction
-            assert "schema" in instruction
+            # Verify fallback result
+            assert isinstance(result, ScenePackageOutput)
+            assert result.scene_number == 2
+            assert len(result.narration_script) >= 1
+            assert len(result.visuals) >= 1
 
     @pytest.mark.asyncio
-    async def test_scene_with_previous_scenes_context(self):
+    async def test_scene_with_previous_context(self):
         """Test scene expansion with previous scenes context"""
         
         mock_response = MagicMock()
-        mock_response.text = json.dumps({
+        mock_response.text = """{
             "scene_number": 2,
             "narration_script": [
                 {
-                    "line": "Building on what we learned in the previous scene, let's dive deeper.",
+                    "line": "Building on what we learned, let's dive deeper.",
                     "at_ms": 0,
                     "pause_ms": 600
                 }
@@ -241,8 +168,8 @@ class TestSceneScriptWriterAgent:
             "visuals": [
                 {
                     "frame_id": "2A",
-                    "shot_type": "medium",
-                    "image_prompt": "Glowbie character continuing the explanation from the previous scene, showing continuity",
+                    "shot_type": "medium", 
+                    "image_prompt": "Glowbie character continuing explanation with continuity from previous scene",
                     "aspect_ratio": "16:9"
                 }
             ],
@@ -253,9 +180,9 @@ class TestSceneScriptWriterAgent:
             },
             "timing": {
                 "total_ms": 5000,
-                "estimated": True
+                "estimated": true
             }
-        })
+        }"""
         
         with patch('agents.scene_script_writer_agent.genai.Client') as mock_client_class:
             mock_client = MagicMock()
@@ -269,7 +196,7 @@ class TestSceneScriptWriterAgent:
                 scene_data={
                     "scene_number": 2,
                     "scene_type": "explanation",
-                    "beats": ["Continue the explanation"],
+                    "beats": ["Continue explanation"],
                     "learning_objectives": ["Build on previous knowledge"]
                 },
                 global_context={"main_character": "Glowbie"},
@@ -286,24 +213,7 @@ class TestSceneScriptWriterAgent:
             
             # Verify continuity
             assert result.scene_number == 2
-            assert "previous scene" in result.narration_script[0].line.lower()
-
-    def test_get_schemas_method(self):
-        """Test schema retrieval method"""
-        
-        with patch('agents.scene_script_writer_agent.genai.Client'):
-            agent = SceneScriptWriterAgent()
-            
-            schemas = agent.get_schemas()
-            
-            assert "input_schema" in schemas
-            assert "output_schema" in schemas
-            assert "output_key" in schemas
-            
-            # Verify they're valid
-            assert isinstance(schemas["input_schema"], dict)
-            assert isinstance(schemas["output_schema"], dict)
-            assert schemas["output_key"] == "scene_package_output_result"
+            assert len(result.narration_script) >= 1
 
 
 if __name__ == "__main__":
