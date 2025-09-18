@@ -457,7 +457,7 @@ Multiple images per dialogue segment are encouraged for dynamic storytelling.
                     except AttributeError:
                         logger.info("generate_content() method not available, trying direct model call")
                         
-                        # Method 3: Direct model call
+                        # Method 3: Direct model call with structured output
                         client = genai.Client()
                         # Load ScenePackage schema for structured output
                         schema_path = Path("schemas/ScenePackage.json")
@@ -465,6 +465,7 @@ Multiple images per dialogue segment are encouraged for dynamic storytelling.
                         if schema_path.exists():
                             with open(schema_path, 'r') as f:
                                 scene_schema = json.load(f)
+                                logger.info("📋 Loaded ScenePackage JSON schema")
                         
                         config = {
                             "temperature": 0.7,  # Lower temperature for more consistent JSON
@@ -474,12 +475,14 @@ Multiple images per dialogue segment are encouraged for dynamic storytelling.
                             "response_mime_type": "application/json"
                         }
                         
-                        # Add schema if available - but disable for now due to issues
-                        # if scene_schema:
-                        #     config["response_schema"] = scene_schema
-                        #     logger.info("🎯 Using JSON schema for structured output")
+                        # Enable schema for structured output
+                        if scene_schema:
+                            config["response_schema"] = scene_schema
+                            logger.info("🎯 Using JSON schema for structured output")
+                        else:
+                            logger.warning("⚠️ Schema not found, using standard JSON output")
                         
-                        logger.info("🎯 Using standard JSON output (schema disabled for stability)")
+                        logger.info("🎯 Using ADK API with output schema for scene generation")
                         
                         response = client.models.generate_content(
                             model="gemini-2.5-flash",

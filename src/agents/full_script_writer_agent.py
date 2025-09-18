@@ -313,9 +313,9 @@ Output ONLY valid JSON following the FullScript.json schema.
 """
     
     async def _simulate_adk_response(self, prompt: str) -> str:
-        """Use actual ADK API to generate response"""
+        """Use actual ADK API to generate response with structured output schema"""
         try:
-            logger.info("Using actual ADK API for full script generation")
+            logger.info("🎯 Using ADK API with output schema for full script generation")
             
             # Try different methods to call the ADK agent
             response = None
@@ -323,18 +323,18 @@ Output ONLY valid JSON following the FullScript.json schema.
             # Method 1: Try run() method
             try:
                 response = await self.run(prompt)
-                logger.info("Successfully used run() method")
+                logger.info("✅ Successfully used run() method")
             except AttributeError:
                 logger.info("run() method not available, trying generate_content()")
                 
                 # Method 2: Try generate_content() method
                 try:
                     response = await self.generate_content(prompt)
-                    logger.info("Successfully used generate_content() method")
+                    logger.info("✅ Successfully used generate_content() method")
                 except AttributeError:
                     logger.info("generate_content() method not available, trying direct model call")
                     
-                    # Method 3: Direct model call
+                    # Method 3: Direct model call with structured output
                     client = genai.Client()
                     # Load FullScript schema for structured output
                     schema_path = Path("schemas/FullScript.json")
@@ -342,6 +342,7 @@ Output ONLY valid JSON following the FullScript.json schema.
                     if schema_path.exists():
                         with open(schema_path, 'r') as f:
                             script_schema = json.load(f)
+                            logger.info("📋 Loaded FullScript JSON schema")
                     
                     config = {
                         "temperature": 0.6,  # Lower temperature for more consistent JSON
@@ -351,19 +352,19 @@ Output ONLY valid JSON following the FullScript.json schema.
                         "response_mime_type": "application/json"
                     }
                     
-                    # Add schema if available - but disable for now due to issues
-                    # if script_schema:
-                    #     config["response_schema"] = script_schema
-                    #     logger.info("🎯 Using JSON schema for structured output")
-                    
-                    logger.info("🎯 Using standard JSON output (schema disabled for stability)")
+                    # Enable schema for structured output
+                    if script_schema:
+                        config["response_schema"] = script_schema
+                        logger.info("🎯 Using JSON schema for structured output")
+                    else:
+                        logger.warning("⚠️ Schema not found, using standard JSON output")
                     
                     response = client.models.generate_content(
                         model="gemini-2.5-flash",
                         contents=[prompt],
                         config=config
                     )
-                    logger.info("Successfully used direct model call")
+                    logger.info("✅ Successfully used direct model call with schema")
             
             if response and hasattr(response, 'text') and response.text:
                 logger.info("Successfully received response from ADK API")
