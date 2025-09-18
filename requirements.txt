@@ -1,0 +1,27 @@
+# ShortFactory Agent - Production Dependencies
+# 핵심 AI 및 데이터 처리
+
+# Google AI 및 ADK
+google-generativeai>=0.7.0,<0.8.0
+google-adk>=0.1.0
+
+# 데이터 검증 및 스키마
+pydantic>=2.0.0,<3.0.0
+jsonschema>=4.0.0,<5.0.0
+
+# 환경 설정
+python-dotenv>=1.0.0,<2.0.0
+
+# HTTP 요청 (LemonFox API)
+requests>=2.31.0,<3.0.0
+
+# 이미지 처리
+Pillow>=10.0.0,<11.0.0
+
+# 비디오 처리 (FFmpeg Python wrapper)
+ffmpeg-python>=0.2.0,<0.3.0
+
+# 기본 Python 라이브러리 (명시적 버전 지정)
+# 이미 내장되어 있지만 명확성을 위해 명시
+# asyncio, json, logging, os, pathlib, time, typing, enum, datetime, argparse, sys, re, io
+# dataclasses (Python 3.7+)
