@@ -262,20 +262,22 @@ LEARNING OBJECTIVES:
 
 {continuity_context}
 
-ELABORATION & HOOKING MISSION:
-Your job is to ELABORATE the story beats and ADD HOOKING elements to make this scene compelling.
+FAST-PACED VIDEO MISSION:
+Your job is to create RAPID, ENGAGING content that delivers core information QUICKLY.
+This is a SHORT VIDEO format - prioritize SPEED, VISUAL VARIETY, and QUICK INFORMATION DELIVERY.
 Generate all content in {language} language.
 
 DIALOGUE FLOW & CONTINUITY MISSION:
 Create smooth, natural dialogue that flows seamlessly within the scene and connects logically to other scenes.
 Ensure each line of dialogue builds naturally from the previous line and leads smoothly to the next.
 
-ELABORATION REQUIREMENTS:
-- EXPAND on the basic beats with rich details, interesting facts, and compelling narratives
-- ADD depth with specific examples, case studies, and real-world applications
-- INCLUDE fascinating details, surprising facts, and intriguing information
-- CREATE vivid descriptions and compelling storytelling elements
-- DEVELOP the content into something truly engaging and memorable
+ELABORATION REQUIREMENTS - FAST & CONCISE:
+- EXPAND on the basic beats with CONCISE but compelling facts
+- ADD depth with BRIEF examples and key applications (avoid lengthy explanations)
+- INCLUDE fascinating details but keep each point SHORT (3-5 seconds max per concept)
+- CREATE vivid descriptions but be SUCCINCT and PUNCHY
+- DEVELOP engaging content but prioritize SPEED and CLARITY over length
+- FOCUS on delivering core information QUICKLY with visual support
 
 HOOKING REQUIREMENTS:
 - START with attention-grabbing elements (questions, surprising facts, intriguing statements)
@@ -326,8 +328,10 @@ OPTIONAL FIELDS (use empty arrays if not needed):
 ✓ sfx_cues (array with cue, at_ms, duration_ms)
 ✓ on_screen_text (array with text, at_ms, duration_ms, style, position)
 
-VISUAL REQUIREMENTS:
-- Create 1-2 key visual frames per scene (not more than 2)
+VISUAL REQUIREMENTS - FAST-PACED SHORT VIDEO:
+- Create 3-6 visual frames per scene for RAPID visual progression
+- Create NEW IMAGES when switching topics/concepts within the scene
+- Each image should represent 3-5 seconds of content maximum
 - Create compelling image_prompts (minimum 40 characters)
 - Include negative_prompts to avoid unwanted elements
 - Specify shot_types: wide, medium, close, macro, extreme_wide, extreme_close
@@ -335,7 +339,7 @@ VISUAL REQUIREMENTS:
 - Use aspect_ratio: 16:9, 9:16, 1:1, 4:5, 3:2, 2:3
 - Include model_hints for style consistency
 - Set appropriate guidance_scale (1.0-20.0)
-- Focus on the MOST IMPORTANT visual moment(s) of the scene
+- IMPORTANT: Change visual when changing topic/concept for better engagement
 
 TTS REQUIREMENTS:
 - Use engine: "elevenlabs"
@@ -344,7 +348,7 @@ TTS REQUIREMENTS:
   - stability: 0.2-0.6 (lower for more expressive, varied voice)
   - similarity_boost: 0.8-1.0 (higher for better voice consistency)  
   - style: 0.7-1.0 (higher for more emotional expression and mood)
-  - speed: 1.2-1.5 (20-30% faster for better engagement)
+  - speed: 1.4-1.6 (40-60% faster for rapid information delivery)
   - loudness: 0.1-0.4 (moderate levels for clear audio)
 
 OUTPUT FORMAT:

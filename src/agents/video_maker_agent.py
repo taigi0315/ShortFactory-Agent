@@ -131,10 +131,10 @@ class VideoMakerAgent:
         if not images:
             return []
         
-        # Target duration per image (5-7 seconds is optimal)
-        target_min_duration = 5.0
-        target_max_duration = 7.0
-        absolute_min_duration = 3.0  # Never go below 3 seconds
+        # Target duration per image (3-5 seconds for fast-paced content)
+        target_min_duration = 3.0  
+        target_max_duration = 5.0
+        absolute_min_duration = 2.0  # Never go below 2 seconds
         
         if len(images) == 1:
             # Single image: use full duration but cap at reasonable maximum
@@ -142,7 +142,7 @@ class VideoMakerAgent:
             return [duration]
         
         # Calculate optimal duration per image
-        optimal_duration = (target_min_duration + target_max_duration) / 2  # 6 seconds
+        optimal_duration = (target_min_duration + target_max_duration) / 2  # 4 seconds
         total_optimal = optimal_duration * len(images)
         
         durations = []
@@ -302,8 +302,15 @@ class VideoMakerAgent:
                 self.logger.warning(f"No images found for scene {scene_num}, skipping this scene")
                 continue
             
-            # Calculate image timings
+            # Calculate image timings - ENSURE video is at least as long as audio
             durations = self.distribute_image_timings(scene_images, voice_duration)
+            
+            # CRITICAL: Verify total video duration matches or exceeds audio duration
+            total_video_duration = sum(durations)
+            if total_video_duration < voice_duration:
+                # Extend the last image to match audio duration exactly
+                durations[-1] += (voice_duration - total_video_duration)
+                self.logger.info(f"🔧 Extended last image by {voice_duration - total_video_duration:.2f}s to match audio duration")
             
             image_timings = []
             current_time = 0.0
@@ -401,15 +408,23 @@ class VideoMakerAgent:
         
         # Add audio to the video (if voice file exists)
         if segment.voice_file and os.path.exists(segment.voice_file):
+            # CRITICAL FIX: Always preserve full audio - never cut off dialogue
+            # Remove -shortest flag and use audio as the master duration
             cmd = [
                 'ffmpeg', '-y',
                 '-i', str(video_only_path),  # Video input
                 '-i', segment.voice_file,    # Audio input
                 '-c:v', 'copy',              # Copy video codec
                 '-c:a', 'aac',               # Audio codec
-                '-shortest',                 # End when shortest stream ends
+                '-map', '0:v',               # Use video stream
+                '-map', '1:a',               # Use audio stream  
                 output_path
             ]
+            
+            # Get audio duration for logging
+            audio_duration = self.get_audio_duration(segment.voice_file)
+            self.logger.info(f"🎵 Preserving full audio duration: {audio_duration:.2f}s for scene {segment.scene_number}")
+            self.logger.info(f"🔧 FIXED: Removed -shortest flag to prevent audio cutoff")
         else:
             # No audio - just copy video
             cmd = [
