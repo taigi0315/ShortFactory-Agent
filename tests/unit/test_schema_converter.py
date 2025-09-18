@@ -17,10 +17,10 @@ from schemas.output_models import FullScriptOutput, ScenePackageOutput, ImageAss
 
 
 class TestPydanticToADKSchema:
-    """Pydantic → ADK 스키마 변환 테스트"""
+    """Pydantic → ADK 스키마 conversion test"""
 
     def test_convert_full_script_input(self):
-        """FullScriptInput → ADK 스키마 변환 테스트"""
+        """FullScriptInput → ADK 스키마 conversion test"""
         adk_schema = PydanticToADKSchema.convert_model_to_schema(FullScriptInput)
         
         # 기본 구조 확인
@@ -41,7 +41,7 @@ class TestPydanticToADKSchema:
         assert topic_prop["minLength"] == 5
 
     def test_convert_scene_package_output(self):
-        """ScenePackageOutput → ADK 스키마 변환 테스트"""
+        """ScenePackageOutput → ADK 스키마 conversion test"""
         adk_schema = PydanticToADKSchema.convert_model_to_schema(ScenePackageOutput)
         
         # 기본 구조 확인
@@ -66,7 +66,7 @@ class TestPydanticToADKSchema:
         assert "items" in narration_prop
 
     def test_get_output_key_generation(self):
-        """output_key 자동 생성 테스트"""
+        """output_key 자동 generation test"""
         
         # 다양한 모델들의 output_key 생성
         test_cases = [
@@ -97,7 +97,7 @@ class TestPydanticToADKSchema:
             assert is_valid, f"{model_class.__name__} 스키마가 ADK 규격에 맞지 않음"
 
     def test_enum_handling(self):
-        """Enum 타입 처리 테스트"""
+        """Enum 타입 handling test"""
         adk_schema = PydanticToADKSchema.convert_model_to_schema(FullScriptInput)
         
         properties = adk_schema["properties"]
@@ -109,7 +109,7 @@ class TestPydanticToADKSchema:
             assert length_prop["type"] == "string"
 
     def test_nested_object_handling(self):
-        """중첩된 객체 처리 테스트"""
+        """중첩된 객체 handling test"""
         adk_schema = PydanticToADKSchema.convert_model_to_schema(ScenePackageOutput)
         
         properties = adk_schema["properties"]
@@ -121,7 +121,7 @@ class TestPydanticToADKSchema:
             assert "properties" in tts_prop
 
     def test_array_handling(self):
-        """배열 타입 처리 테스트"""
+        """배열 타입 handling test"""
         adk_schema = PydanticToADKSchema.convert_model_to_schema(ScenePackageOutput)
         
         properties = adk_schema["properties"]
@@ -176,7 +176,7 @@ class TestADKSchemaValidator:
         assert ADKSchemaValidator.validate_adk_schema(invalid_schema) == False
 
     def test_schema_conversion_test_utility(self):
-        """스키마 변환 테스트 유틸리티 검증"""
+        """스키마 conversion test 유틸리티 검증"""
         
         test_result = ADKSchemaValidator.test_schema_conversion(FullScriptInput)
         
@@ -195,7 +195,7 @@ class TestEndToEndConversion:
     """전체 변환 과정 테스트"""
 
     def test_all_input_models_conversion(self):
-        """모든 입력 모델들의 변환 테스트"""
+        """모든 입력 모델들의 conversion test"""
         input_models = [
             FullScriptInput,
             SceneExpansionInput,
@@ -203,7 +203,7 @@ class TestEndToEndConversion:
         ]
         
         for model_class in input_models:
-            # 변환 테스트
+            # conversion test
             test_result = ADKSchemaValidator.test_schema_conversion(model_class)
             
             assert test_result["schema_valid"] == True, f"{model_class.__name__} 변환 실패"
@@ -211,7 +211,7 @@ class TestEndToEndConversion:
             assert test_result["properties_count"] > 0
 
     def test_all_output_models_conversion(self):
-        """모든 출력 모델들의 변환 테스트"""
+        """모든 출력 모델들의 conversion test"""
         output_models = [
             FullScriptOutput,
             ScenePackageOutput,
@@ -219,7 +219,7 @@ class TestEndToEndConversion:
         ]
         
         for model_class in output_models:
-            # 변환 테스트
+            # conversion test
             test_result = ADKSchemaValidator.test_schema_conversion(model_class)
             
             assert test_result["schema_valid"] == True, f"{model_class.__name__} 변환 실패"

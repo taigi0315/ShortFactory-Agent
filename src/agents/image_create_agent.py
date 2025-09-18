@@ -469,7 +469,7 @@ class ImageCreateAgent:
                     'thumbnail_uri': str(target_path).replace('.png', '_thumb.png'),
                     'prompt_used': f"Enhanced mock with Glowbie character: {visual.get('image_prompt', 'Mock image')}",
                     'negative_prompt_used': visual.get('negative_prompt', ''),
-                    'model': 'enhanced_mock_with_glowbie',
+                    'model': 'mock',
                     'sampler': 'mock',
                     'cfg': visual.get('guidance_scale', 7.5),
                     'steps': 1,

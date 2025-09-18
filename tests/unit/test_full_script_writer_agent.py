@@ -1,5 +1,5 @@
 """
-Test: Enhanced ADK Full Script Agent
+Test: Full Script Writer Agent
 Type-safe Pydantic-based agent testing
 """
 
@@ -13,19 +13,19 @@ from unittest.mock import patch, MagicMock, AsyncMock
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from agents.enhanced_adk_full_script_agent import EnhancedADKFullScriptAgent
+from agents.full_script_writer_agent import FullScriptWriterAgent
 from schemas.input_models import FullScriptInput, LengthPreference, Language
 from schemas.output_models import FullScriptOutput
 
 
-class TestEnhancedADKFullScriptAgent:
-    """Enhanced ADK Full Script Agent unit tests"""
+class TestFullScriptWriterAgent:
+    """Full Script Writer Agent unit tests"""
 
     def test_agent_initialization(self):
         """Test agent initialization with Pydantic schemas"""
         
-        with patch('agents.enhanced_adk_full_script_agent.genai.Client'):
-            agent = EnhancedADKFullScriptAgent()
+        with patch('agents.full_script_writer_agent.genai.Client'):
+            agent = FullScriptWriterAgent()
             
             # Check schemas are generated
             assert hasattr(agent, 'input_schema')
@@ -40,8 +40,8 @@ class TestEnhancedADKFullScriptAgent:
     def test_get_schemas_method(self):
         """Test schema retrieval method"""
         
-        with patch('agents.enhanced_adk_full_script_agent.genai.Client'):
-            agent = EnhancedADKFullScriptAgent()
+        with patch('agents.full_script_writer_agent.genai.Client'):
+            agent = FullScriptWriterAgent()
             
             schemas = agent.get_schemas()
             
@@ -120,12 +120,12 @@ class TestEnhancedADKFullScriptAgent:
             ]
         })
         
-        with patch('agents.enhanced_adk_full_script_agent.genai.Client') as mock_client_class:
+        with patch('agents.full_script_writer_agent.genai.Client') as mock_client_class:
             mock_client = MagicMock()
             mock_client.agenerate_content = AsyncMock(return_value=mock_response)
             mock_client_class.return_value = mock_client
             
-            agent = EnhancedADKFullScriptAgent()
+            agent = FullScriptWriterAgent()
             
             # Create type-safe input
             input_data = FullScriptInput(
@@ -146,8 +146,8 @@ class TestEnhancedADKFullScriptAgent:
     def test_fallback_output_creation(self):
         """Test fallback output when generation fails"""
         
-        with patch('agents.enhanced_adk_full_script_agent.genai.Client'):
-            agent = EnhancedADKFullScriptAgent()
+        with patch('agents.full_script_writer_agent.genai.Client'):
+            agent = FullScriptWriterAgent()
             
             input_data = FullScriptInput(
                 topic="Test topic",
@@ -166,8 +166,8 @@ class TestEnhancedADKFullScriptAgent:
     def test_instruction_creation(self):
         """Test instruction prompt creation"""
         
-        with patch('agents.enhanced_adk_full_script_agent.genai.Client'):
-            agent = EnhancedADKFullScriptAgent()
+        with patch('agents.full_script_writer_agent.genai.Client'):
+            agent = FullScriptWriterAgent()
             
             input_data = FullScriptInput(
                 topic="Quantum physics",
@@ -192,12 +192,12 @@ class TestEnhancedADKFullScriptAgent:
         mock_response = MagicMock()
         mock_response.text = '{"title": "Test", "scenes": [invalid json'
         
-        with patch('agents.enhanced_adk_full_script_agent.genai.Client') as mock_client_class:
+        with patch('agents.full_script_writer_agent.genai.Client') as mock_client_class:
             mock_client = MagicMock()
             mock_client.agenerate_content = AsyncMock(return_value=mock_response)
             mock_client_class.return_value = mock_client
             
-            agent = EnhancedADKFullScriptAgent()
+            agent = FullScriptWriterAgent()
             
             input_data = FullScriptInput(topic="Test topic")
             

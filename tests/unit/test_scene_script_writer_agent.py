@@ -1,5 +1,5 @@
 """
-Test: Enhanced ADK Scene Script Agent
+Test: Scene Script Writer Agent
 Type-safe Pydantic-based scene script agent testing
 """
 
@@ -13,19 +13,19 @@ from unittest.mock import patch, MagicMock, AsyncMock
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from agents.enhanced_adk_scene_script_agent import EnhancedADKSceneScriptAgent
+from agents.scene_script_writer_agent import SceneScriptWriterAgent
 from schemas.input_models import SceneExpansionInput
 from schemas.output_models import ScenePackageOutput, NarrationLine, VisualFrame, TTSSettings
 
 
-class TestEnhancedADKSceneScriptAgent:
-    """Enhanced ADK Scene Script Agent unit tests"""
+class TestSceneScriptWriterAgent:
+    """Scene Script Writer Agent unit tests"""
 
     def test_agent_initialization(self):
         """Test agent initialization with Pydantic schemas"""
         
-        with patch('agents.enhanced_adk_scene_script_agent.genai.Client'):
-            agent = EnhancedADKSceneScriptAgent()
+        with patch('agents.scene_script_writer_agent.genai.Client'):
+            agent = SceneScriptWriterAgent()
             
             # Check schemas are generated
             assert hasattr(agent, 'input_schema')
@@ -118,12 +118,12 @@ class TestEnhancedADKSceneScriptAgent:
             }
         })
         
-        with patch('agents.enhanced_adk_scene_script_agent.genai.Client') as mock_client_class:
+        with patch('agents.scene_script_writer_agent.genai.Client') as mock_client_class:
             mock_client = MagicMock()
             mock_client.agenerate_content = AsyncMock(return_value=mock_response)
             mock_client_class.return_value = mock_client
             
-            agent = EnhancedADKSceneScriptAgent()
+            agent = SceneScriptWriterAgent()
             
             # Create type-safe input
             input_data = SceneExpansionInput(
@@ -170,8 +170,8 @@ class TestEnhancedADKSceneScriptAgent:
     def test_fallback_output_creation(self):
         """Test fallback output when generation fails"""
         
-        with patch('agents.enhanced_adk_scene_script_agent.genai.Client'):
-            agent = EnhancedADKSceneScriptAgent()
+        with patch('agents.scene_script_writer_agent.genai.Client'):
+            agent = SceneScriptWriterAgent()
             
             input_data = SceneExpansionInput(
                 scene_data={
@@ -196,8 +196,8 @@ class TestEnhancedADKSceneScriptAgent:
     def test_instruction_creation(self):
         """Test instruction prompt creation"""
         
-        with patch('agents.enhanced_adk_scene_script_agent.genai.Client'):
-            agent = EnhancedADKSceneScriptAgent()
+        with patch('agents.scene_script_writer_agent.genai.Client'):
+            agent = SceneScriptWriterAgent()
             
             input_data = SceneExpansionInput(
                 scene_data={
@@ -257,12 +257,12 @@ class TestEnhancedADKSceneScriptAgent:
             }
         })
         
-        with patch('agents.enhanced_adk_scene_script_agent.genai.Client') as mock_client_class:
+        with patch('agents.scene_script_writer_agent.genai.Client') as mock_client_class:
             mock_client = MagicMock()
             mock_client.agenerate_content = AsyncMock(return_value=mock_response)
             mock_client_class.return_value = mock_client
             
-            agent = EnhancedADKSceneScriptAgent()
+            agent = SceneScriptWriterAgent()
             
             # Create input with previous scenes
             input_data = SceneExpansionInput(
@@ -291,8 +291,8 @@ class TestEnhancedADKSceneScriptAgent:
     def test_get_schemas_method(self):
         """Test schema retrieval method"""
         
-        with patch('agents.enhanced_adk_scene_script_agent.genai.Client'):
-            agent = EnhancedADKSceneScriptAgent()
+        with patch('agents.scene_script_writer_agent.genai.Client'):
+            agent = SceneScriptWriterAgent()
             
             schemas = agent.get_schemas()
             
