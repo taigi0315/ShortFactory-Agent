@@ -14,6 +14,7 @@ from core.shared_context import SharedContextManager
 from core.informative_enhancer import InformativeEnhancer
 from core.image_style_selector import ImageStyleSelector
 from core.json_parser import RobustJSONParser, JSONParsingError, parse_scene_package
+from core.enhanced_response_models import EnhancedScenePackage, LLMResponseProcessor
 from core.cost_optimizer import CostOptimizer, validate_and_optimize_prompt, validate_response_quality
 from model.models import ScenePackage
 
@@ -539,38 +540,42 @@ Multiple images per dialogue segment are encouraged for dynamic storytelling.
         raise ValueError(f"Unexpected error: reached end of retry loop")
     
     def _parse_response_with_pydantic(self, response_text: str, scene_number: int) -> Dict[str, Any]:
-        """Parse AI response using robust JSON parser with Pydantic validation"""
+        """Parse AI response using enhanced Pydantic processor"""
         try:
-            # Use the robust JSON parser with Pydantic validation
-            scene_package_model = parse_scene_package(response_text, scene_number)
+            # Use the new enhanced LLM response processor
+            enhanced_scene_package = LLMResponseProcessor.safe_parse_scene(
+                response_text, 
+                fallback_scene_number=scene_number
+            )
             
-            # Convert Pydantic model back to dict for compatibility
-            scene_package_dict = scene_package_model.model_dump()
+            # Convert enhanced model back to dict for compatibility
+            scene_package_dict = enhanced_scene_package.model_dump()
             
-            logger.info(f"✅ Scene {scene_number} parsed and validated successfully with Pydantic")
+            logger.info(f"✅ Scene {scene_number} parsed with Enhanced Pydantic processor - auto-handled field variations")
             return scene_package_dict
             
-        except JSONParsingError as e:
-            logger.error(f"❌ JSON parsing failed for scene {scene_number}: {e}")
-            logger.error(f"Raw response preview: {response_text[:500]}...")
-            
-            # Try to create fallback data
-            try:
-                logger.warning(f"⚠️ Creating fallback data for scene {scene_number}")
-                fallback_model = RobustJSONParser.create_fallback_data(
-                    ScenePackage,
-                    context_name=f"scene_{scene_number}",
-                    scene_number=scene_number
-                )
-                fallback_dict = fallback_model.model_dump()
-                fallback_dict['safety_checks'] = ['parsing_failed_fallback_used']
-                return fallback_dict
-            except Exception as fallback_error:
-                logger.error(f"❌ Even fallback creation failed for scene {scene_number}: {fallback_error}")
-                raise ValueError(f"Complete parsing failure for scene {scene_number}: {e}")
         except Exception as e:
-            logger.error(f"❌ Unexpected error parsing scene {scene_number}: {e}")
-            raise ValueError(f"Unexpected parsing error for scene {scene_number}: {e}")
+            logger.warning(f"⚠️ Enhanced processor encountered issue for scene {scene_number}: {e}")
+            logger.info("🔄 Enhanced processor will automatically handle this with fallback")
+            
+            # Enhanced processor always returns valid data, even on complete failure
+            # This should rarely happen, but if it does, create minimal fallback
+            from core.enhanced_response_models import EnhancedScenePackage
+            fallback_scene = EnhancedScenePackage.model_validate({
+                'scene_number': scene_number,
+                'narration_script': [{
+                    'line': f"Scene {scene_number} content could not be generated properly.",
+                    'at_ms': 0,
+                    'duration_ms': 3000
+                }],
+                'timing': {'total_ms': 3000}
+            })
+            
+            fallback_dict = fallback_scene.model_dump()
+            fallback_dict['safety_checks'] = ['enhanced_processor_fallback_used']
+            
+            logger.info(f"✅ Scene {scene_number} fallback created successfully")
+            return fallback_dict
     
     def _parse_response_safely_legacy(self, response_text: str, scene_number: int) -> Dict[str, Any]:
         """Parse AI response safely with JSON repair and validation"""

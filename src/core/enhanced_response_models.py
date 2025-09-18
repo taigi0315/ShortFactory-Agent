@@ -113,15 +113,21 @@ class EnhancedSFXCue(BaseModel):
         
         return normalized
 
-    @field_validator('at_ms', 'duration_ms')
+    @field_validator('at_ms', 'duration_ms', mode='before')
     @classmethod
     def convert_to_int(cls, v: Any) -> int:
-        """문자열 숫자도 정수로 변환"""
+        """문자열 숫자도 정수로 변환 (시간 문자열 포함)"""
         if isinstance(v, str):
+            # "3.5s", "1000ms", "2s" 등의 형식 처리
+            v_clean = v.lower().replace('ms', '').replace('s', '')
             try:
-                return int(float(v))  # "1000.0" 같은 경우도 처리
+                float_val = float(v_clean)
+                # 원본 문자열에 's'가 있고 'ms'가 없으면 초 단위로 간주
+                if 's' in v.lower() and 'ms' not in v.lower():
+                    return int(float_val * 1000)
+                return int(float_val)
             except (ValueError, TypeError):
-                return 0 if 'at_ms' in cls.model_fields else 1000
+                return 0 if v == 'at_ms' else 1000
         return int(v)
 
 
