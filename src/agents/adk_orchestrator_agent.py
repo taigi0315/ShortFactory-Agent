@@ -57,7 +57,7 @@ class ADKOrchestratorAgent:
         """
         
         # Create session
-        session_id = self.session_manager.create_session()
+        session_id = self.session_manager.create_session(topic)
         logger.info(f"🎬 Starting ADK video production pipeline - Session: {session_id}")
         
         # Initialize build report
@@ -98,7 +98,7 @@ class ADKOrchestratorAgent:
             logger.info(f"✅ Full script generated with {len(full_script.get('scenes', []))} scenes")
             
             # Save full script
-            script_file = self.session_manager.get_session_path(session_id) / "full_script.json"
+            script_file = self.session_manager.get_session_dir(session_id) / "full_script.json"
             with open(script_file, 'w', encoding='utf-8') as f:
                 json.dump(full_script, f, indent=2, ensure_ascii=False)
             
@@ -135,7 +135,7 @@ class ADKOrchestratorAgent:
                     previous_scenes.append(scene_package)
                     
                     # Save individual scene package
-                    scene_file = self.session_manager.get_session_path(session_id) / f"scene_package_{scene_number}.json"
+                    scene_file = self.session_manager.get_session_dir(session_id) / f"scene_package_{scene_number}.json"
                     with open(scene_file, 'w', encoding='utf-8') as f:
                         json.dump(scene_package, f, indent=2, ensure_ascii=False)
                     
@@ -195,7 +195,7 @@ class ADKOrchestratorAgent:
             }
             
             # Save complete package
-            package_file = self.session_manager.get_session_path(session_id) / "production_package.json"
+            package_file = self.session_manager.get_session_dir(session_id) / "production_package.json"
             with open(package_file, 'w', encoding='utf-8') as f:
                 json.dump(production_package, f, indent=2, ensure_ascii=False)
             
@@ -211,7 +211,7 @@ class ADKOrchestratorAgent:
             }
             
             # Save final build report
-            report_file = self.session_manager.get_session_path(session_id) / "build_report.json"
+            report_file = self.session_manager.get_session_dir(session_id) / "build_report.json"
             with open(report_file, 'w', encoding='utf-8') as f:
                 json.dump(build_report, f, indent=2, ensure_ascii=False)
             
@@ -226,7 +226,7 @@ class ADKOrchestratorAgent:
             build_report["error"] = str(e)
             
             # Save error report
-            report_file = self.session_manager.get_session_path(session_id) / "build_report.json"
+            report_file = self.session_manager.get_session_dir(session_id) / "build_report.json"
             with open(report_file, 'w', encoding='utf-8') as f:
                 json.dump(build_report, f, indent=2, ensure_ascii=False)
             

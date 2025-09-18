@@ -11,7 +11,7 @@ import argparse
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from main import main_new_architecture
+from main import main_shortfactory
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -56,7 +56,7 @@ def main():
             "Parker, H. G. et al. FGF4 retrogene on CFA12 is responsible for chondrodysplasia and intervertebral disc disease in dogs. PNAS (2009)"
         ]
         
-        asyncio.run(main_new_architecture(
+        asyncio.run(main_shortfactory(
             topic=test_topic,
             length_preference=args.length,
             style_profile=args.style,
@@ -69,11 +69,11 @@ def main():
         # Validate topic
         if not args.topic:
             print("❌ Error: Topic is required (or use --test for test mode)")
-            print("Usage: python run_new_architecture.py \"Your Topic Here\"")
+            print("Usage: python run_shortfactory.py \"Your Topic Here\"")
             sys.exit(1)
         
         # Normal mode
-        asyncio.run(main_new_architecture(
+        asyncio.run(main_shortfactory(
             topic=args.topic,
             length_preference=args.length,
             style_profile=args.style,
