@@ -33,24 +33,34 @@ class SceneScriptWriterAgent:
 Given scene information and context, create detailed narration, visuals, TTS settings, and timing.
 
 REQUIREMENTS:
-- Create engaging narration script with precise timing (at_ms, pause_ms)
+- Create engaging narration script with voice control settings (speed, emphasis, tone, pause_after)
 - Design 1-6 visual frames with detailed image prompts (40+ characters each)
 - Configure TTS settings (LemonFox engine, voice, speed)
-- Calculate realistic timing based on narration length
 - Maintain character consistency (use main character from context)
+- No timing calculations needed - audio files will be concatenated
 
 NARRATION GUIDELINES:
 - Use conversational, engaging language
 - Write numbers as words ("five" not "5")
-- Plan realistic pacing (150-180 words per minute)
-- Add appropriate pauses for emphasis
+- Use voice_settings to control delivery:
+  * speed: 0.7-1.3 (1.0 = normal, 1.2 for excitement)
+  * emphasis: "normal", "strong" (for key points), "gentle" (for sensitive topics)
+  * pause_after: "short" (brief pause), "medium" (dramatic pause), "long" (scene transition)
+  * tone: "conversational", "excited", "explanatory", "dramatic"
 
 VISUAL GUIDELINES:
 - Create 1-6 frames per scene for visual variety
 - Each frame represents 3-5 seconds of content
-- Include main character in appropriate context
-- Specify shot types, poses, expressions, backgrounds
-- Image prompts must be 40+ characters minimum
+- Structure visuals with separate character, camera, and scene elements:
+  * character: name="Glowbie", expression (cheerful/excited/friendly/curious/explanatory), pose (standing/gesturing/pointing/demonstrating), outfit="default"
+  * camera: angle (eye level/low angle/high angle), motion (static/slow push-in/pan), focus (character/background/specific object)
+  * scene_prompt: background and environment WITHOUT character details (40+ chars)
+  * background: specific setting description
+  * lighting: warm/dynamic/cinematic/natural illumination
+  * style_hints: ["high detail", "dynamic lighting", "educational", "friendly"] etc.
+- Maintain Glowbie character consistency: warm golden glow, friendly appearance, expressive eyes
+- Use appropriate shot types: wide (full scene), medium (character focus), close (expression focus)
+- Apply quality keywords: "high detail", "sharp focus", "professional quality", "4K resolution"
 
 TTS CONFIGURATION:
 - Engine: "lemonfox" (preferred)
@@ -200,14 +210,33 @@ CONTEXT:
             narration_script=[
                 {
                     "line": f"This is scene {scene_number}. Content generation encountered an issue, but we're providing a basic structure.",
-                    "at_ms": 0
+                    "voice_settings": {
+                        "speed": 1.0,
+                        "emphasis": "normal",
+                        "pause_after": "short",
+                        "tone": "conversational"
+                    }
                 }
             ],
             visuals=[
                 {
                     "frame_id": f"{scene_number}A",
                     "shot_type": "medium",
-                    "image_prompt": "Educational scene with friendly character explaining a concept in a clear and engaging manner with colorful background"
+                    "character": {
+                        "name": "Glowbie",
+                        "expression": "friendly",
+                        "pose": "explaining gesture",
+                        "outfit": "default"
+                    },
+                    "camera": {
+                        "angle": "eye level",
+                        "motion": "static",
+                        "focus": "character"
+                    },
+                    "scene_prompt": "Educational environment with colorful background and learning materials",
+                    "background": "bright classroom setting",
+                    "lighting": "warm and inviting",
+                    "style_hints": ["educational", "friendly", "colorful"]
                 }
             ],
             tts={
@@ -216,8 +245,8 @@ CONTEXT:
                 "speed": 1.0
             },
             timing={
-                "total_ms": 5000,
-                "estimated": True
+                "estimated_duration_seconds": 8.0,
+                "word_count": 25
             }
         )
     

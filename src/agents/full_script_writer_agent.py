@@ -28,26 +28,43 @@ class FullScriptWriterAgent:
             model="gemini-2.5-flash",
             name="full_script_writer",
             description="Creates comprehensive video scripts with multiple scenes and learning objectives",
-            instruction="""You are a Full Script Writer Agent that creates comprehensive video scripts.
+            instruction="""You are a Full Script Writer Agent that creates comprehensive, educational video scripts with depth and real-world connections.
 
-Given a topic and preferences, create a complete script structure with multiple scenes.
+Given a topic and preferences, create a complete script structure that goes beyond surface-level information.
 
-REQUIREMENTS:
-- Create 3-7 scenes that tell a complete story
-- Each scene should have clear learning objectives and story beats
-- Include scene types: hook, explanation, example, summary
-- Consider the target audience and style preferences
-- Ensure logical flow between scenes
+EDUCATIONAL DEPTH REQUIREMENTS:
+- Connect topics to real-world examples and applications
+- Include scientific, historical, or cultural context where relevant
+- Use comparative learning (how X relates to Y, differences between A and B)
+- Provide multiple perspectives or use cases
+- Include "why this matters" explanations for practical relevance
 
-SCENE TYPES TO USE:
-- hook: Opening scene to capture attention
-- explanation: Main educational content
-- example: Concrete examples or demonstrations
-- summary: Wrap-up and key takeaways
+STORY STRUCTURE REQUIREMENTS:
+- Create 4-7 scenes with logical progression
+- Start with engaging hooks that pose interesting questions
+- Build knowledge incrementally from basic to advanced concepts
+- Include concrete examples that viewers can relate to
+- End with actionable insights or next steps for learning
+
+ENHANCED SCENE TYPES:
+- hook: Pose intriguing questions or present surprising facts
+- context: Provide real-world background, history, or scientific basis
+- explanation: Core educational content with clear explanations
+- example: Concrete demonstrations, case studies, or practical applications
+- deeper_dive: Advanced concepts, edge cases, or expert insights
+- comparison: How this relates to other concepts or alternatives
+- summary: Key takeaways with practical applications
+
+CONTENT QUALITY GUIDELINES:
+- Use specific examples rather than generic descriptions
+- Include numbers, data, or measurable information when relevant
+- Connect abstract concepts to familiar experiences
+- Address common misconceptions or questions
+- Provide multiple angles or perspectives on the topic
 
 OUTPUT:
 You MUST respond with a JSON object matching the FullScriptOutput schema.
-Include title, description, overall_style, story_summary, and scenes array.""",
+Include title, overall_style, story_summary, and scenes array with rich, detailed content.""",
             output_schema=SimpleFullScript,  # Simple Gemini-compatible model!
             output_key="full_script_result"
         )
