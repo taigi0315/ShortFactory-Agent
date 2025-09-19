@@ -1,31 +1,34 @@
 """
-Scene Script Writer Agent - Simple LlmAgent Pattern  
-Direct Pydantic input/output with clean instruction-based approach
+Scene Script Writer Agent - Proper ADK LlmAgent Pattern
+Uses Google ADK LlmAgent with direct Pydantic output_schema
 """
 
 import logging
-from typing import Dict, Any
-import google.genai as genai
+from google.adk.agents.llm_agent import LlmAgent
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
 from google.genai import types
-
 from model.input_models import SceneExpansionInput
-from model.output_models import ScenePackageOutput
+from model.simple_models import SimpleScenePackage
 
 logger = logging.getLogger(__name__)
 
 
 class SceneScriptWriterAgent:
     """
-    Simple Scene Script Writer Agent using direct Pydantic models
-    Clean instruction-based approach without complex schema conversion
+    Scene Script Writer Agent using proper ADK LlmAgent pattern
+    No manual JSON parsing - automatic structured output via output_schema
     """
     
     def __init__(self):
-        """Initialize Simple Scene Script Writer Agent"""
-        self.client = genai.Client()
+        """Initialize Scene Script Writer Agent with proper ADK pattern"""
         
-        # Simple instruction - no complex schema conversion needed
-        self.instruction = """You are a Scene Script Writer Agent that transforms scene beats into production-ready packages.
+        # Create LlmAgent with direct Pydantic schema - NO manual parsing!
+        self.agent = LlmAgent(
+            model="gemini-2.5-flash",
+            name="scene_script_writer",
+            description="Transforms scene beats into production-ready packages with narration, visuals, and timing",
+            instruction="""You are a Scene Script Writer Agent that transforms scene beats into production-ready packages.
 
 Given scene information and context, create detailed narration, visuals, TTS settings, and timing.
 
@@ -49,26 +52,43 @@ VISUAL GUIDELINES:
 - Specify shot types, poses, expressions, backgrounds
 - Image prompts must be 40+ characters minimum
 
-OUTPUT FORMAT:
-Respond ONLY with valid JSON matching the ScenePackageOutput schema.
-No additional text, explanations, or markdown formatting."""
+TTS CONFIGURATION:
+- Engine: "lemonfox" (preferred)
+- Voice: "sarah" (default)
+- Speed: 1.0-1.2 (slightly faster for engagement)
+- Language: "en-US"
+
+OUTPUT:
+You MUST respond with a JSON object matching the ScenePackageOutput schema.
+Include scene_number, narration_script, visuals, tts, and timing.""",
+            output_schema=SimpleScenePackage,  # Simple Gemini-compatible model!
+            output_key="scene_package_result"
+        )
         
-        # Legacy compatibility properties for tests
+        # Setup ADK Runner for proper execution
+        self.session_service = InMemorySessionService()
+        self.runner = Runner(
+            agent=self.agent,
+            app_name="shortfactory",
+            session_service=self.session_service
+        )
+        
+        # Legacy compatibility for tests
         self.input_schema = SceneExpansionInput.model_json_schema()
-        self.output_schema = ScenePackageOutput.model_json_schema()
-        self.output_key = "scene_package_output_result"
+        self.output_schema = SimpleScenePackage.model_json_schema()
+        self.output_key = "scene_package_result"
         
-        logger.info("🚀 Simple Scene Script Writer Agent initialized")
+        logger.info("🚀 ADK Scene Script Writer Agent initialized with structured output")
     
-    async def expand_scene(self, input_data: SceneExpansionInput) -> ScenePackageOutput:
+    async def expand_scene(self, input_data: SceneExpansionInput) -> SimpleScenePackage:
         """
-        Expand scene with simple direct approach
+        Expand scene using ADK LlmAgent - NO manual JSON parsing!
         
         Args:
             input_data: Type-safe scene expansion input
             
         Returns:
-            ScenePackageOutput: Type-safe scene package output
+            ScenePackageOutput: Automatically validated output from LlmAgent
         """
         try:
             scene_data = input_data.scene_data
@@ -77,32 +97,56 @@ No additional text, explanations, or markdown formatting."""
             
             logger.info(f"🎬 Expanding scene {scene_number} ({scene_type})")
             
-            # Create context prompt from input data
-            context_prompt = self._create_context_prompt(input_data)
+            # Create input prompt
+            input_prompt = self._create_context_prompt(input_data)
             
-            # Use ADK structured generation with direct Pydantic schema
-            response = await self.client.agenerate_content(
-                model="gemini-2.5-flash",
-                contents=[
-                    types.Content(parts=[
-                        types.Part(text=context_prompt)
-                    ])
-                ],
-                config=types.GenerateContentConfig(
-                    system_instruction=self.instruction,
-                    response_schema=ScenePackageOutput.model_json_schema(),  # Direct Pydantic!
-                    temperature=0.8,
-                    top_p=0.9,
-                    top_k=40,
-                    max_output_tokens=8192
-                )
+            # Use ADK Runner pattern - automatic structured output!
+            # No manual JSON parsing needed!
+            
+            # Create session for this request
+            session = await self.session_service.create_session(
+                app_name="shortfactory",
+                user_id="system",
+                session_id=f"scene_{scene_number}_{hash(str(input_data.scene_data)) % 100000}"
             )
             
-            # Parse and validate with Pydantic
-            result = ScenePackageOutput.model_validate_json(response.text)
+            # Create user message
+            user_message = types.Content(
+                role='user',
+                parts=[types.Part(text=input_prompt)]
+            )
             
-            logger.info(f"✅ Scene {scene_number} expansion completed")
-            return result
+            # Run through ADK Runner
+            events = self.runner.run(
+                user_id="system",
+                session_id=session.id,
+                new_message=user_message
+            )
+            
+            # Extract final response from events (based on ADK manual)
+            final_response = None
+            for event in events:
+                if event.is_final_response() and event.content:
+                    # Try session state first (output_key)
+                    if self.output_key in session.state:
+                        final_response = session.state[self.output_key]
+                        logger.info(f"✅ Found structured response in session state")
+                        break
+                    # Fallback: extract from event content and parse manually
+                    elif event.content.parts:
+                        response_text = event.content.parts[0].text.strip()
+                        try:
+                            final_response = SimpleScenePackage.model_validate_json(response_text)
+                            logger.info(f"✅ Parsed structured response from event content")
+                            break
+                        except Exception as parse_error:
+                            logger.warning(f"⚠️ Failed to parse event content: {parse_error}")
+            
+            if final_response:
+                logger.info(f"✅ Scene {scene_number} expansion completed with structured output")
+                return final_response
+            else:
+                raise Exception("No structured response received from LlmAgent")
                 
         except Exception as e:
             logger.error(f"❌ Scene expansion failed: {e}")
@@ -144,34 +188,31 @@ CONTEXT:
         
         return context
     
-    def _create_fallback_output(self, input_data: SceneExpansionInput) -> ScenePackageOutput:
+    def _create_fallback_output(self, input_data: SceneExpansionInput) -> SimpleScenePackage:
         """Create fallback output when generation fails"""
         scene_data = input_data.scene_data
         scene_number = scene_data.get('scene_number', 1)
         
         logger.warning(f"⚠️ Creating fallback scene package for scene {scene_number}")
         
-        return ScenePackageOutput(
+        return SimpleScenePackage(
             scene_number=scene_number,
             narration_script=[
                 {
                     "line": f"This is scene {scene_number}. Content generation encountered an issue, but we're providing a basic structure.",
-                    "at_ms": 0,
-                    "pause_ms": 500
+                    "at_ms": 0
                 }
             ],
             visuals=[
                 {
                     "frame_id": f"{scene_number}A",
                     "shot_type": "medium",
-                    "image_prompt": "Educational scene with friendly character explaining a concept in a clear and engaging manner with colorful background",
-                    "aspect_ratio": "16:9"
+                    "image_prompt": "Educational scene with friendly character explaining a concept in a clear and engaging manner with colorful background"
                 }
             ],
             tts={
                 "engine": "lemonfox",
                 "voice": "sarah",
-                "language": "en-US",
                 "speed": 1.0
             },
             timing={
@@ -180,8 +221,8 @@ CONTEXT:
             }
         )
     
-    def get_schemas(self) -> Dict[str, Any]:
-        """Get the schemas for this agent (legacy compatibility)"""
+    def get_schemas(self) -> dict:
+        """Get schemas (legacy compatibility)"""
         return {
             "input_schema": self.input_schema,
             "output_schema": self.output_schema,
@@ -190,4 +231,4 @@ CONTEXT:
     
     def _create_instruction(self, input_data: SceneExpansionInput) -> str:
         """Create instruction (legacy compatibility)"""
-        return self.instruction
+        return self.agent.instruction

@@ -4,7 +4,7 @@ Pydantic-based output data structures for each agent
 Automatically converted to ADK output_schema
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any, Literal
 from enum import Enum
 
@@ -45,6 +45,8 @@ class FullScriptOutput(BaseModel):
     Full Script Writer output schema
     Structure enforced by ADK output_schema
     """
+    model_config = ConfigDict(extra='forbid')  # No additionalProperties for Gemini API
+    
     title: str = Field(
         min_length=5, 
         max_length=100,
@@ -83,11 +85,7 @@ class FullScriptOutput(BaseModel):
         description="Scene beats"
     )
 
-    class Config:
-        json_schema_extra = {
-            "title": "FullScriptOutput",
-            "description": "Output data structure for Full Script Writer Agent - ADK output_schema compliant"
-        }
+    # Config removed - using model_config instead
 
 
 class NarrationLine(BaseModel):
@@ -156,11 +154,13 @@ class OnScreenTextElement(BaseModel):
 
 class ScenePackageOutput(BaseModel):
     """
-    Scene Script Writer 출력 스키마
-    ADK output_schema로 강제되는 구조
-    실제 사용되는 기능들만 포함 (SFX 제거)
+    Scene Script Writer output schema
+    Structure enforced by ADK output_schema
+    Includes only actually used features (SFX removed)
     """
-    scene_number: int = Field(ge=1, description="씬 번호")
+    model_config = ConfigDict(extra='forbid')  # No additionalProperties for Gemini API
+    
+    scene_number: int = Field(ge=1, description="Scene number")
     
     narration_script: List[NarrationLine] = Field(
         min_length=1,
@@ -203,11 +203,6 @@ class ScenePackageOutput(BaseModel):
         description="씬 종료 전환"
     )
 
-    class Config:
-        json_schema_extra = {
-            "title": "ScenePackageOutput",
-            "description": "Scene Script Writer Agent의 출력 데이터 구조 - 실제 사용 기능만 포함"
-        }
 
 
 class ImageAssetOutput(BaseModel):
@@ -235,11 +230,6 @@ class ImageAssetOutput(BaseModel):
         description="안전성 검사 결과"
     )
 
-    class Config:
-        json_schema_extra = {
-            "title": "ImageAssetOutput",
-            "description": "Image Create Agent의 출력 데이터 구조"
-        }
 
 
 class VoiceAssetOutput(BaseModel):
@@ -272,11 +262,6 @@ class VoiceAssetOutput(BaseModel):
         }]
     )
 
-    class Config:
-        json_schema_extra = {
-            "title": "VoiceAssetOutput",
-            "description": "Voice Generate Agent의 출력 데이터 구조"
-        }
 
 
 class VideoOutput(BaseModel):
@@ -307,8 +292,3 @@ class VideoOutput(BaseModel):
         }]
     )
 
-    class Config:
-        json_schema_extra = {
-            "title": "VideoOutput",
-            "description": "Video Maker Agent의 출력 데이터 구조"
-        }

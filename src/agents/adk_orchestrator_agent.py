@@ -100,41 +100,47 @@ class ADKOrchestratorAgent:
                 "agent_type": "adk_structured"
             }
             
-            logger.info(f"✅ Full script generated with {len(full_script.get('scenes', []))} scenes")
+            logger.info(f"✅ Full script generated with {len(full_script_output.scenes)} scenes")
             
             # Save full script
             script_file = self.session_manager.get_session_dir(session_id) / "full_script.json"
             with open(script_file, 'w', encoding='utf-8') as f:
-                json.dump(full_script, f, indent=2, ensure_ascii=False)
+                json.dump(full_script_output.model_dump(), f, indent=2, ensure_ascii=False)
             
             # Stage 2: Scene Script Generation
             logger.info("🎭 Stage 2: Generating detailed scene scripts with ADK...")
             stage_start = time.time()
             
-            scenes = full_script.get("scenes", [])
+            scenes = full_script_output.scenes
             scene_packages = []
             previous_scenes = []
             
             # Prepare global context
             global_context = {
-                "title": full_script.get("title", ""),
-                "overall_style": full_script.get("overall_style", ""),
-                "story_summary": full_script.get("story_summary", ""),
-                "main_character": full_script.get("main_character", ""),
+                "title": full_script_output.title,
+                "overall_style": full_script_output.overall_style,
+                "story_summary": full_script_output.story_summary,
+                "main_character": getattr(full_script_output, 'main_character', 'Glowbie'),
                 "target_audience": target_audience
             }
             
             # Generate each scene package
             for scene_data in scenes:
-                scene_number = scene_data.get("scene_number", 1)
+                scene_number = scene_data.scene_number if hasattr(scene_data, 'scene_number') else scene_data.get("scene_number", 1)
                 logger.info(f"🎬 Generating scene {scene_number}...")
                 
                 try:
-                    scene_package = await self.scene_script_agent.expand_scene(
-                        scene_data=scene_data,
+                    # Create Pydantic input for scene expansion
+                    scene_input = SceneExpansionInput(
+                        scene_data=scene_data.model_dump() if hasattr(scene_data, 'model_dump') else scene_data,
                         global_context=global_context,
-                        previous_scenes=previous_scenes.copy()
+                        previous_scenes=[
+                            pkg.model_dump() if hasattr(pkg, 'model_dump') else pkg 
+                            for pkg in previous_scenes
+                        ]
                     )
+                    
+                    scene_package = await self.scene_script_agent.expand_scene(scene_input)
                     
                     scene_packages.append(scene_package)
                     previous_scenes.append(scene_package)
@@ -142,7 +148,7 @@ class ADKOrchestratorAgent:
                     # Save individual scene package
                     scene_file = self.session_manager.get_session_dir(session_id) / f"scene_package_{scene_number}.json"
                     with open(scene_file, 'w', encoding='utf-8') as f:
-                        json.dump(scene_package, f, indent=2, ensure_ascii=False)
+                        json.dump(scene_package.model_dump(), f, indent=2, ensure_ascii=False)
                     
                     logger.info(f"✅ Scene {scene_number} generated and saved")
                     
@@ -172,7 +178,7 @@ class ADKOrchestratorAgent:
             validation_start = time.time()
             
             validation_results = self._validate_production_package(
-                full_script, scene_packages
+                full_script_output, scene_packages
             )
             
             validation_time = time.time() - validation_start
@@ -193,8 +199,8 @@ class ADKOrchestratorAgent:
                     "created_at": datetime.now().isoformat(),
                     "pipeline_version": "adk_2.0"
                 },
-                "full_script": full_script,
-                "scene_packages": scene_packages,
+                "full_script": full_script_output.model_dump(),
+                "scene_packages": [pkg.model_dump() for pkg in scene_packages],
                 "validation_results": validation_results,
                 "build_report": build_report
             }
@@ -238,8 +244,8 @@ class ADKOrchestratorAgent:
             raise
     
     def _validate_production_package(self, 
-                                   full_script: Dict[str, Any], 
-                                   scene_packages: List[Dict[str, Any]]) -> Dict[str, Any]:
+                                   full_script_output: FullScriptOutput, 
+                                   scene_packages: List[ScenePackageOutput]) -> Dict[str, Any]:
         """Validate the complete production package"""
         
         validation_results = {
@@ -253,7 +259,7 @@ class ADKOrchestratorAgent:
         
         try:
             # Validate full script
-            if self._validate_full_script(full_script):
+            if self._validate_full_script(full_script_output):
                 validation_results["full_script_valid"] = True
                 logger.info("✅ Full script validation passed")
             else:
@@ -263,7 +269,7 @@ class ADKOrchestratorAgent:
             # Validate scene packages
             valid_scenes = 0
             for i, scene_package in enumerate(scene_packages):
-                scene_number = scene_package.get("scene_number", i + 1)
+                scene_number = scene_package.scene_number if hasattr(scene_package, 'scene_number') else i + 1
                 if self._validate_scene_package(scene_package, scene_number):
                     valid_scenes += 1
                 else:
@@ -282,43 +288,31 @@ class ADKOrchestratorAgent:
             validation_results["issues"].append(f"Validation error: {str(e)}")
             return validation_results
     
-    def _validate_full_script(self, full_script: Dict[str, Any]) -> bool:
+    def _validate_full_script(self, full_script_output) -> bool:
         """Validate full script structure"""
         try:
-            required_fields = ["title", "overall_style", "story_summary", "scenes"]
-            for field in required_fields:
-                if field not in full_script or not full_script[field]:
-                    return False
+            # Pydantic validation is automatic, just check basic requirements
+            if not full_script_output.title or not full_script_output.scenes:
+                return False
             
-            scenes = full_script.get("scenes", [])
-            if len(scenes) < 3:
+            if len(full_script_output.scenes) < 3:
                 return False
             
             return True
         except:
             return False
     
-    def _validate_scene_package(self, scene_package: Dict[str, Any], scene_number: int) -> bool:
+    def _validate_scene_package(self, scene_package: ScenePackageOutput, scene_number: int) -> bool:
         """Validate individual scene package"""
         try:
-            required_fields = ["scene_number", "narration_script", "visuals", "tts", "timing"]
-            for field in required_fields:
-                if field not in scene_package:
-                    return False
-            
-            # Check narration script
-            narration = scene_package.get("narration_script", [])
-            if not narration:
+            # Pydantic validation is automatic, just check basic requirements
+            if not scene_package.narration_script:
                 return False
             
-            # Check visuals
-            visuals = scene_package.get("visuals", [])
-            if not visuals:
+            if not scene_package.visuals:
                 return False
             
-            # Check timing
-            timing = scene_package.get("timing", {})
-            if timing.get("total_ms", 0) < 1000:
+            if scene_package.timing.total_ms < 1000:
                 return False
             
             return True
